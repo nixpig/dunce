@@ -1,0 +1,47 @@
+version: "3.1"
+
+services:
+  app:
+    restart: always
+    image: registry.digitalocean.com/nixpig/bloggor:latest
+    depends_on:
+      - db
+    env_file: .env
+    ports:
+      - 127.0.0.1:80:8080
+    networks:
+      - bloggor_net
+
+  db:
+    restart: always
+    image: postgres:16.0-alpine3.18
+    env_file: .env
+    volumes:
+      - bloggor_db_volume:/var/lib/postgresql/data
+    ports:
+      - 127.0.0.1:5432:5432
+    networks:
+      - bloggor_net
+
+  server:
+    restart: always
+    image: nginx:1.25.2-alpine
+    env_file: .env
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./default.conf.template:/etc/nginx/templates/default.conf.template
+      - ${SSL_PATH:-/etc/ssl/certs}:/etc/nginx/ssl:so
+    depends_on:
+      - app
+      - db
+    networks:
+      - bloggor_net
+
+volumes:
+  bloggor_db_volume:
+
+networks:
+  bloggor_net:
+    driver: bridge

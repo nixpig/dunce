@@ -31,9 +31,9 @@ build_app:
 .PHONY: build
 build: build_app
 
-.PHONY: dev_app
-dev_app: export APP_ENV=development
-dev_app: 
+.PHONY: run_app
+run_app: export APP_ENV=development
+run_app: 
 	go run github.com/cosmtrek/air@v1.43.0 \
 		--build.cmd "make build_app" \
 		--build.bin "tmp/bin/${APP_BINARY_NAME}" \
@@ -46,9 +46,9 @@ clean:
 	rm -rf bin tmp 
 
 .PHONY: dev
-dev: export APP_ENV=development
-dev:
-	make -j1 dev_app
+run: export APP_ENV=development
+run:
+	make -j1 run_app
 
 .PHONY: migrate_up
 migrate_up:

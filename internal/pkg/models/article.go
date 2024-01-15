@@ -12,5 +12,5 @@ type Article struct {
 	UpdatedAt time.Time `json:"updated_at"`
 	TypeId    string    `json:"type_id"`
 	UserId    int       `json:"user_id"`
-	TagIds    []int     `json:"tag_ids"`
+	TagIds    []int     `json:"tag_ids"` // stored as comma separated list in db
 }
