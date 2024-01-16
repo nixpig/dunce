@@ -33,12 +33,17 @@ func main() {
 		Role:     models.ReaderRole,
 	}
 
-	user, err := models.CreateUser(&newUser)
+	_, err := models.CreateUser(&newUser)
 	if err != nil {
 		log.Printf("error: %v", err)
 	}
 
-	log.Printf("user: %v", user)
+	users, err := models.GetUserById(2)
+	if err != nil {
+		log.Printf("error: %v", err)
+	}
+
+	log.Printf("users: %v", users)
 
 	fmt.Println(("Hello, world!"))
 }
