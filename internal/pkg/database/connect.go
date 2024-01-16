@@ -33,7 +33,7 @@ func Connect() error {
 		os.Exit(1)
 	}
 
-	defer DB.Close(context.Background())
+	defer DB.Close()
 
 	return nil
 
@@ -46,7 +46,7 @@ func loadEnv() (*databaseEnvironment, error) {
 	username := config.Get("POSTGRES_USER")
 	password := config.Get("POSTGRES_PASSWORD")
 
-	portNumber, err := strconv.ParseUint(port, 16, 16)
+	portNumber, err := strconv.ParseUint(port, 10, 16)
 	if err != nil {
 		log.Fatalf("unable to get valid port number from: %s", port)
 		return nil, err

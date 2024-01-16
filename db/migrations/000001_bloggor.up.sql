@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS user_ (
 
 CREATE TABLE IF NOT EXISTS site_ (
     id_ integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    name_ character varying(100),
     description_ character varying(255),
     url_ character varying(255),
     owner_ integer references user_(id_) NOT NULL

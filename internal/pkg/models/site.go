@@ -1,8 +1,9 @@
 package models
 
 type Site struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Url         string `json:"url"`
-	Owner       User   `json:"owner"`
+	Id          int    `json:"id"`
+	Name        string `json:"name" validate:"required,max=100"`
+	Description string `json:"description" validate:"required,max=255"`
+	Url         string `json:"url" validate:"required,max=255"`
+	Owner       User   `json:"owner" validate:"required"`
 }
