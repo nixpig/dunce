@@ -5,14 +5,9 @@ CREATE TABLE IF NOT EXISTS type_ (
     slug_ character varying(255) NOT NULL
 );
 
-INSERT INTO type_ (name_, template_, slug_) VALUES ('post', 'post', 'post');
+INSERT INTO type_ (name_, template_, slug_) VALUES ('post', 'post', 'post'), ('page', 'page', 'page');
 
-CREATE TABLE IF NOT EXISTS role_ (
-    id_ integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    name_ character varying(100) NOT NULL
-);
-
-INSERT INTO role_ (name_) VALUES ('admin'), ('author'), ('reader');
+CREATE TYPE role_ AS ENUM ('admin', 'author', 'reader');
 
 CREATE TABLE IF NOT EXISTS tag_ (
     id_ integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
@@ -26,7 +21,7 @@ CREATE TABLE IF NOT EXISTS user_ (
     email_ character varying(100) NOT NULL,
     password_ character varying(255) NOT NULL,
     link_ character varying(255) NOT NULL,
-    role_ integer references role_(id_) NOT NULL
+    role_ role_ NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS site_ (

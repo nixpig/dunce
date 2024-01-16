@@ -1,7 +1,9 @@
 package models
 
-// TODO: look to use enums for roles - how to serialise/deserialise JSON??
-type Role struct {
-	Id   int    `json:"id"`
-	Name string `json:"name" required:"required,max=100"`
-}
+type RoleName string
+
+const (
+	ReaderRole RoleName = "reader"
+	AuthorRole RoleName = "author"
+	AdminRole  RoleName = "admin"
+)

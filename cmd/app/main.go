@@ -7,6 +7,7 @@ import (
 
 	"github.com/nixpig/bloggor/internal/pkg/config"
 	"github.com/nixpig/bloggor/internal/pkg/database"
+	"github.com/nixpig/bloggor/internal/pkg/models"
 )
 
 func main() {
@@ -23,6 +24,20 @@ func main() {
 		log.Fatalf("unable to connect to database: %v", err)
 		os.Exit(1)
 	}
+
+	newUser := models.NewUser{
+		Username: "testname",
+		Email:    "test@example.com",
+		Link:     "some link",
+		Role:     models.ReaderRole,
+	}
+
+	user, err := newUser.CreateWithPassword("foobarbaz")
+	if err != nil {
+		log.Printf("error: %v", err)
+	}
+
+	log.Printf("user: %v", user)
 
 	fmt.Println(("Hello, world!"))
 }

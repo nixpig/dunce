@@ -33,8 +33,6 @@ func Connect() error {
 		os.Exit(1)
 	}
 
-	defer DB.Close()
-
 	return nil
 
 }
@@ -67,4 +65,8 @@ func buildConnectionString(env *databaseEnvironment) string {
 		"postgres://%s:%s@%s:%d/%s?sslmode=disable",
 		env.username, env.password, env.host, env.port, env.name,
 	)
+}
+
+func Close() {
+	DB.Close()
 }
