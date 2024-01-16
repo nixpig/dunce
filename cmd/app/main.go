@@ -29,10 +29,11 @@ func main() {
 		Username: "testname",
 		Email:    "test@example.com",
 		Link:     "some link",
+		Password: "something suprt secret in hree!!!",
 		Role:     models.ReaderRole,
 	}
 
-	user, err := newUser.CreateWithPassword("foobarbaz")
+	user, err := models.CreateUser(&newUser)
 	if err != nil {
 		log.Printf("error: %v", err)
 	}
