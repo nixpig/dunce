@@ -24,6 +24,11 @@ test: export APP_ENV=test
 test: 
 	go test -v -race -buildvcs ./...
 
+.PHONY: test_coverage
+test_coverage:
+	go test -v -race -buildvcs -coverprofile=coverage.out ./...
+	go tool cover -html=coverage.out
+
 .PHONY: build_app
 build_app:
 	go build -o tmp/bin/${APP_BINARY_NAME} ${APP_PACKAGE_PATH}

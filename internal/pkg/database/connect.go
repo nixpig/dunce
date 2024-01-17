@@ -3,6 +3,8 @@ package database
 import (
 	"context"
 	"fmt"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"log"
 	"os"
@@ -10,6 +12,13 @@ import (
 	// _ "github.com/golang-migrate/migrate/v4/source/github"
 	"github.com/nixpig/bloggor/internal/pkg/config"
 )
+
+type Dbconn interface {
+	Begin(ctx context.Context) (pgx.Tx, error)
+	Exec(ctx context.Context, sql string, arguments ...interface{}) (pgconn.CommandTag, error)
+	Query(ctx context.Context, sql string, optionsAndArgs ...interface{}) (pgx.Rows, error)
+	QueryRow(ctx context.Context, sql string, optionsAndArgs ...interface{}) pgx.Row
+}
 
 type databaseEnvironment struct {
 	host     string
@@ -19,21 +28,21 @@ type databaseEnvironment struct {
 	password string
 }
 
-func Connect() error {
+func Connect() (Dbconn, error) {
 	env, err := loadEnv()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	connectionString := buildConnectionString(env)
 
-	DB, err = pgxpool.New(context.Background(), connectionString)
+	db, err := pgxpool.New(context.Background(), connectionString)
 	if err != nil {
 		log.Fatalf("unable to connect to database: %v", err)
 		os.Exit(1)
 	}
 
-	return nil
+	return db, nil
 
 }
 
@@ -65,8 +74,4 @@ func buildConnectionString(env *databaseEnvironment) string {
 		"postgres://%s:%s@%s:%d/%s?sslmode=disable",
 		env.username, env.password, env.host, env.port, env.name,
 	)
-}
-
-func Close() {
-	DB.Close()
 }

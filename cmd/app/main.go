@@ -20,7 +20,8 @@ func main() {
 		log.Printf("did not run database migration due to '%v' which may not be fatal; continuing...", err)
 	}
 
-	if err := database.Connect(); err != nil {
+	db, err := database.Connect()
+	if err != nil {
 		log.Fatalf("unable to connect to database: %v", err)
 		os.Exit(1)
 	}
@@ -33,12 +34,15 @@ func main() {
 		Role:     models.ReaderRole,
 	}
 
-	_, err := models.CreateUser(&newUser)
+	api := models.Api{DB: db}
+
+	u1, err := api.CreateUser(&newUser)
 	if err != nil {
 		log.Printf("error: %v", err)
 	}
+	fmt.Println(u1)
 
-	users, err := models.GetUserById(2)
+	users, err := api.GetUserById(3)
 	if err != nil {
 		log.Printf("error: %v", err)
 	}

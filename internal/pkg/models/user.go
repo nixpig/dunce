@@ -6,6 +6,10 @@ import (
 	"github.com/nixpig/bloggor/internal/pkg/database"
 )
 
+type Api struct {
+	DB database.Dbconn
+}
+
 type User struct {
 	Id       int      `json:"id"`
 	Username string   `json:"username" validate:"required,max=100"`
@@ -22,12 +26,12 @@ type NewUser struct {
 	Role     RoleName `json:"role" validate:"required"`
 }
 
-func CreateUser(newUser *NewUser) (*User, error) {
+func (a *Api) CreateUser(newUser *NewUser) (*User, error) {
 	query := `insert into user_ (username_, email_, link_, role_, password_) values($1, $2, $3, $4, $5) returning id_, username_, email_, link_, role_`
 
 	var user User
 
-	row := database.DB.QueryRow(context.Background(), query, newUser.Username, newUser.Email, newUser.Link, newUser.Role, newUser.Password)
+	row := a.DB.QueryRow(context.Background(), query, newUser.Username, newUser.Email, newUser.Link, newUser.Role, newUser.Password)
 
 	if err := row.Scan(&user.Id, &user.Username, &user.Email, &user.Link, &user.Role); err != nil {
 		return nil, err
@@ -36,10 +40,10 @@ func CreateUser(newUser *NewUser) (*User, error) {
 	return &user, nil
 }
 
-func GetUsers() (*[]User, error) {
+func (a *Api) GetUsers() (*[]User, error) {
 	query := `select id_, username_, email_, link_, role_ from user_`
 
-	rows, err := database.DB.Query(context.Background(), query)
+	rows, err := a.DB.Query(context.Background(), query)
 	if err != nil {
 		return nil, err
 	}
@@ -61,10 +65,10 @@ func GetUsers() (*[]User, error) {
 	return &users, nil
 }
 
-func GetUsersByRole(role RoleName) (*[]User, error) {
+func (a *Api) GetUsersByRole(role RoleName) (*[]User, error) {
 	query := `select id_, username_, email_, link_, role_ from user_ where role_ = $1`
 
-	rows, err := database.DB.Query(context.Background(), query, role)
+	rows, err := a.DB.Query(context.Background(), query, role)
 	if err != nil {
 		return nil, err
 	}
@@ -84,12 +88,12 @@ func GetUsersByRole(role RoleName) (*[]User, error) {
 	return &users, nil
 }
 
-func GetUserById(id int) (*User, error) {
+func (a *Api) GetUserById(id int) (*User, error) {
 	query := `select id_, username_, email_, link_, role_ from user_ where id_ = $1`
 
 	var user User
 
-	row := database.DB.QueryRow(context.Background(), query, id)
+	row := a.DB.QueryRow(context.Background(), query, id)
 
 	if err := row.Scan(&user.Id, &user.Username, &user.Email, &user.Link, &user.Role); err != nil {
 		return nil, err
