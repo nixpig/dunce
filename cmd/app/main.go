@@ -34,15 +34,15 @@ func main() {
 		Role:     models.ReaderRole,
 	}
 
-	api := models.Api{DB: db}
+	database.DB = &db
 
-	u1, err := api.CreateUser(&newUser)
+	u1, err := models.CreateUser(*database.DB, &newUser)
 	if err != nil {
 		log.Printf("error: %v", err)
 	}
 	fmt.Println(u1)
 
-	users, err := api.GetUserById(3)
+	users, err := models.GetUserById(*database.DB, 3)
 	if err != nil {
 		log.Printf("error: %v", err)
 	}

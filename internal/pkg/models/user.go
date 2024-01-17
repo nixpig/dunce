@@ -6,10 +6,6 @@ import (
 	"github.com/nixpig/bloggor/internal/pkg/database"
 )
 
-type Api struct {
-	DB database.Dbconn
-}
-
 type User struct {
 	Id       int      `json:"id"`
 	Username string   `json:"username" validate:"required,max=100"`
@@ -26,12 +22,12 @@ type NewUser struct {
 	Role     RoleName `json:"role" validate:"required"`
 }
 
-func (a *Api) CreateUser(newUser *NewUser) (*User, error) {
+func CreateUser(db database.Dbconn, newUser *NewUser) (*User, error) {
 	query := `insert into user_ (username_, email_, link_, role_, password_) values($1, $2, $3, $4, $5) returning id_, username_, email_, link_, role_`
 
 	var user User
 
-	row := a.DB.QueryRow(context.Background(), query, newUser.Username, newUser.Email, newUser.Link, newUser.Role, newUser.Password)
+	row := db.QueryRow(context.Background(), query, newUser.Username, newUser.Email, newUser.Link, newUser.Role, newUser.Password)
 
 	if err := row.Scan(&user.Id, &user.Username, &user.Email, &user.Link, &user.Role); err != nil {
 		return nil, err
@@ -40,10 +36,10 @@ func (a *Api) CreateUser(newUser *NewUser) (*User, error) {
 	return &user, nil
 }
 
-func (a *Api) GetUsers() (*[]User, error) {
+func GetUsers(db database.Dbconn) (*[]User, error) {
 	query := `select id_, username_, email_, link_, role_ from user_`
 
-	rows, err := a.DB.Query(context.Background(), query)
+	rows, err := db.Query(context.Background(), query)
 	if err != nil {
 		return nil, err
 	}
@@ -65,10 +61,10 @@ func (a *Api) GetUsers() (*[]User, error) {
 	return &users, nil
 }
 
-func (a *Api) GetUsersByRole(role RoleName) (*[]User, error) {
+func GetUsersByRole(db database.Dbconn, role RoleName) (*[]User, error) {
 	query := `select id_, username_, email_, link_, role_ from user_ where role_ = $1`
 
-	rows, err := a.DB.Query(context.Background(), query, role)
+	rows, err := db.Query(context.Background(), query, role)
 	if err != nil {
 		return nil, err
 	}
@@ -88,12 +84,12 @@ func (a *Api) GetUsersByRole(role RoleName) (*[]User, error) {
 	return &users, nil
 }
 
-func (a *Api) GetUserById(id int) (*User, error) {
+func GetUserById(db database.Dbconn, id int) (*User, error) {
 	query := `select id_, username_, email_, link_, role_ from user_ where id_ = $1`
 
 	var user User
 
-	row := a.DB.QueryRow(context.Background(), query, id)
+	row := db.QueryRow(context.Background(), query, id)
 
 	if err := row.Scan(&user.Id, &user.Username, &user.Email, &user.Link, &user.Role); err != nil {
 		return nil, err
