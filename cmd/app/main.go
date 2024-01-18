@@ -31,7 +31,7 @@ func main() {
 		Email:    "test@example.com",
 		Link:     "some link",
 		Password: "something suprt secret in hree!!!",
-		Role:     models.ReaderRole,
+		Role:     models.AdminRole,
 	}
 
 	database.DB = &db
@@ -42,7 +42,7 @@ func main() {
 	}
 	fmt.Println(u1)
 
-	users, err := models.GetUserById(*database.DB, 3)
+	users, err := models.GetUsersByRole(*database.DB, models.ReaderRole)
 	if err != nil {
 		log.Printf("error: %v", err)
 	}
