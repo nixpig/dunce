@@ -1,12 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 
+	"github.com/nixpig/bloggor/internal/app/server"
 	"github.com/nixpig/bloggor/internal/pkg/config"
-	"github.com/nixpig/bloggor/internal/pkg/database"
 	"github.com/nixpig/bloggor/internal/pkg/models"
 )
 
@@ -16,38 +15,16 @@ func main() {
 		log.Printf("unable to load config from env '%v' which may not be fatal; continuing...", err)
 	}
 
-	if err := database.MigrateUp(); err != nil {
+	if err := models.MigrateUp(); err != nil {
 		log.Printf("did not run database migration due to '%v' which may not be fatal; continuing...", err)
 	}
 
-	db, err := database.Connect()
-	if err != nil {
+	if err := models.Connect(); err != nil {
 		log.Fatalf("unable to connect to database: %v", err)
 		os.Exit(1)
 	}
 
-	newUser := models.NewUser{
-		Username: "testname",
-		Email:    "test@example.com",
-		Link:     "some link",
-		Password: "something suprt secret in hree!!!",
-		Role:     models.AdminRole,
-	}
+	port := config.Get("WEB_PORT")
 
-	database.DB = &db
-
-	u1, err := models.CreateUser(*database.DB, &newUser)
-	if err != nil {
-		log.Printf("error: %v", err)
-	}
-	fmt.Println(u1)
-
-	users, err := models.GetUsersByRole(*database.DB, models.ReaderRole)
-	if err != nil {
-		log.Printf("error: %v", err)
-	}
-
-	log.Printf("users: %v", users)
-
-	fmt.Println(("Hello, world!"))
+	app.Start(port)
 }

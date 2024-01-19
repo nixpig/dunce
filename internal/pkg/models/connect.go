@@ -1,17 +1,36 @@
-package database
+package models
 
 import (
 	"context"
 	"fmt"
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"log"
 	"os"
 	"strconv"
-	// _ "github.com/golang-migrate/migrate/v4/source/github"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nixpig/bloggor/internal/pkg/config"
 )
+
+type DbInstance struct {
+	Conn Dbconn
+}
+
+var DB DbInstance
+
+type Queries struct {
+	User *User
+}
+
+var Query Queries
+
+func BuildQueries(db Dbconn) {
+	Query =
+		Queries{
+			User: &User{Db: db},
+		}
+}
 
 type Dbconn interface {
 	Begin(ctx context.Context) (pgx.Tx, error)
@@ -28,10 +47,10 @@ type databaseEnvironment struct {
 	password string
 }
 
-func Connect() (Dbconn, error) {
+func Connect() error {
 	env, err := loadEnv()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	connectionString := buildConnectionString(env)
@@ -42,8 +61,13 @@ func Connect() (Dbconn, error) {
 		os.Exit(1)
 	}
 
-	return db, nil
+	DB = DbInstance{
+		Conn: db,
+	}
 
+	BuildQueries(DB.Conn)
+
+	return nil
 }
 
 func loadEnv() (*databaseEnvironment, error) {

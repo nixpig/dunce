@@ -1,0 +1,14 @@
+<h1>Users</h1>
+
+<p>
+{{ if and .Users }}
+	<ul>
+		{{ range $user := .Users }}
+			<li>{{ $user.Id }} - <a href="/user/{{ $user.Id }}">{{ $user.Username }}</a></li>
+		{{ end }}
+	</ul>
+
+{{ else if and .User }}
+	<b>Username:</b> {{ .User.Username }}
+{{ end }}
+</p>
