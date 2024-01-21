@@ -1,0 +1,13 @@
+package api
+
+import (
+	"github.com/gofiber/fiber/v2"
+	"github.com/nixpig/bloggor/internal/pkg/models"
+)
+
+func WithContext(c *fiber.Ctx) map[string]interface{} {
+	return map[string]interface{}{
+		"getUser":  func() *models.UserData { return getUser(c) },
+		"getUsers": getUsers,
+	}
+}

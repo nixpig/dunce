@@ -1,14 +1,28 @@
 <h1>Users</h1>
+<h2>Method: {{ .Context.Method }}</h2>
 
+<h2>Path: {{  .Context.Path }}</h2>
+
+
+{{ $users := (call .Api.getUsers)}}
+<h2>All users</h2>
 <p>
-{{ if and .Users }}
 	<ul>
-		{{ range $user := .Users }}
-			<li>{{ $user.Id }} - <a href="/user/{{ $user.Id }}">{{ $user.Username }}</a></li>
+		{{ range $user := $users }}
+			<li><a href="/users/{{ $user.Id }}">{{ $user.Username }}</a></li>
 		{{ end }}
 	</ul>
-
-{{ else if and .User }}
-	<b>Username:</b> {{ .User.Username }}
-{{ end }}
 </p>
+
+{{ $user := (call .Api.getUser)}}
+{{ if $user }}
+	<h2>Current user: {{ $user.Username }}</h2>
+	<p>
+		<b>Id:</b> {{ $user.Id }}<br>
+		<b>Role:</b> {{ $user.Role }}<br>
+		<b>Email:</b> {{ $user.Email }}<br>
+		<b>Link:</b> {{ $user.Link }}<br>
+	</p>
+{{ end }}
+
+

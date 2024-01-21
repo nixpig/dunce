@@ -46,13 +46,16 @@ func Start(port string) {
 
 	web.Get("/", handlers.IndexHandler)
 
-	web.Get("/user/:id", handlers.UserHandler)
-	web.Get("/user", handlers.UserHandler)
-	// web.Get("/user/register", handlers.UserRegisterHandler)
-	// web.Get("/user/login", handlers.UserLoginHandler)
+	web.Get("/users/:id", handlers.UserGetHandler)
+	web.Get("/users", handlers.UserGetHandler)
+
+	web.Get("/admin/users", handlers.AdminUserGetHandler)
+	web.Post("/admin/users", handlers.AdminUserPostHandler)
+	// web.Get("/users/register", handlers.UserRegisterHandler)
+	// web.Get("/users/login", handlers.UserLoginHandler)
 	//
-	// web.Get("/tag", handlers.TagHandler)
-	// web.Get("/tag/:name", handlers.TagHandler)
+	// web.Get("/tags", handlers.TagHandler)
+	// web.Get("/tags/:name", handlers.TagHandler)
 	//
 	// web.Get("/:article_type", handlers.ArticleHandler)
 	// web.Get("/:article_type/:article_slug", handlers.ArticleHandler)
