@@ -1,62 +1,81 @@
-<h2>Users</h2>
+<h2>👥 Users</h2>
 
-<h3>Create user</h3>
-
-{{ if eq .Context.Method "POST"}}
-	{{ if .CreatedUser }}
-		<div>
-			<h4>Successfully created user!</h4>
-				<p>
-				{{ .CreatedUser.Username }} ({{ .CreatedUser.Email }}) as {{ .CreatedUser.Role }}
-				</p>
-		</div>
-	{{ end }}
-
-	{{ if .Errors }}
-		<div>
-			<h4>Errors in form</h4>
-			<p>
-				The following errors were found. Please fix and try again.
-			</p>
-			<ul>
-				{{ range $error := .Errors }}
-					<li>{{ $error.Error }}</li>
-				{{ end }}
-			</ul>
-		</div>
-	{{ end }}
+{{ if .Errors }}
+	<div>
+		<h4>❌ Errors in form</h4>
+		<p>
+			The following errors were found. Please fix and try again.
+		</p>
+		<ul>
+			{{ range $error := .Errors }}
+				<li>{{ $error.Error }}</li>
+			{{ end }}
+		</ul>
+	</div>
 {{ end }}
 
+<details>
+	<summary>
+		Add user
+	</summary>
+
+	{{ if eq .Context.Method "POST"}}
+		{{ if .CreatedUser }}
+			<div>
+				<h4>🚀 Successfully added user!</h4>
+					<p>
+						Added user {{ .CreatedUser.Username }} ({{ .CreatedUser.Email }}) as {{ .CreatedUser.Role }}.
+					</p>
+			</div>
+		{{ end }}
+
+	{{ end }}
 
 <form name="create-user" method="post">
-	<label for="username">Username</label>
-	<input type="text" id="username" name="username">
+	<label for="username">
+		Username
+		<input type="text" id="username" name="username">
+	</label>
+	<br>
 
-	<label for="email">Email</label>
-	<input type="text" id="email" name="email">
+	<label for="email">
+		Email
+		<input type="text" id="email" name="email">
+	</label>
+	<br>
 
-	<label for="link">Link</label>
-	<input type="text" id="link" name="link">
+	<label for="link">
+		Link
+		<input type="text" id="link" name="link">
+	</label>
+	<br>
 
-	<label for="password">Password</label>
-	<input type="password" id="password" name="password">
+	<label for="password">
+		Password
+		<input type="password" id="password" name="password">
+	</label>
+	<br>
 
-	<label for="role">Role</label>
-	<select name="role" id="role">
-		<option value="reader" selected>Reader</option>
-		<option value="author">Author</option>
-		<option value="admin">Admin</option>
-	</select>
+	<label for="role">
+		Role
+		<select name="role" id="role">
+			<option value="reader" selected>Reader</option>
+			<option value="author">Author</option>
+			<option value="admin">Admin</option>
+		</select>
+	</label>
+	<br>
 
-	<button type="submit">Create user</button>
+	<button type="submit">Add user</button>
 </form>
+</details>
 
 <h3>All users</h3>
 {{ $params := .Context.Queries }}
 {{ $users := (call .Api.GetUsers)}}
 
 {{ if $users }}
-	<table>
+	<table style="width: 100%;">
 		<thead>
 			<tr>
 				<th>ID</th>
@@ -72,54 +91,64 @@
 		<tbody>
 			{{ range $user := $users }}
 				{{ if and ($params.edit) (call $.IsEditable $user.Id $params.edit)}}
-					<form name="update-user" method="post">
 						<tr>
-							<td>
-								<input type="hidden" value="{{ $user.Id }}">
-								{{ $user.Id }}
-							</td>
+							<!-- TODO: needs to be a PUT -->
+							<form name="update-user" method="post">
+								<td>
+									<input type="hidden" id="update-id" name="id" value="{{ $user.Id }}">
+									{{ $user.Id }}
+								</td>
+
+								<td>
+									<input type="hidden" id="update-role" name="role" value="{{ $user.Role }}">
+									{{ $user.Role }}
+								</td>
+
+								<td>
+									<input type="text" id="update-username" name="username" value="{{ $user.Username }}">
+								</td>
+
+								<td>
+									<input type="text" id="update-email" name="email" value="{{ $user.Email }}">
+								</td>
+
+								<td>
+									<input type="text" id="update-link" name="link" value="{{ $user.Link }}">
+								</td>
+
+								<td>
+									<a href="#">Reset</a>
+								</td>
 
 							<td>
-								<input type="hidden" value="{{ $user.Role }}">
-								{{ $user.Role }}
-							</td>
+									<button type="submit">Save</button>
+							</form>
 
-							<td>
-								<input type="text" id="update-username" name="username" value="{{ $user.Username }}">
-							</td>
-
-							<td>
-								<input type="text" id="update-email" name="email" value="{{ $user.Email }}">
-							</td>
-
-							<td>
-								<input type="text" id="update-link" name="link" value="{{ $user.Link }}">
-							</td>
-
-							<td>
-								<button>Reset</button>
-							</td>
-							<td>
-								<button>Cancel</button>
-								<button>Save</button>
+								<form name="action-buttons" method="get">
+									<button type="submit">Cancel</button>
+								</form>
 							</td>
 						</tr>
-					</form>
 				{{ else }}
 					<tr {{ if and ($.CreatedUser) (eq $.CreatedUser.Id $user.Id)}} style="font-weight: bold;" {{ end }}>
 						<td>{{ $user.Id }}</td>
 						<td>{{ $user.Role }}</td>
 						<td>{{ $user.Username }}</td>
 						<td>{{ $user.Email }}</td>
-						<td>{{ $user.Link }}</td>
+						<td><a href="{{ $user.Link }}" target="_blank">{{ $user.Link }}</a></td>
 						<td><code>********</code></td>
 						<td>
-							<button>Edit</button>
-							<button>Delete</button>
+							<form name="action-buttons" method="get">
+								<input type=hidden name="edit" value="{{ $user.Id }}">
+								<button type="submit">Edit</button>
+								<button>Delete</button>
+							</form>
 						</td>
 					</tr>
 				{{ end }}
 			{{ end }}
 		</tbody>
 	</table>
+{{ else }}
+	<div>No users yet. You best go add some!</div>
 {{ end }}

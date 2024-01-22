@@ -1,28 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-		<meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<head>
+<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
 
     <title>Bloggor Admin</title>
 
-		<!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simpledotcss@2.2.1/simple.min.css"> -->
+		<link rel="stylesheet" href="/static/simple-v1.css">
 		<!-- <script src="https://cdn.jsdelivr.net/npm/htmx.org@1.9.10/dist/ext/ws.min.js"></script> -->
   </head>
 
   <body>
 		<header>
+			<h1>Bloggor Admin</h1>
 			<nav>
-				<h1>Bloggor Admin</h1>
-				<p>Manage stuff related to the site</p>
-				<ul>
-					<li><a href="/admin/articles">Articles</a></li>
-					<li><a href="/admin/users">Users</a></li>
-					<li><a href="/admin/tags">Tags</a></li>
-					<li><a href="/admin/types">Types</a></li>
-					<li><a href="/admin/settings">Settings</a></li>
-					<li><a href="/admin/logout">Logout</a></li>
-				</ul>
+				<a href="/">🏠️ Homepage</a>
+				<a href="/admin/articles">📰 Articles</a>
+				<a href="/admin/users">👥 Users</a>
+				<a href="/admin/tags">🏷️ Tags</a>
+				<a href="/admin/types">📁 Types</a>
+				<a href="/admin/settings">⚙️ Settings</a>
+				<a href="/admin/logout">↩️ Logout</a>
+
+				<!-- <ul> -->
+				<!-- 	<li><a href="/">🏠️ Homepage</a></li> -->
+				<!-- 	<li><a href="/admin/articles">📰 Articles</a></li> -->
+				<!-- 	<li><a href="/admin/users">👥 Users</a></li> -->
+				<!-- 	<li><a href="/admin/tags">🏷️ Tags</a></li> -->
+				<!-- 	<li><a href="/admin/types">📁 Types</a></li> -->
+				<!-- 	<li><a href="/admin/settings">⚙️ Settings</a></li> -->
+				<!-- 	<li><a href="/admin/logout">↩️ Logout</a></li> -->
+				<!-- </ul> -->
 			</nav>
 		</header>
 
@@ -31,7 +40,8 @@
 		</main>
 
 		<footer>
-			&copy; 2024 Copyright <a href="https://nixpig.dev" target="blank">@nixpig</a>. All rights reserved.
+			<div>Made with 🖤 using <a href="" target="_blank">Go</a> + <a href="" target="_blank">HTMX</a>.</div>
+			<div>&copy; 2024 Copyright <a href="https://nixpig.dev" target="_blank">@nixpig</a>. All rights reserved.</div>
 		</footer>
   </body>
 </html>

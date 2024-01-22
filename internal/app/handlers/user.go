@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -48,15 +47,17 @@ func AdminUserPostHandler(c *fiber.Ctx) error {
 		return err
 	}
 
-	createdUser, err := models.Query.User.Create(&models.NewUserData{
+	newUser := models.NewUserData{
+
 		Username: username,
 		Email:    email,
 		Link:     link,
 		Password: password,
 		Role:     role,
-	})
+	}
+
+	createdUser, err := models.Query.User.Create(&newUser)
 	if err != nil {
-		fmt.Println("ERROR")
 		return c.Render("admin_user", fiber.Map{
 			"Api":     a,
 			"Context": c,
@@ -68,7 +69,7 @@ func AdminUserPostHandler(c *fiber.Ctx) error {
 
 				return editIdConv == userId
 			},
-			"Errors": err,
+			"Errors": []error{err},
 		}, "layouts/admin")
 	}
 
