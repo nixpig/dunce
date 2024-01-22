@@ -2,6 +2,8 @@ package models
 
 import (
 	"context"
+
+	"github.com/go-playground/validator/v10"
 )
 
 type User struct {
@@ -9,22 +11,28 @@ type User struct {
 }
 
 type UserData struct {
-	Id       int      `json:"id"`
-	Username string   `json:"username" validate:"required,max=100"`
-	Email    string   `json:"email" validate:"required,max=100"`
-	Link     string   `json:"link" validate:"required,max=255"` // e.g. twitter.com/nixpig
-	Role     RoleName `json:"role" validate:"required"`
+	Id       int      ``
+	Username string   `validate:"required,max=100"`
+	Email    string   `validate:"required,max=100"`
+	Link     string   `validate:"required,max=255"`
+	Role     RoleName `validate:"required"`
 }
 
 type NewUserData struct {
-	Username string   `json:"username" validate:"required,max=100"`
-	Email    string   `json:"email" validate:"required,max=100"`
-	Link     string   `json:"link" validate:"required,max=255"` // e.g. twitter.com/nixpig
-	Password string   `json:"password" validate:"required,max=255"`
+	Username string   `json:"username" validate:"required,min=5,max=100"`
+	Email    string   `json:"email" validate:"required,email,max=100"`
+	Link     string   `json:"link" validate:"required,url,max=255"`
+	Password string   `json:"password" validate:"required,min=8,max=255"`
 	Role     RoleName `json:"role" validate:"required"`
 }
 
 func (u *User) Create(newUser *NewUserData) (*UserData, error) {
+	validate := validator.New()
+
+	if err := validate.Struct(newUser); err != nil {
+		return nil, err
+	}
+
 	query := `insert into user_ (username_, email_, link_, role_, password_) values($1, $2, $3, $4, $5) returning id_, username_, email_, link_, role_`
 
 	var user UserData

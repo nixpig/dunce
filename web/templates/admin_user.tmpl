@@ -1,0 +1,125 @@
+<h2>Users</h2>
+
+<h3>Create user</h3>
+
+{{ if eq .Context.Method "POST"}}
+	{{ if .CreatedUser }}
+		<div>
+			<h4>Successfully created user!</h4>
+				<p>
+				{{ .CreatedUser.Username }} ({{ .CreatedUser.Email }}) as {{ .CreatedUser.Role }}
+				</p>
+		</div>
+	{{ end }}
+
+	{{ if .Errors }}
+		<div>
+			<h4>Errors in form</h4>
+			<p>
+				The following errors were found. Please fix and try again.
+			</p>
+			<ul>
+				{{ range $error := .Errors }}
+					<li>{{ $error.Error }}</li>
+				{{ end }}
+			</ul>
+		</div>
+	{{ end }}
+{{ end }}
+
+
+<form name="create-user" method="post">
+	<label for="username">Username</label>
+	<input type="text" id="username" name="username">
+
+	<label for="email">Email</label>
+	<input type="text" id="email" name="email">
+
+	<label for="link">Link</label>
+	<input type="text" id="link" name="link">
+
+	<label for="password">Password</label>
+	<input type="password" id="password" name="password">
+
+	<label for="role">Role</label>
+	<select name="role" id="role">
+		<option value="reader" selected>Reader</option>
+		<option value="author">Author</option>
+		<option value="admin">Admin</option>
+	</select>
+
+	<button type="submit">Create user</button>
+</form>
+
+<h3>All users</h3>
+{{ $params := .Context.Queries }}
+{{ $users := (call .Api.GetUsers)}}
+
+{{ if $users }}
+	<table>
+		<thead>
+			<tr>
+				<th>ID</th>
+				<th>Role</th>
+				<th>Username</th>
+				<th>Email</th>
+				<th>Link</th>
+				<th>Password</th>
+				<th>Actions</th>
+			</tr>
+		</thead>
+
+		<tbody>
+			{{ range $user := $users }}
+				{{ if and ($params.edit) (call $.IsEditable $user.Id $params.edit)}}
+					<form name="update-user" method="post">
+						<tr>
+							<td>
+								<input type="hidden" value="{{ $user.Id }}">
+								{{ $user.Id }}
+							</td>
+
+							<td>
+								<input type="hidden" value="{{ $user.Role }}">
+								{{ $user.Role }}
+							</td>
+
+							<td>
+								<input type="text" id="update-username" name="username" value="{{ $user.Username }}">
+							</td>
+
+							<td>
+								<input type="text" id="update-email" name="email" value="{{ $user.Email }}">
+							</td>
+
+							<td>
+								<input type="text" id="update-link" name="link" value="{{ $user.Link }}">
+							</td>
+
+							<td>
+								<button>Reset</button>
+							</td>
+							<td>
+								<button>Cancel</button>
+								<button>Save</button>
+							</td>
+						</tr>
+					</form>
+				{{ else }}
+					<tr {{ if and ($.CreatedUser) (eq $.CreatedUser.Id $user.Id)}} style="font-weight: bold;" {{ end }}>
+						<td>{{ $user.Id }}</td>
+						<td>{{ $user.Role }}</td>
+						<td>{{ $user.Username }}</td>
+						<td>{{ $user.Email }}</td>
+						<td>{{ $user.Link }}</td>
+						<td><code>********</code></td>
+						<td>
+							<button>Edit</button>
+							<button>Delete</button>
+						</td>
+					</tr>
+				{{ end }}
+			{{ end }}
+		</tbody>
+	</table>
+{{ end }}

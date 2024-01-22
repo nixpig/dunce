@@ -8,7 +8,7 @@ import (
 	"github.com/nixpig/bloggor/internal/pkg/models"
 )
 
-func getUser(c *fiber.Ctx) *models.UserData {
+func GetUser(c *fiber.Ctx) *models.UserData {
 	user_id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		fmt.Println("Invalid ID: ", err)
@@ -24,7 +24,7 @@ func getUser(c *fiber.Ctx) *models.UserData {
 	return user
 }
 
-func getUsers() map[string]models.UserData {
+func GetUsers() map[string]models.UserData {
 	users, err := models.Query.User.GetAll()
 	if err != nil {
 		fmt.Println("Error getting users: ", err)

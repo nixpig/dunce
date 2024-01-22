@@ -7,7 +7,7 @@ import (
 
 func WithContext(c *fiber.Ctx) map[string]interface{} {
 	return map[string]interface{}{
-		"getUser":  func() *models.UserData { return getUser(c) },
-		"getUsers": getUsers,
+		"GetUser":  func() *models.UserData { return GetUser(c) },
+		"GetUsers": GetUsers,
 	}
 }
