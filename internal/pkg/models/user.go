@@ -13,7 +13,7 @@ type User struct {
 }
 
 type UserData struct {
-	Id       int      ``
+	Id       int      `validate:"required"`
 	Username string   `validate:"required,max=100"`
 	Email    string   `validate:"required,max=100"`
 	Link     string   `validate:"required,max=255"`
@@ -21,11 +21,19 @@ type UserData struct {
 }
 
 type NewUserData struct {
-	Username string   `json:"username" validate:"required,min=5,max=100"`
-	Email    string   `json:"email" validate:"required,email,max=100"`
-	Link     string   `json:"link" validate:"required,url,max=255"`
-	Password string   `json:"password" validate:"required,min=8,max=255"`
-	Role     RoleName `json:"role" validate:"required"`
+	Username string   `validate:"required,min=5,max=100"`
+	Email    string   `validate:"required,email,max=100"`
+	Link     string   `validate:"required,url,max=255"`
+	Password string   `validate:"required,min=8,max=255"`
+	Role     RoleName `validate:"required"`
+}
+
+type UpdateUserData struct {
+	Id       int      `validate:"required"`
+	Username string   `validate:"required,min=5,max=100"`
+	Email    string   `validate:"required,email,max=100"`
+	Link     string   `validate:"required,url,max=255"`
+	Role     RoleName `validate:"required"`
 }
 
 func (u *User) Create(newUser *NewUserData) (*UserData, error) {
@@ -34,24 +42,6 @@ func (u *User) Create(newUser *NewUserData) (*UserData, error) {
 	if err := validate.Struct(newUser); err != nil {
 		return nil, err
 	}
-
-	// usernameTaken, err := u.Exists(newUser.Username)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	//
-	// if usernameTaken {
-	// 	return nil, fmt.Errorf("username already taken")
-	// }
-	//
-	// emailTaken, err := u.Exists(newUser.Email)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	//
-	// if emailTaken {
-	// 	return nil, fmt.Errorf("email already taken")
-	// }
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), 14)
 	if err != nil {
@@ -62,13 +52,33 @@ func (u *User) Create(newUser *NewUserData) (*UserData, error) {
 
 	var user UserData
 
-	row := u.Db.QueryRow(context.Background(), query, newUser.Username, newUser.Email, newUser.Link, newUser.Role, hashedPassword)
+	row := u.Db.QueryRow(context.Background(), query, &newUser.Username, &newUser.Email, &newUser.Link, &newUser.Role, &hashedPassword)
 
 	if err := row.Scan(&user.Id, &user.Username, &user.Email, &user.Link, &user.Role); err != nil {
 		return nil, err
 	}
 
 	return &user, nil
+}
+
+func (u *User) Update(user *UpdateUserData) (*UserData, error) {
+	validate := validator.New()
+
+	if err := validate.Struct(user); err != nil {
+		return nil, err
+	}
+
+	query := `update user_ set username_ = $2, email_ = $3, link_ = $4, role_ = $5 where id_ = $1 returning id_, username_, email_, link_, role_`
+
+	row := u.Db.QueryRow(context.Background(), query, &user.Id, &user.Username, &user.Email, &user.Link, &user.Role)
+
+	var updatedUser UserData
+
+	if err := row.Scan(&updatedUser.Id, &updatedUser.Username, &updatedUser.Email, &updatedUser.Link, &updatedUser.Role); err != nil {
+		return nil, err
+	}
+
+	return &updatedUser, nil
 }
 
 func (u *User) GetAll() (*[]UserData, error) {
@@ -103,6 +113,8 @@ func (u *User) GetByRole(role RoleName) (*[]UserData, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	defer rows.Close()
 
 	var users []UserData
 
@@ -171,5 +183,18 @@ func (u *User) Exists(s string) (bool, error) {
 		return false, err
 	}
 
+	defer rows.Close()
+
 	return rows.Next(), nil
+}
+
+func (u *User) Delete(id int) error {
+	query := `delete from user_ where id_ = $1`
+
+	res, err := u.Db.Exec(context.Background(), query, id)
+	if err != nil || res.RowsAffected() == 0 {
+		return err
+	}
+
+	return nil
 }

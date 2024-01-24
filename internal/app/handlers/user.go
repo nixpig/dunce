@@ -20,7 +20,7 @@ func UserGetHandler(c *fiber.Ctx) error {
 func AdminUserGetHandler(c *fiber.Ctx) error {
 	a := api.WithContext(c)
 
-	return c.Render("admin_user", fiber.Map{
+	return c.Render("pages/admin/user", fiber.Map{
 		"Context": c,
 		"Api":     a,
 		"IsEditable": func(userId int, editId string) bool {
@@ -35,8 +35,6 @@ func AdminUserGetHandler(c *fiber.Ctx) error {
 }
 
 func AdminUserPostHandler(c *fiber.Ctx) error {
-	a := api.WithContext(c)
-
 	username := c.FormValue("username")
 	email := c.FormValue("email")
 	link := c.FormValue("link")
@@ -48,7 +46,6 @@ func AdminUserPostHandler(c *fiber.Ctx) error {
 	}
 
 	newUser := models.NewUserData{
-
 		Username: username,
 		Email:    email,
 		Link:     link,
@@ -58,32 +55,65 @@ func AdminUserPostHandler(c *fiber.Ctx) error {
 
 	createdUser, err := models.Query.User.Create(&newUser)
 	if err != nil {
-		return c.Render("admin_user", fiber.Map{
-			"Api":     a,
-			"Context": c,
-			"IsEditable": func(userId int, editId string) bool {
-				editIdConv, err := strconv.Atoi(editId)
-				if err != nil {
-					return false
-				}
-
-				return editIdConv == userId
-			},
+		return c.Status(fiber.StatusInternalServerError).Render("fragments/admin/user/add_user_error", fiber.Map{
 			"Errors": []error{err},
-		}, "layouts/admin")
+		})
 	}
 
-	return c.Render("admin_user", fiber.Map{
+	return c.Render("fragments/admin/user/add_user_success", fiber.Map{
+		"CreatedUser": createdUser,
+	})
+}
+
+func AdminUserPutHandler(c *fiber.Ctx) error {
+	a := api.WithContext(c)
+
+	id, err := strconv.Atoi(c.FormValue("id"))
+	if err != nil {
+		return err
+	}
+
+	username := c.FormValue("username")
+	email := c.FormValue("email")
+	link := c.FormValue("link")
+
+	role, err := models.ParseRoleName(c.FormValue("role"))
+	if err != nil {
+		return err
+	}
+
+	user := models.UpdateUserData{
+		Id:       id,
+		Username: username,
+		Email:    email,
+		Link:     link,
+		Role:     role,
+	}
+
+	updatedUser, err := models.Query.User.Update(&user)
+	if err != nil {
+		return err
+	}
+
+	return c.Render("pages/admin/user", &fiber.Map{
+		"Api":         a,
+		"Context":     c,
+		"UpdatedUser": updatedUser,
+	}, "layouts/admin")
+}
+
+func AdminUserDeleteHander(c *fiber.Ctx) error {
+	a := api.WithContext(c)
+
+	id, err := strconv.Atoi(c.FormValue("delete"))
+	if err != nil {
+		return err
+	}
+
+	models.Query.User.Delete(id)
+
+	return c.Render("pages/admin/user", &fiber.Map{
 		"Api":     a,
 		"Context": c,
-		"IsEditable": func(userId int, editId string) bool {
-			editIdConv, err := strconv.Atoi(editId)
-			if err != nil {
-				return false
-			}
-
-			return editIdConv == userId
-		},
-		"CreatedUser": createdUser,
 	}, "layouts/admin")
 }

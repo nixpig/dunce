@@ -51,6 +51,8 @@ func Start(port string) {
 
 	web.Get("/admin/users", handlers.AdminUserGetHandler)
 	web.Post("/admin/users", handlers.AdminUserPostHandler)
+	web.Put("/admin/users", handlers.AdminUserPutHandler)
+	web.Delete("/admin/users", handlers.AdminUserDeleteHander)
 	// web.Get("/users/register", handlers.UserRegisterHandler)
 	// web.Get("/users/login", handlers.UserLoginHandler)
 	//

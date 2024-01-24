@@ -1,0 +1,47 @@
+<details style="transition: all 1s ease-in-out;">
+	<summary>
+		Add user
+	</summary>
+
+
+<form name="create-user" 
+  hx-post="/admin/users" 
+  hx-target="previous #add-user-result" 
+  hx-target-5xx="previous #add-user-result" 
+  hx-swap="innerHTML" 
+  hx-on::after-request="if (event.detail.successful) this.reset()"
+>
+	<label for="username">
+		Username
+	</label>
+	<input type="text" id="username" name="username">
+
+	<label for="email">
+		Email
+	</label>
+	<input type="text" id="email" name="email">
+
+	<label for="link">
+		Link
+	</label>
+	<input type="text" id="link" name="link">
+
+	<label for="password">
+		Password
+	</label>
+	<input type="password" id="password" name="password">
+
+	<label for="role">
+		Role
+	</label>
+	<select name="role" id="role">
+		<option value="reader" selected>Reader</option>
+		<option value="author">Author</option>
+		<option value="admin">Admin</option>
+	</select>
+
+	<hr>
+
+	<button type="submit">Add user</button>
+</form>
+</details>

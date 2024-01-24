@@ -1,7 +1,7 @@
 <h2>👥 Users</h2>
 
 {{ if .Errors }}
-	<div>
+	<div class="notice">
 		<h4>❌ Errors in form</h4>
 		<p>
 			The following errors were found. Please fix and try again.
@@ -14,61 +14,12 @@
 	</div>
 {{ end }}
 
-<details>
-	<summary>
-		Add user
-	</summary>
+<div id="add-user-result"></div>
 
-	{{ if eq .Context.Method "POST"}}
-		{{ if .CreatedUser }}
-			<div>
-				<h4>🚀 Successfully added user!</h4>
-					<p>
-						Added user {{ .CreatedUser.Username }} ({{ .CreatedUser.Email }}) as {{ .CreatedUser.Role }}.
-					</p>
-			</div>
-		{{ end }}
+<div id="add-user-form">
+	{{ template "fragments/admin/user/add_user_form" . }}
+</div>
 
-	{{ end }}
-
-<form name="create-user" method="post">
-	<label for="username">
-		Username
-		<input type="text" id="username" name="username">
-	</label>
-	<br>
-
-	<label for="email">
-		Email
-		<input type="text" id="email" name="email">
-	</label>
-	<br>
-
-	<label for="link">
-		Link
-		<input type="text" id="link" name="link">
-	</label>
-	<br>
-
-	<label for="password">
-		Password
-		<input type="password" id="password" name="password">
-	</label>
-	<br>
-
-	<label for="role">
-		Role
-		<select name="role" id="role">
-			<option value="reader" selected>Reader</option>
-			<option value="author">Author</option>
-			<option value="admin">Admin</option>
-		</select>
-	</label>
-	<br>
-
-	<button type="submit">Add user</button>
-</form>
-</details>
 
 <h3>All users</h3>
 {{ $params := .Context.Queries }}
@@ -91,9 +42,8 @@
 		<tbody>
 			{{ range $user := $users }}
 				{{ if and ($params.edit) (call $.IsEditable $user.Id $params.edit)}}
-						<tr>
-							<!-- TODO: needs to be a PUT -->
-							<form name="update-user" method="post">
+					<tr id="user-table-row-{{ $user.Id }}">
+							<form name="update-user" hx-put="/admin/users">
 								<td>
 									<input type="hidden" id="update-id" name="id" value="{{ $user.Id }}">
 									{{ $user.Id }}
@@ -120,7 +70,7 @@
 									<a href="#">Reset</a>
 								</td>
 
-							<td>
+							<td style="display: flex; flex-direction: row; gap: 0.25rem;">
 									<button type="submit">Save</button>
 							</form>
 
@@ -130,18 +80,21 @@
 							</td>
 						</tr>
 				{{ else }}
-					<tr {{ if and ($.CreatedUser) (eq $.CreatedUser.Id $user.Id)}} style="font-weight: bold;" {{ end }}>
+					<tr id="user-table-row-{{ $user.Id }}" {{ if and ($.CreatedUser) (eq $.CreatedUser.Id $user.Id)}} style="font-weight: bold;" {{ end }}>
 						<td>{{ $user.Id }}</td>
 						<td>{{ $user.Role }}</td>
 						<td>{{ $user.Username }}</td>
 						<td>{{ $user.Email }}</td>
 						<td><a href="{{ $user.Link }}" target="_blank">{{ $user.Link }}</a></td>
 						<td><code>********</code></td>
-						<td>
+						<td style="display: flex; flex-direction: row; gap: 0.25rem; width: 100%;">
 							<form name="action-buttons" method="get">
 								<input type=hidden name="edit" value="{{ $user.Id }}">
 								<button type="submit">Edit</button>
-								<button>Delete</button>
+							</form>
+							<form name="action-buttons" hx-delete="/admin/users">
+								<input type=hidden name="delete" value="{{ $user.Id }}">
+								<button type="submit">Delete</button>
 							</form>
 						</td>
 					</tr>
