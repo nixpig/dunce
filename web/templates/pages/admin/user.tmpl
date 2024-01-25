@@ -1,19 +1,5 @@
 <h2>👥 Users</h2>
 
-{{ if .Errors }}
-	<div class="notice">
-		<h4>❌ Errors in form</h4>
-		<p>
-			The following errors were found. Please fix and try again.
-		</p>
-		<ul>
-			{{ range $error := .Errors }}
-				<li>{{ $error.Error }}</li>
-			{{ end }}
-		</ul>
-	</div>
-{{ end }}
-
 <div id="add-user-result"></div>
 
 <div id="add-user-form">
@@ -26,7 +12,7 @@
 {{ $users := (call .Api.GetUsers)}}
 
 {{ if $users }}
-	<table style="width: 100%;">
+	<table id="user-table" style="width: 100%;">
 		<thead>
 			<tr>
 				<th>ID</th>
@@ -88,11 +74,11 @@
 						<td><a href="{{ $user.Link }}" target="_blank">{{ $user.Link }}</a></td>
 						<td><code>********</code></td>
 						<td style="display: flex; flex-direction: row; gap: 0.25rem; width: 100%;">
-							<form name="action-buttons" method="get">
+							<form name="edit-action-button" method="get">
 								<input type=hidden name="edit" value="{{ $user.Id }}">
 								<button type="submit">Edit</button>
 							</form>
-							<form name="action-buttons" hx-delete="/admin/users">
+							<form name="delete-action-button" hx-delete="/admin/users" hx-target="#user-table-row-{{ $user.Id }}">
 								<input type=hidden name="delete" value="{{ $user.Id }}">
 								<button type="submit">Delete</button>
 							</form>

@@ -21,6 +21,7 @@ var DB DbInstance
 
 type Queries struct {
 	User *User
+	Tag  *Tag
 }
 
 var Query Queries
@@ -29,6 +30,7 @@ func BuildQueries(db Dbconn) {
 	Query =
 		Queries{
 			User: &User{Db: db},
+			Tag:  &Tag{Db: db},
 		}
 }
 

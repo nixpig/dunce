@@ -103,8 +103,6 @@ func AdminUserPutHandler(c *fiber.Ctx) error {
 }
 
 func AdminUserDeleteHander(c *fiber.Ctx) error {
-	a := api.WithContext(c)
-
 	id, err := strconv.Atoi(c.FormValue("delete"))
 	if err != nil {
 		return err
@@ -112,8 +110,5 @@ func AdminUserDeleteHander(c *fiber.Ctx) error {
 
 	models.Query.User.Delete(id)
 
-	return c.Render("pages/admin/user", &fiber.Map{
-		"Api":     a,
-		"Context": c,
-	}, "layouts/admin")
+	return c.Status(200).Send([]byte{})
 }

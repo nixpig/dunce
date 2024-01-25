@@ -1,0 +1,53 @@
+<h2>🏷️ Tags</h2>
+
+<details>
+	<summary>
+		Add tag
+	</summary>
+
+	<form name="create-tag" hx-post="/admin/tags" >
+		<label for="name">
+			Tag name
+		</label>
+		<input type="text" id="name" name="name">
+
+		<label for="slug">
+			Slug
+		</label>
+		<input type="text" id="slug" name="slug">
+
+		<hr>
+
+		<button type="submit">Add tag</button>
+	</form>
+</details>
+
+
+<h3>All tags</h3>
+{{ $params := .Context.Queries }}
+{{ $tags := (call .Api.GetTags)}}
+
+{{ if $tags }}
+	<table id="tag-table" style="width: 100%;">
+		<thead>
+			<tr>
+				<th>ID</th>
+				<th>Name</th>
+				<th>Slug</th>
+				<th>Actions</th>
+			</tr>
+		</thead>
+
+		<tbody>
+			{{ range $tag := $tags }}
+				<tr id="tag-table-row-{{ $tag.Id }}">
+					<td>{{ $tag.Id }}</td>
+					<td>{{ $tag.Name }}</td>
+					<td>{{ $tag.Slug }}</td>
+					<td>DELETE</td>
+			{{ end }}
+		</tbody>
+	</table>
+{{ else }}
+	<div>No tags yet. You best go add some!</div>
+{{ end }}
