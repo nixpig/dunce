@@ -10,7 +10,7 @@ import (
 func GetTags() map[string]models.TagData {
 	tags, err := models.Query.Tag.GetAll()
 	if err != nil {
-		fmt.Println("error getting tags")
+		fmt.Println(fmt.Errorf("unable to get tags: %v", err))
 		return nil
 	}
 

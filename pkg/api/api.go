@@ -10,5 +10,6 @@ func WithContext(c *fiber.Ctx) map[string]interface{} {
 		"GetUser":  func() *models.UserData { return GetUser(c) },
 		"GetUsers": GetUsers,
 		"GetTags":  GetTags,
+		"GetTypes": GetTypes,
 	}
 }
