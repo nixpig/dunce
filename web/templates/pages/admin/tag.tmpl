@@ -30,26 +30,28 @@
 {{ $tags := (call .Api.GetTags)}}
 
 {{ if $tags }}
-	<table id="tag-table" style="width: 100%;">
-		<thead>
-			<tr>
-				<th>ID</th>
-				<th>Name</th>
-				<th>Slug</th>
-				<th>Actions</th>
-			</tr>
-		</thead>
+	<figure>
+		<table id="tag-table" style="width: 100%;">
+			<thead>
+				<tr>
+					<th>ID</th>
+					<th>Name</th>
+					<th>Slug</th>
+					<th>Actions</th>
+				</tr>
+			</thead>
 
-		<tbody>
-			{{ range $tag := $tags }}
-				<tr id="tag-table-row-{{ $tag.Id }}">
-					<td>{{ $tag.Id }}</td>
-					<td>{{ $tag.Name }}</td>
-					<td>{{ $tag.Slug }}</td>
-					<td>DELETE</td>
-			{{ end }}
-		</tbody>
-	</table>
+			<tbody>
+				{{ range $tag := $tags }}
+					<tr id="tag-table-row-{{ $tag.Id }}">
+						<td>{{ $tag.Id }}</td>
+						<td>{{ $tag.Name }}</td>
+						<td>{{ $tag.Slug }}</td>
+						<td>DELETE</td>
+				{{ end }}
+			</tbody>
+		</table>
+	</figure>
 {{ else }}
 	<div>No tags yet. You best go add some!</div>
 {{ end }}

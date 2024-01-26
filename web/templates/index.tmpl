@@ -1,1 +1,10 @@
 <h1>{{ .Title }}</h1>
+
+{{ $articles := (call .Api.GetArticles) }}
+{{ if $articles }}
+  <ul>
+    {{ range $article := $articles }}
+      <li>{{ $article.Title }} - {{ $article.UpdatedAt }}</li>
+    {{ end }}
+  </ul>
+{{ end }}

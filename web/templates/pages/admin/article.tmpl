@@ -64,38 +64,45 @@
 {{ $articles := (call .Api.GetArticles) }}
 
 {{ if $articles }}
-	<table id="article-table" style="width: 100%;">
-		<thead>
-			<tr>
-				<th>ID</th>
-				<th>Title</th>
-				<th>Subtitle</th>
-				<th>Created</th>
-				<th>Updated</th>
-				<th>Type</th>
-				<th>User</th>
-				<th>Tags</th>
-				<th>Slug</th>
-				<th>Actions</th>
-			</tr>
-		</thead>
+	<figure>
+		<table id="article-table" style="width: 100%;">
+			<thead>
+				<tr>
+					<th>ID</th>
+					<th>Title</th>
+					<th>Subtitle</th>
+					<th>Created</th>
+					<th>Updated</th>
+					<th>Type</th>
+					<th>User</th>
+					<th>Tags</th>
+					<th>Slug</th>
+					<th>Actions</th>
+				</tr>
+			</thead>
 
-		<tbody>
-			{{ range $article := $articles }}
-				<tr id="article-table-row-{{ $article.Id }}">
-					<td>{{ $article.Id }}</td>
-					<td>{{ $article.Title }}</td>
-					<td>{{ $article.Subtitle }}</td>
-					<td>{{ $article.CreatedAt }}</td>
-					<td>{{ $article.UpdatedAt }}</td>
-					<td>{{ $article.TypeId }}</td>
-					<td>{{ $article.UserId }}</td>
-					<td>{{ $article.TagIds }}</td>
-					<td>{{ $article.Slug }}</td>
-					<td>DELETE</td>
-			{{ end }}
-		</tbody>
-	</table>
+			<tbody>
+				{{ range $article := $articles }}
+					<tr id="article-table-row-{{ $article.Id }}">
+						<td>{{ $article.Id }}</td>
+						<td>{{ $article.Title }}</td>
+						<td>{{ $article.Subtitle }}</td>
+						<td>{{ $article.CreatedAt }}</td>
+						<td>{{ $article.UpdatedAt }}</td>
+						<td>{{ $article.TypeId }}</td>
+						<td>{{ $article.UserId }}</td>
+						<td>{{ $article.TagIds }}</td>
+						<td>{{ $article.Slug }}</td>
+						<td>
+							<div style="display: flex; flex-direction: row; gap: 0.5rem; align-items: center;">
+								<button>Edit</button>
+								<a href="" style="color: var(--code);">Delete</a>
+							</div>
+						</td>
+				{{ end }}
+			</tbody>
+		</table>
+	</figure>
 {{ else }}
 	<div>No articles yet. You best go write some!</div>
 {{ end }}
