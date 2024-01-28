@@ -36,3 +36,27 @@ Frankly, pretty fed up with REST APIs and had a crazy idea for a _headless_ HTML
 │   └── templates/  # customisable templates
 
 ```
+
+## Template functions
+
+| Function               | Description |
+| ---------------------- | ----------- |
+| `GetUsers`             |             |
+| `GetUserByUsername`    |             |
+| `GetUserById`          |             |
+| `GetLoggedInUser`      |             |
+| `GetTags`              |             |
+| `GetTypes`             |             |
+| `GetArticles`          |             |
+| `GetArticlesByAuthor`  |             |
+| `GetArticlesByType`    |             |
+| `GetArticlesByTagName` |             |
+| `GetArticleBySlug`     |             |
+| `GetArticleById`       |             |
+| `SiteName`             |             |
+| `SiteDescription`      |             |
+| `SiteUrl`              |             |
+| `SiteOwner`            |             |
+| -                      | -           |
+| `Login`                |             |
+| `Logout`               |             |

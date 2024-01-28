@@ -23,7 +23,7 @@ func GetArticles() map[string]models.ArticleData {
 	return articlemap
 }
 
-func GetArticlesByTypeName(typeName string) map[string]models.ArticleData {
+func GetArticlesByTypeName(typeName string) *map[string]models.ArticleData {
 	articles, err := models.Query.Article.GetByTypeName(typeName)
 	if err != nil {
 		fmt.Println(fmt.Errorf("unable to get articles by type name: %v", err))
@@ -37,7 +37,7 @@ func GetArticlesByTypeName(typeName string) map[string]models.ArticleData {
 
 	}
 
-	return articlemap
+	return &articlemap
 }
 
 func GetArticleBySlug(slug string) *models.ArticleData {
