@@ -1,0 +1,26 @@
+
+{{ $slug := ( .Context.Params "article_slug") }}
+{{ if $slug }}
+	<div>&larr; <a href="/post">Posts</a></div>
+	<h2>🔗 {{ $slug }}</h2>
+{{ else }}
+	<h2>📰 Posts</h2>
+{{ end }}
+
+{{ $params := .Context.Queries }}
+{{ $articles := (call .Api.GetArticlesByTypeName) }}
+
+{{ if $articles }}
+	<ul>
+		{{ range $article := $articles }}
+			<li>
+				<a href="/{{ $article.TypeName }}/{{ $article.Slug }}">
+					{{ $article.Title }}
+				</a> on {{ $article.UpdatedAt }}
+			</li>
+		{{ end }}
+	</ul>
+
+{{ else }}
+	<div>No articles yet. You best go write some!</div>
+{{ end }}

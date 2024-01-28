@@ -7,10 +7,11 @@ import (
 
 func WithContext(c *fiber.Ctx) map[string]interface{} {
 	return map[string]interface{}{
-		"GetUser":     func() *models.UserData { return GetUser(c) },
-		"GetUsers":    GetUsers,
-		"GetTags":     GetTags,
-		"GetTypes":    GetTypes,
-		"GetArticles": GetArticles,
+		"GetUser":               func() *models.UserData { return GetUser(c) },
+		"GetUsers":              GetUsers,
+		"GetTags":               GetTags,
+		"GetTypes":              GetTypes,
+		"GetArticles":           GetArticles,
+		"GetArticlesByTypeName": func() map[string]models.ArticleData { return GetArticlesByTypeName(c.Params("article_type")) },
 	}
 }

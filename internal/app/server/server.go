@@ -68,8 +68,8 @@ func Start(port string) {
 	// web.Get("/tags", handlers.TagHandler)
 	// web.Get("/tags/:name", handlers.TagHandler)
 	//
-	// web.Get("/:article_type", handlers.ArticleHandler)
-	// web.Get("/:article_type/:article_slug", handlers.ArticleHandler)
+	web.Get("/:article_type", handlers.ArticleHandler)
+	web.Get("/:article_type/:article_slug", handlers.ArticleHandler)
 	//
 	// web.Use(handlers.NotFoundHandler)
 

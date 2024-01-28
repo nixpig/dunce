@@ -19,7 +19,8 @@ type ArticleData struct {
 	Body      string    `validate:"required"`
 	CreatedAt time.Time `validate:"required"`
 	UpdatedAt time.Time `validate:"required"`
-	TypeId    string    `validate:"required"`
+	TypeId    int       `validate:"required"`
+	TypeName  string    `validate:"required"`
 	UserId    int       `validate:"required"`
 	TagIds    string    `validate:"required"` // stored as comma separated list in db
 }
@@ -31,13 +32,13 @@ type NewArticleData struct {
 	Body      string    `validate:"required"`
 	CreatedAt time.Time `validate:"required"`
 	UpdatedAt time.Time `validate:"required"`
-	TypeId    string    `validate:"required"`
+	TypeId    int       `validate:"required"`
 	UserId    int       `validate:"required"`
 	TagIds    string    `validate:"required"` // stored as comma separated list in db
 }
 
 func (a *Article) GetAll() (*[]ArticleData, error) {
-	query := `select id_, title_, subtitle_, slug_, body_, created_at_, updated_at_, type_id_, user_id_, tag_ids_ from article_`
+	query := `select a.id_, a.title_, a.subtitle_, a.slug_, a.body_, a.created_at_, a.updated_at_, a.type_id_, a.user_id_, a.tag_ids_, t.name_ from article_ a inner join type_ t on a.type_id_ = t.id_`
 
 	rows, err := a.Db.Query(context.Background(), query)
 	if err != nil {
@@ -51,7 +52,32 @@ func (a *Article) GetAll() (*[]ArticleData, error) {
 	for rows.Next() {
 		var article ArticleData
 
-		if err := rows.Scan(&article.Id, &article.Title, &article.Subtitle, &article.Slug, &article.Body, &article.CreatedAt, &article.UpdatedAt, &article.TypeId, &article.UserId, &article.TagIds); err != nil {
+		if err := rows.Scan(&article.Id, &article.Title, &article.Subtitle, &article.Slug, &article.Body, &article.CreatedAt, &article.UpdatedAt, &article.TypeId, &article.UserId, &article.TagIds, &article.TypeName); err != nil {
+			return nil, err
+		}
+
+		articles = append(articles, article)
+	}
+
+	return &articles, nil
+}
+
+func (a *Article) GetByTypeName(typeName string) (*[]ArticleData, error) {
+	query := `select a.id_, a.title_, a.subtitle_, a.slug_, a.body_, a.created_at_, a.updated_at_, a.type_id_, a.user_id_, a.tag_ids_, t.name_ from article_ a inner join type_ t on a.type_id_ = t.id_ where t.name_ = $1`
+
+	rows, err := a.Db.Query(context.Background(), query, typeName)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var articles []ArticleData
+
+	for rows.Next() {
+		var article ArticleData
+
+		if err := rows.Scan(&article.Id, &article.Title, &article.Subtitle, &article.Slug, &article.Body, &article.CreatedAt, &article.UpdatedAt, &article.TypeId, &article.UserId, &article.TagIds, &article.TypeName); err != nil {
 			return nil, err
 		}
 

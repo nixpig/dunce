@@ -22,3 +22,20 @@ func GetArticles() map[string]models.ArticleData {
 
 	return articlemap
 }
+
+func GetArticlesByTypeName(typeName string) map[string]models.ArticleData {
+	articles, err := models.Query.Article.GetByTypeName(typeName)
+	if err != nil {
+		fmt.Println(fmt.Errorf("unable to get articles by type name: %v", err))
+		return nil
+	}
+
+	articlemap := make(map[string]models.ArticleData)
+
+	for index, article := range *articles {
+		articlemap[strconv.Itoa(index)] = article
+
+	}
+
+	return articlemap
+}

@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -25,11 +27,15 @@ func AdminArticlePostHandler(c *fiber.Ctx) error {
 	subtitle := c.FormValue("subtitle")
 	slug := c.FormValue("slug")
 	body := c.FormValue("body")
-	typeId := c.FormValue("type_id")
 	tagIds := c.FormValue("tag_ids")
 
 	updatedAt := time.Now()
 	createdAt := time.Now()
+
+	typeId, err := strconv.Atoi(c.FormValue("type_id"))
+	if err != nil {
+		return err
+	}
 
 	userId := 3
 
@@ -55,4 +61,15 @@ func AdminArticlePostHandler(c *fiber.Ctx) error {
 		"Context":        c,
 		"CreatedArticle": createdArticle,
 	}, "layouts/admin")
+}
+
+func ArticleHandler(c *fiber.Ctx) error {
+	a := api.WithContext(c)
+	articleTypeName := c.Params("article_type")
+
+	return c.Render(fmt.Sprintf("pages/public/%s", articleTypeName), &fiber.Map{
+		"Api":     a,
+		"Context": c,
+	}, "layouts/public")
+
 }
