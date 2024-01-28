@@ -39,3 +39,13 @@ func GetArticlesByTypeName(typeName string) map[string]models.ArticleData {
 
 	return articlemap
 }
+
+func GetArticleBySlug(slug string) *models.ArticleData {
+	article, err := models.Query.Article.GetBySlug(slug)
+	if err != nil {
+		fmt.Println(fmt.Errorf("unable to get article by slug: %v", err))
+		return nil
+	}
+
+	return article
+}

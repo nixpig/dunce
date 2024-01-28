@@ -2,15 +2,26 @@
 {{ $slug := ( .Context.Params "article_slug") }}
 {{ if $slug }}
 	<div>&larr; <a href="/post">Posts</a></div>
-	<h2>🔗 {{ $slug }}</h2>
-{{ else }}
-	<h2>📰 Posts</h2>
+	{{ $article := ( call .Api.GetArticleBySlug )}}
+	{{ if $article }}
+		<h2>🔗 {{ $article.Title }}</h2>
+		<h3>{{ $article.Subtitle }}</h3>
+		<div>
+			<div><b>Created:</b> {{ $article.CreatedAt }}</div>
+			<div><b>Updated:</b> {{ $article.UpdatedAt }}</div>
+		</div>
+
+		<div>{{ $article.Body }}</div>
+	{{ else }}
+	<h2>Could not find post</h2>
+	{{ end }}
 {{ end }}
 
 {{ $params := .Context.Queries }}
 {{ $articles := (call .Api.GetArticlesByTypeName) }}
 
 {{ if $articles }}
+	<h2>📰 Posts</h2>
 	<ul>
 		{{ range $article := $articles }}
 			<li>

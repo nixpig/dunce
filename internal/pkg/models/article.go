@@ -37,6 +37,20 @@ type NewArticleData struct {
 	TagIds    string    `validate:"required"` // stored as comma separated list in db
 }
 
+func (a *Article) GetBySlug(slug string) (*ArticleData, error) {
+	query := `select a.id_, a.title_, a.subtitle_, a.slug_, a.body_, a.created_at_, a.updated_at_, a.type_id_, a.user_id_, a.tag_ids_, t.name_ from article_ a inner join type_ t on a.type_id_ = t.id_ where a.slug_ = $1`
+
+	row := a.Db.QueryRow(context.Background(), query, slug)
+
+	var article ArticleData
+
+	if err := row.Scan(&article.Id, &article.Title, &article.Subtitle, &article.Slug, &article.Body, &article.CreatedAt, &article.UpdatedAt, &article.TypeId, &article.UserId, &article.TagIds, &article.TypeName); err != nil {
+		return nil, err
+	}
+
+	return &article, nil
+}
+
 func (a *Article) GetAll() (*[]ArticleData, error) {
 	query := `select a.id_, a.title_, a.subtitle_, a.slug_, a.body_, a.created_at_, a.updated_at_, a.type_id_, a.user_id_, a.tag_ids_, t.name_ from article_ a inner join type_ t on a.type_id_ = t.id_`
 
