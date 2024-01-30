@@ -48,7 +48,7 @@ func (u *User) Create(newUser *NewUserData) (*UserData, error) {
 		return nil, err
 	}
 
-	query := `insert into user_ (username_, email_, link_, role_, password_) values($1, $2, $3, $4, $5) returning id_, username_, email_, link_, role_`
+	query := `insert into users_ (username_, email_, link_, role_, password_) values($1, $2, $3, $4, $5) returning id_, username_, email_, link_, role_`
 
 	var user UserData
 
@@ -68,7 +68,7 @@ func (u *User) Update(user *UpdateUserData) (*UserData, error) {
 		return nil, err
 	}
 
-	query := `update user_ set username_ = $2, email_ = $3, link_ = $4, role_ = $5 where id_ = $1 returning id_, username_, email_, link_, role_`
+	query := `update users_ set username_ = $2, email_ = $3, link_ = $4, role_ = $5 where id_ = $1 returning id_, username_, email_, link_, role_`
 
 	row := u.Db.QueryRow(context.Background(), query, &user.Id, &user.Username, &user.Email, &user.Link, &user.Role)
 
@@ -82,7 +82,7 @@ func (u *User) Update(user *UpdateUserData) (*UserData, error) {
 }
 
 func (u *User) GetAll() (*[]UserData, error) {
-	query := `select id_, username_, email_, link_, role_ from user_`
+	query := `select id_, username_, email_, link_, role_ from users_`
 
 	rows, err := u.Db.Query(context.Background(), query)
 	if err != nil {
@@ -107,7 +107,7 @@ func (u *User) GetAll() (*[]UserData, error) {
 }
 
 func (u *User) GetByRole(role RoleName) (*[]UserData, error) {
-	query := `select id_, username_, email_, link_, role_ from user_ where role_ = $1`
+	query := `select id_, username_, email_, link_, role_ from users_ where role_ = $1`
 
 	rows, err := u.Db.Query(context.Background(), query, role)
 	if err != nil {
@@ -132,7 +132,7 @@ func (u *User) GetByRole(role RoleName) (*[]UserData, error) {
 }
 
 func (u *User) GetById(id int) (*UserData, error) {
-	query := `select id_, username_, email_, link_, role_ from user_ where id_ = $1`
+	query := `select id_, username_, email_, link_, role_ from users_ where id_ = $1`
 
 	var user UserData
 
@@ -146,7 +146,7 @@ func (u *User) GetById(id int) (*UserData, error) {
 }
 
 func (u *User) GetByUsername(username string) (*UserData, error) {
-	query := `select id_, username_, email_, link_, role_ from user_ where username_ = $1`
+	query := `select id_, username_, email_, link_, role_ from users_ where username_ = $1`
 
 	row := u.Db.QueryRow(context.Background(), query, username)
 
@@ -160,7 +160,7 @@ func (u *User) GetByUsername(username string) (*UserData, error) {
 }
 
 func (u *User) GetByEmail(email string) (*UserData, error) {
-	query := `select id_, username_, email_, link_, role_ from user_ where email = $1`
+	query := `select id_, username_, email_, link_, role_ from users_ where email = $1`
 
 	row := u.Db.QueryRow(context.Background(), query, email)
 
@@ -174,7 +174,7 @@ func (u *User) GetByEmail(email string) (*UserData, error) {
 }
 
 func (u *User) Exists(s string) (bool, error) {
-	query := `select id_ from user_ where username_ = $1 or email_ = $1`
+	query := `select id_ from users_ where username_ = $1 or email_ = $1`
 
 	fmt.Println("check if exists: ", s)
 
@@ -189,7 +189,7 @@ func (u *User) Exists(s string) (bool, error) {
 }
 
 func (u *User) Delete(id int) error {
-	query := `delete from user_ where id_ = $1`
+	query := `delete from users_ where id_ = $1`
 
 	res, err := u.Db.Exec(context.Background(), query, id)
 	if err != nil || res.RowsAffected() == 0 {

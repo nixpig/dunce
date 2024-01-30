@@ -24,7 +24,7 @@ type NewTypeData struct {
 }
 
 func (t *Type) GetAll() (*[]TypeData, error) {
-	query := `select id_, name_, template_, slug_ from type_`
+	query := `select id_, name_, template_, slug_ from types_`
 
 	rows, err := t.Db.Query(context.Background(), query)
 	if err != nil {
@@ -55,7 +55,7 @@ func (t *Type) Create(newType NewTypeData) (*TypeData, error) {
 		return nil, err
 	}
 
-	query := `insert into type_ (name_, template_, slug_) values ($1, $2, $3) returning id_, name_, template_, slug_`
+	query := `insert into types_ (name_, template_, slug_) values ($1, $2, $3) returning id_, name_, template_, slug_`
 
 	row := t.Db.QueryRow(context.Background(), query, &newType.Name, &newType.Template, &newType.Slug)
 

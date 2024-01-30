@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -38,7 +39,7 @@ type NewArticleData struct {
 }
 
 func (a *Article) GetBySlug(slug string) (*ArticleData, error) {
-	query := `select a.id_, a.title_, a.subtitle_, a.slug_, a.body_, a.created_at_, a.updated_at_, a.type_id_, a.user_id_, a.tag_ids_, t.name_ from article_ a inner join type_ t on a.type_id_ = t.id_ where a.slug_ = $1`
+	query := `select a.id_, a.title_, a.subtitle_, a.slug_, a.body_, a.created_at_, a.updated_at_, a.type_id_, a.user_id_, a.tag_ids_, t.name_ from articles_ a inner join types_ t on a.type_id_ = t.id_ where a.slug_ = $1`
 
 	row := a.Db.QueryRow(context.Background(), query, slug)
 
@@ -52,7 +53,7 @@ func (a *Article) GetBySlug(slug string) (*ArticleData, error) {
 }
 
 func (a *Article) GetAll() (*[]ArticleData, error) {
-	query := `select a.id_, a.title_, a.subtitle_, a.slug_, a.body_, a.created_at_, a.updated_at_, a.type_id_, a.user_id_, a.tag_ids_, t.name_ from article_ a inner join type_ t on a.type_id_ = t.id_`
+	query := `select a.id_, a.title_, a.subtitle_, a.slug_, a.body_, a.created_at_, a.updated_at_, a.type_id_, a.user_id_, a.tag_ids_, t.name_ from articles_ a inner join types_ t on a.type_id_ = t.id_`
 
 	rows, err := a.Db.Query(context.Background(), query)
 	if err != nil {
@@ -77,7 +78,7 @@ func (a *Article) GetAll() (*[]ArticleData, error) {
 }
 
 func (a *Article) GetByTypeName(typeName string) (*[]ArticleData, error) {
-	query := `select a.id_, a.title_, a.subtitle_, a.slug_, a.body_, a.created_at_, a.updated_at_, a.type_id_, a.user_id_, a.tag_ids_, t.name_ from article_ a inner join type_ t on a.type_id_ = t.id_ where t.name_ = $1`
+	query := `select a.id_, a.title_, a.subtitle_, a.slug_, a.body_, a.created_at_, a.updated_at_, a.type_id_, a.user_id_, a.tag_ids_, t.name_ from articles_ a inner join types_ t on a.type_id_ = t.id_ where t.name_ = $1`
 
 	rows, err := a.Db.Query(context.Background(), query, typeName)
 	if err != nil {
@@ -108,7 +109,9 @@ func (a *Article) Create(newArticle NewArticleData) (*ArticleData, error) {
 		return nil, err
 	}
 
-	query := `insert into article_ (title_, subtitle_, slug_, body_, created_at_, updated_at_, type_id_, user_id_, tag_ids_) values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning id_, title_, subtitle_, slug_, body_, created_at_, updated_at_, type_id_, user_id_, tag_ids_`
+	query := `insert into articles_ (title_, subtitle_, slug_, body_, created_at_, updated_at_, type_id_, user_id_, tag_ids_) values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning id_, title_, subtitle_, slug_, body_, created_at_, updated_at_, type_id_, user_id_, tag_ids_`
+
+	fmt.Println(newArticle.Title, newArticle.Subtitle, newArticle.Slug, newArticle.Body, newArticle.CreatedAt, newArticle.UpdatedAt, newArticle.TypeId, newArticle.UserId, newArticle.TagIds)
 
 	row := a.Db.QueryRow(context.Background(), query, &newArticle.Title, &newArticle.Subtitle, &newArticle.Slug, &newArticle.Body, &newArticle.CreatedAt, &newArticle.UpdatedAt, &newArticle.TypeId, &newArticle.UserId, &newArticle.TagIds)
 

@@ -50,9 +50,17 @@
 			{{ end }}
 		</select>
 
-		<hr>
+		<label for="users">
+			Users
+		</label>
+		{{ $users := (call .Api.GetUsers) }}
+		<select name="user_id" id="users">
+			{{ range $user := $users }}
+				<option value="{{ $user.Id }}">{{ $user.Id }} - {{ $user.Username }}</option>
+			{{ end }}
+		</select>
 
-		<input type="hidden" name="user_id" value="3">
+		<hr>
 
 		<button type="submit">Publish article</button>
 	</form>

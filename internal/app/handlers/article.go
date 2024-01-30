@@ -37,7 +37,10 @@ func AdminArticlePostHandler(c *fiber.Ctx) error {
 		return err
 	}
 
-	userId := 3
+	userId, err := strconv.Atoi(c.FormValue("user_id"))
+	if err != nil {
+		return err
+	}
 
 	newArticle := models.NewArticleData{
 		Title:     title,

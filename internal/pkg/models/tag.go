@@ -35,7 +35,7 @@ func (t *Tag) Create(newTag NewTagData) (*TagData, error) {
 		return nil, err
 	}
 
-	query := `insert into tag_ (name_, slug_) values ($1, $2) returning id_, name_, slug_`
+	query := `insert into tags_ (name_, slug_) values ($1, $2) returning id_, name_, slug_`
 
 	var tag TagData
 
@@ -49,7 +49,7 @@ func (t *Tag) Create(newTag NewTagData) (*TagData, error) {
 }
 
 func (t *Tag) GetAll() (*[]TagData, error) {
-	query := `select id_, name_, slug_ from tag_`
+	query := `select id_, name_, slug_ from tags_`
 
 	rows, err := t.Db.Query(context.Background(), query)
 	if err != nil {
