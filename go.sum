@@ -54,6 +54,8 @@ github.com/mattn/go-isatty v0.0.20 h1:xfD0iDuEKnDkl03q4limB+vH+GxLEtL/jb4xVJSWWE
 github.com/mattn/go-isatty v0.0.20/go.mod h1:W+V8PltTTMOvKvAeJH7IuucS94S2C6jfK/D7dTCTo3Y=
 github.com/mattn/go-runewidth v0.0.15 h1:UNAjwbU9l54TA3KzvqLGxwWjHmMgBUVhBiTjelZgg3U=
 github.com/mattn/go-runewidth v0.0.15/go.mod h1:Jdepj2loyihRzMpdS35Xk/zdY8IAYHsh153qUoGf23w=
+github.com/mrz1836/go-sanitize v1.3.1 h1:bTxpzDXzGh9cp3XLTeVKgL2iLqEwCaLqqe+3BmpnCbo=
+github.com/mrz1836/go-sanitize v1.3.1/go.mod h1:Js6Gq1uiarNReoOeOKxPXxNpKy1FRlbgDDZnJG4THdM=
 github.com/pashagolub/pgxmock/v3 v3.3.0 h1:vMDQiBs74JEIYT/DeWNtUDrcfKCsgMmKd+ecQs1WsV4=
 github.com/pashagolub/pgxmock/v3 v3.3.0/go.mod h1:ywwoE43oyD7aqpA3Jh5tvZ8h00P7RRiygA23aXmNpWU=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=

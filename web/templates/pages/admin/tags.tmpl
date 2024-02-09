@@ -1,0 +1,127 @@
+<style>
+	:root {
+		--error: #d81b60;
+		--small-border-radius: 2px;
+	}
+
+	.stretch {
+		width: 1%;
+		white-space: nowrap;
+	}
+
+	.tag-layout {
+		display: flex;
+		gap: 2rem;
+
+		@media (max-width: 992px) {
+			flex-direction: column-reverse;
+		}
+	}
+
+	.tag-table {
+		flex-grow: 1;
+	}
+
+	.tag-create {
+		background-color: var(--accent-bg);
+		margin: 1.5rem 0;
+		
+		border: 1px solid var(--border);
+		padding: 1rem;
+	}
+
+	.tag-create h3 {
+		margin-top: 0;
+	}
+
+	.tag-create #name:user-invalid {
+		border-color: var(--error);
+	}
+
+	#name+div {
+		background-color: var(--error);
+		border: 1px dashed var(--error);
+		border-radius: var(--standard-border-radius);
+		padding: 0.225rem;
+		display: none;
+		margin-bottom: 1rem;
+	}
+
+	.errors #name:user-invalid+div {
+		display: block;
+	}
+
+	.errors #name:user-invalid:placeholder-shown+div::after {
+		content: "Tag name is required";
+		color: var(--text);
+	}
+
+	.errors #name:user-invalid+div::after {
+		content: "Required format is email";
+		color: var(--text);
+	}
+</style>
+
+<h2>🏷️ Tags</h2>
+
+<div class="tag-layout">
+	<div class="tag-table">
+		{{ $params := .Context.Queries }}
+		{{ $tags := (call .Api.GetTags)}}
+
+		{{ if $tags }}
+			<table id="tag-table" style="width: 100%;">
+				<thead>
+					<tr>
+						<th>ID</th>
+						<th>Name</th>
+						<th>Slug</th>
+						<th>Actions</th>
+					</tr>
+				</thead>
+
+				<tbody>
+					{{ range $tag := $tags }}
+						<tr id="tag-table-row-{{ $tag.Id }}">
+							<td class="stretch">{{ $tag.Id }}</td>
+							<td>{{ $tag.Name }}</td>
+							<td>{{ $tag.Slug }}</td>
+							<td class="stretch">
+								<button href="">Edit</button>
+								&nbsp;
+								<button hx-delete="/admin/tags/{{ $tag.Id }}" hx-confirm="Are you sure?" hx-target="closest #tag-table-row-{{ $tag.Id }}" hx-swap="outerHTML swap:1s">Delete</button>
+							</td>
+					{{ end }}
+				</tbody>
+			</table>
+		{{ else }}
+			<div class="notice">No tags yet. You best go add some!</div>
+		{{ end }}
+	</div>
+
+	<div class="tag-create">
+		<h3>Create new tag</h3>
+
+		<form name="create-tag" hx-post="/admin/tags" >
+			<label for="name">
+				Tag name
+			</label>
+			<div class="errors">
+				<input type="email" id="name" name="name" placeholder="Tag Name" required>
+				<div class="name-input"></div>
+			</div>
+
+			<label for="slug">
+				Slug
+			</label>
+			<div class="errors">
+				<input type="text" id="slug" name="slug" placeholder="tag-slug" required>
+				<div class="slug-input"></div>
+			</div>
+
+			<hr>
+
+			<button type="submit">Create</button>
+		</form>
+	</div>
+</div>
