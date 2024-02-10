@@ -15,12 +15,24 @@ body {
 
 			.htmx-swapping {
 				opacity: 0;
-				transition: opacity 1s ease-out;
+				transition: opacity 0.25s ease-out;
 			}
 
+	:root {
+		--error: #d81b60;
+		--small-border-radius: 2px;
+	}
+
+	label {
+		font-weight: bold;
+		margin: 0.5rem 0 0.225rem;
+	}
 </style>
 		<script src="/static/htmx.min.js"></script>
 		<script src="/static/htmx-response-targets.js"></script>
+		<script>
+			htmx.config.useTemplateFragments = true;
+		</script>
   </head>
 
   <body hx-ext="response-targets">

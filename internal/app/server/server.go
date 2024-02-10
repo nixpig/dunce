@@ -58,6 +58,8 @@ func Start(port string) {
 
 	web.Get("/admin/tags", handlers.AdminTagGetHandler)
 	web.Post("/admin/tags", handlers.AdminTagPostHandler)
+	web.Get("/admin/tags/:id", handlers.AdminTagGetHandler)
+	web.Patch("/admin/tags/:id", handlers.AdminTagUpdateHandler)
 	web.Delete("/admin/tags/:id", handlers.AdminTagDeleteHandler)
 
 	web.Get("/admin/types", handlers.AdminTypeGetHandler)

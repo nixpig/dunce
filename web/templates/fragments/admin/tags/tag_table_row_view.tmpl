@@ -1,0 +1,11 @@
+<tr id="tag-table-row-{{ .Id }}">
+  <td class="stretch">{{ .Id }}</td>
+  <td>{{ .Name }}</td>
+  <td>{{ .Slug }}</td>
+  <td class="stretch">
+    <button hx-get="/admin/tags/{{ .Id }}?edit=true" hx-target="closest #tag-table-row-{{ .Id }}" hx-swap="outerHTML">Edit</button>
+    &nbsp;
+    <button hx-delete="/admin/tags/{{ .Id }}" hx-confirm="Are you sure?" hx-target="closest #tag-table-row-{{ .Id }}" hx-swap="outerHTML swap:0.25s">Delete</button>
+  </td>
+</tr>
+

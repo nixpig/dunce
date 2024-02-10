@@ -77,6 +77,54 @@ func (t *Tag) Delete(id int) error {
 	return nil
 }
 
+func (t *Tag) UpdateById(id int, tag UpdateTagData) (*TagData, error) {
+	validate := validator.New(validator.WithRequiredStructEnabled())
+
+	fmt.Println("ID: ", id)
+	fmt.Println("TAG: ", tag)
+
+	validate.RegisterValidation("slug", ValidateSlug)
+
+	sanitisedTagData := NewTagData{
+		Name: sanitize.XSS(tag.Name),
+		Slug: sanitize.PathName(tag.Slug),
+	}
+
+	if err := validate.Struct(sanitisedTagData); err != nil {
+		return nil, err.(validator.ValidationErrors)
+	}
+
+	if t.IsDuplicate(sanitisedTagData) {
+		return nil, fmt.Errorf("duplicate tag: %v", sanitisedTagData)
+	}
+
+	query := `update tags_ set name_ = $2, slug_ = $3 where id_ = $1 returning id_, name_, slug_`
+
+	row := t.Db.QueryRow(context.Background(), query, &tag.Id, &sanitisedTagData.Name, &sanitisedTagData.Slug)
+
+	var updatedTag TagData
+
+	if err := row.Scan(&updatedTag.Id, &updatedTag.Name, &updatedTag.Slug); err != nil {
+		return nil, err
+	}
+
+	return &updatedTag, nil
+}
+
+func (t *Tag) GetById(id int) (*TagData, error) {
+	query := `select id_, name_, slug_ from tags_ where id_ = $1`
+
+	row := t.Db.QueryRow(context.Background(), query, id)
+
+	var tag TagData
+
+	if err := row.Scan(&tag.Id, &tag.Name, &tag.Slug); err != nil {
+		return nil, err
+	}
+
+	return &tag, nil
+}
+
 func (t *Tag) GetAll() (*[]TagData, error) {
 	query := `select id_, name_, slug_ from tags_`
 
@@ -113,7 +161,7 @@ func (t *Tag) IsDuplicate(tag NewTagData) bool {
 }
 
 func ValidateSlug(slug validator.FieldLevel) bool {
-	slugRegexString := "^[a-zA-Z0-9-]+$"
+	slugRegexString := "^[a-zA-Z0-9\\-]+$"
 	slugRegex := regexp.MustCompile(slugRegexString)
 
 	return slugRegex.MatchString(slug.Field().String())

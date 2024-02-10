@@ -1,0 +1,24 @@
+<style>
+  .error-list {
+		color: var(--text);
+		background-color: var(--error);
+		border: 1px dashed var(--error);
+		border-radius: var(--standard-border-radius);
+		padding: 0.225rem 0.5rem;
+		display: block;
+		margin-bottom: 1rem;
+  }
+
+  .error-list ul {
+    padding: 0 1.5rem;
+    margin: 0;
+  }
+</style>
+
+<div class="error-list">
+  <ul>
+    {{ range $error := .Errors }}
+      <li>{{ $error }}</li>
+    {{ end }}
+  </ul>
+</div>

@@ -1,0 +1,33 @@
+<style>
+	.tag-table {
+		flex-grow: 1;
+	}
+
+	.stretch {
+		width: 1%;
+		white-space: nowrap;
+	}
+</style>
+
+<div class="tag-table">
+  {{ if eq (len .Tags) 0 }}
+    <div id="no-tags" class="notice">No tags yet. You best go add some!</div>
+  {{ end }}
+
+  <table id="tag-table" style="width: 100%;">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Slug</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {{ range $tag := .Tags }}
+        {{ template "fragments/admin/tags/tag_table_row_view" $tag }}
+      {{ end }}
+    </tbody>
+  </table>
+</div>

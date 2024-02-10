@@ -5,34 +5,85 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/nixpig/bloggor/internal/pkg/models"
-	"github.com/nixpig/bloggor/pkg/api"
 )
 
 func AdminTagGetHandler(c *fiber.Ctx) error {
-	a := api.WithContext(c)
+	idParam := c.Params("id")
 
-	return c.Render("pages/admin/tags", &fiber.Map{
-		"Context": c,
-		"Api":     a,
-	}, "layouts/admin")
+	if len(idParam) == 0 {
+		tags, err := models.Query.Tag.GetAll()
+		if err != nil {
+			return c.SendStatus(fiber.StatusInternalServerError)
+		}
+
+		return c.Render("pages/admin/tags", &fiber.Map{
+			"Tags": tags,
+		}, "layouts/admin")
+	}
+
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	tagData, err := models.Query.Tag.GetById(id)
+	if err != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	editable := c.Query("edit")
+	if editable == "true" {
+		return c.Render("fragments/admin/tags/tag_table_row_edit", &fiber.Map{
+			"Id":   tagData.Id,
+			"Name": tagData.Name,
+			"Slug": tagData.Slug,
+		})
+	}
+
+	return c.Render("fragments/admin/tags/tag_table_row_view", &fiber.Map{
+		"Id":   tagData.Id,
+		"Name": tagData.Name,
+		"Slug": tagData.Slug,
+	})
+}
+
+func AdminTagUpdateHandler(c *fiber.Ctx) error {
+	id, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	tag := models.UpdateTagData{
+		Name: c.FormValue("name"),
+		Slug: c.FormValue("slug"),
+	}
+
+	updatedTag, err := models.Query.Tag.UpdateById(id, tag)
+	if err != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	return c.Render("/fragments/admin/tags/tag_table_row_view", &fiber.Map{
+		"Id":   updatedTag.Id,
+		"Name": updatedTag.Name,
+		"Slug": updatedTag.Slug,
+	})
 }
 
 func AdminTagDeleteHandler(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return err
+		return c.SendStatus(fiber.StatusBadRequest)
 	}
 
 	if err := models.Query.Tag.Delete(id); err != nil {
-		return err
+		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
 	return c.Status(fiber.StatusOK).Send([]byte{})
 }
 
 func AdminTagPostHandler(c *fiber.Ctx) error {
-	a := api.WithContext(c)
-
 	name := c.FormValue("name")
 	slug := c.FormValue("slug")
 
@@ -43,12 +94,14 @@ func AdminTagPostHandler(c *fiber.Ctx) error {
 
 	createdTag, err := models.Query.Tag.Create(newTag)
 	if err != nil {
-		return err
+		return c.Status(fiber.StatusBadRequest).Render("fragments/admin/shared/error_list", &fiber.Map{
+			"Errors": []string{err.Error()},
+		})
 	}
 
-	return c.Render("pages/admin/tags", &fiber.Map{
-		"Api":        a,
-		"Context":    c,
-		"CreatedTag": createdTag,
+	return c.Render("fragments/admin/tags/tag_table_row_view", &fiber.Map{
+		"Id":   createdTag.Id,
+		"Name": createdTag.Name,
+		"Slug": createdTag.Slug,
 	})
 }
