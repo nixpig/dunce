@@ -1,0 +1,85 @@
+
+<style>
+	.type-update input+div {
+    opacity: 0;
+    max-height: 0;
+    transition: all 0.25s ease-in-out;
+	}
+
+	.type-update .errors input:user-invalid+div {
+		color: var(--text);
+		background-color: var(--error);
+		border-radius: var(--standard-border-radius);
+		padding: 0.225rem;
+		margin-bottom: 1rem;
+    max-height: 300px;
+    opacity: 1;
+    transition: all 0.25s ease-in-out;
+	}
+
+  .type-update .name-input,
+  .type-update .template-input,
+  .type-update .slug-input {
+    margin: 0.5rem 0.5rem 0 -0.5rem !important;
+  }
+
+	.errors input#name:user-invalid:placeholder-shown+div::after {
+		content: "Type name is required";
+	}
+
+	.errors input#template:user-invalid:placeholder-shown+div::after {
+		content: "Template path is required";
+	}
+
+	.errors input#slug:user-invalid:placeholder-shown+div::after {
+		content: "Slug is required";
+	}
+
+	.errors input#slug:user-invalid+div::after {
+		content: "Slug is invalid"
+	}
+</style>
+
+<form 
+  name="update-type" 
+  hx-put="/admin/types/{{ .Id }}" 
+  hx-target="#type-table-row-{{ .Id }}" 
+  hx-target-5xx="#type-table-errors"
+  hx-target-4xx="#type-table-errors"
+  hx-swap="outerHTML swap:0.25s"
+  hx-on::before-request="const t = document.getElementById('type-table-errors'); t.innerHTML = ''; t.style.maxHeight = '0px'; t.style.padding = '0px';"
+>
+  <div class="tr tbody type-update" id="type-table-row-{{ .Id }}">
+      <div class="td">
+        <input type="hidden" name="id" value="{{ .Id }}">
+        {{ .Id }}
+      </div>
+
+      <div class="td">
+        <div class="errors">
+          <input id="name" type="text" name="name" value="{{ .Name }}" placeholder="Type Name" required>
+          <div class="name-input"></div>
+        </div>
+      </div>
+
+      <div class="td">
+        <div class="errors">
+          <input id="template" type="text" name="template" value="{{ .Template }}" placeholder="path/to/template" required>
+          <div class="template-input"></div>
+        </div>
+      </div>
+
+      <div class="td">
+        <div class="errors">
+          <input id="slug" type="text" name="slug" value="{{ .Slug }}" placeholder="type-slug" required>
+          <div class="slug-input"></div>
+        </div>
+      </div>
+
+      <div class="td td-actions">
+        <button type="submit">Save</button>
+        <button hx-get="/admin/types/{{ .Id }}" hx-target="closest #type-table-row-{{ .Id }}" hx-swap="outerHTML swap:0.25s">Cancel</button>
+      </div>
+  </tr>
+</form>
+

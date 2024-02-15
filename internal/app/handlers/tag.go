@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/nixpig/bloggor/internal/pkg/models"
@@ -16,7 +18,12 @@ func AdminTagGetHandler(c *fiber.Ctx) error {
 			return c.SendStatus(fiber.StatusInternalServerError)
 		}
 
+		pathParts := strings.Split(c.Path(), "/")
+
+		page := pathParts[len(pathParts)-1]
+
 		return c.Render("pages/admin/tags", &fiber.Map{
+			"Page": page,
 			"Tags": tags,
 		}, "layouts/admin")
 	}
@@ -52,6 +59,7 @@ func AdminTagUpdateHandler(c *fiber.Ctx) error {
 	if err != nil {
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
+	fmt.Println("AdminTagUpdateHandler: ", id)
 
 	tag := models.UpdateTagData{
 		Name: c.FormValue("name"),
@@ -60,10 +68,12 @@ func AdminTagUpdateHandler(c *fiber.Ctx) error {
 
 	updatedTag, err := models.Query.Tag.UpdateById(id, tag)
 	if err != nil {
-		return c.SendStatus(fiber.StatusInternalServerError)
+		return c.Status(fiber.StatusInternalServerError).Render("fragments/admin/tags/tag_update_errors", &fiber.Map{
+			"Errors": []string{err.Error()},
+		})
 	}
 
-	return c.Render("/fragments/admin/tags/tag_table_row_view", &fiber.Map{
+	return c.Render("fragments/admin/tags/tag_table_row_view", &fiber.Map{
 		"Id":   updatedTag.Id,
 		"Name": updatedTag.Name,
 		"Slug": updatedTag.Slug,

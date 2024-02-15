@@ -1,5 +1,5 @@
 <style>
-	.tag-table {
+	.type-table {
 		flex-grow: 1;
 	}
   
@@ -71,13 +71,13 @@
     }
   }
 
-  #tag-table-errors.htmx-swapping {
+  #type-table-errors.htmx-swapping {
     height: 0;
     opacity: 0;
     transition: all 0.25s ease-in-out;
   }
 
-  #tag-table-errors {
+  #type-table-errors {
     color: var(--text);
     background-color: var(--error);
     border-radius: var(--standard-border-radius);
@@ -91,23 +91,24 @@
 
 </style>
 
-<div class="tag-table">
-  <div id="tag-table-errors"></div>
+<div class="type-table">
+  <div id="type-table-errors"></div>
 
-  {{ if eq (len .Tags) 0 }}
-    <div id="no-tags" class="notice">No tags yet. You best go add some!</div>
+  {{ if eq (len .Types) 0 }}
+    <div id="no-types" class="notice">No types yet. You best go add some!</div>
   {{ end }}
 
-  <div class="table" id="tag-table" style="width: 100%;">
+  <div class="table" id="type-table" style="width: 100%;">
     <div class="tr thead">
       <div class="td">ID</div>
       <div class="td">Name</div>
+      <div class="td">Template</div>
       <div class="td">Slug</div>
       <div class="td td-actions">Actions</div>
     </div>
 
-    {{ range $tag := .Tags }}
-      {{ template "fragments/admin/tags/tag_table_row_view" $tag }}
+    {{ range $type := .Types }}
+      {{ template "fragments/admin/types/type_table_row_view" $type }}
     {{ end }}
   </div>
 </div>

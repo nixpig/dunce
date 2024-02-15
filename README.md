@@ -1,4 +1,4 @@
-# 🧠 bloggor
+# 🧠 bloggor (dunce)
 
 A HATEOAS-first headless (brainless) content publishing engine.
 

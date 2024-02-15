@@ -1,5 +1,5 @@
 <style>
-	.tag-create {
+	.type-create {
 		background-color: var(--accent-bg);
 		margin: 1.5rem 0;
 		
@@ -7,17 +7,17 @@
 		padding: 1rem;
 	}
 
-	.tag-create h3 {
+	.type-create h3 {
 		margin-top: 0;
 	}
 
-	.tag-create input+div {
+	.type-create input+div {
     opacity: 0;
     max-height: 0;
     transition: all 0.25s ease-in-out;
 	}
 
-	.tag-create .errors input:user-invalid+div {
+	.type-create .errors input:user-invalid+div {
 		color: var(--text);
 		background-color: var(--error);
 		border-radius: var(--standard-border-radius);
@@ -29,8 +29,12 @@
 	}
 
 	.errors input#name:user-invalid:placeholder-shown+div::after {
-		content: "Tag name is required";
+		content: "Type name is required";
 	}
+
+  .errors input#template:user-invalid:placeholder-shown+div::after {
+    content: "Template path is required"
+  }
 
 	.errors input#slug:user-invalid:placeholder-shown+div::after {
 		content: "Slug is required";
@@ -40,14 +44,14 @@
 		content: "Slug is invalid"
 	}
 
-  #tag-errors {
+  #type-errors {
     max-height: 500px;
     overflow: hidden;
     opacity: 1;
     transition: all .25s ease-in-out;
   }
 
-  #tag-errors:has(.htmx-swapping) {
+  #type-errors:has(.htmx-swapping) {
     max-height: 0;
     opacity: 0;
     transition: all .25s ease-in-out;
@@ -69,31 +73,39 @@
   }
 </style>
 
-<div class="tag-create">
-  <h3>Create new tag</h3>
+<div class="type-create">
+  <h3>Create new type</h3>
 
-  <div id="tag-errors">
+  <div id="type-errors">
     <ul class="error-list">
       <span class="error-hook"></span>
     </ul>
   </div>
 
-  <form name="create-tag" 
-    hx-post="/admin/tags"
-    hx-target="#tag-table .tr.thead" 
-    hx-target-5xx="#tag-errors .error-hook" 
-    hx-target-4xx="#tag-errors .error-hook" 
+  <form name="create-type" 
+    hx-post="/admin/types"
+    hx-target="#type-table .tr.thead" 
+    hx-target-5xx="#type-errors .error-hook" 
+    hx-target-4xx="#type-errors .error-hook" 
     hx-swap="afterend swap:.25s" 
     hx-on::after-request=" if (event.detail.xhr.status <= 399) this.reset(); " 
-    hx-on::before-request=" document.querySelectorAll('#tag-errors .error-list li').forEach(e => e.remove()); "
+    hx-on::before-request=" document.querySelectorAll('#type-errors .error-list li').forEach(e => e.remove()); "
   >
 
     <label for="name">
-      Tag name
+      Type name
     </label>
     <div class="errors">
       <input type="text" id="name" name="name" placeholder="Tag Name" required>
       <div class="name-input"></div>
+    </div>
+
+    <label for="template">
+      Template path
+    </label>
+    <div class="errors">
+      <input type="text" id="template" name="template" placeholder="Template path" required>
+      <div class="template-input"></div>
     </div>
 
     <label for="slug">

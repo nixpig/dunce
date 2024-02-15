@@ -1,0 +1,11 @@
+<div class="tr tbody" id="type-table-row-{{ .Id }}">
+  <div class="td" class="stretch">{{ .Id }}</div>
+  <div class="td">{{ .Name }}</div>
+  <div class="td">{{ .Template }}</div>
+  <div class="td">{{ .Slug }}</div>
+  <div class="td td-actions">
+    <button hx-get="/admin/types/{{ .Id }}?edit=true" hx-target="closest #type-table-row-{{ .Id }}" hx-swap="outerHTML swap:0.25s">Edit</button>
+    <button hx-delete="/admin/types/{{ .Id }}" hx-confirm="Are you sure?" hx-target="closest #type-table-row-{{ .Id }}" hx-swap="outerHTML swap:0.25s">Delete</button>
+  </div>
+</div>
+

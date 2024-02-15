@@ -1,0 +1,10 @@
+<div id="tag-table-errors" style="display: block;">
+  <b>Errors:</b>
+  {{ if .Errors }}
+    <ul>
+      {{ range $error := .Errors }}
+	<li>{{ $error }}</li>
+      {{ end }}
+    </ul>
+  {{ end }}
+</div>

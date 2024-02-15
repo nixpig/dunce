@@ -1,5 +1,5 @@
 <style>
-	.tag-layout {
+	.type-layout {
 		display: flex;
 		align-items: flex-start;
 		align-content: flex-start;
@@ -13,10 +13,10 @@
 	}
 </style>
 
-<h2>🏷️ Tags</h2>
+<h2>📂 Types</h2>
 
-<div class="tag-layout">
-	{{ template "fragments/admin/tags/tag_table" . }}
+<div class="type-layout">
+	{{ template "fragments/admin/types/type_table" . }}
 
-	{{ template "fragments/admin/tags/tag_create" }}
+	{{ template "fragments/admin/types/type_create" }}
 </div>

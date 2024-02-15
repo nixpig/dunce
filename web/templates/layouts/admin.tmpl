@@ -14,12 +14,13 @@ body {
 }
 
 			.htmx-swapping {
-				opacity: 0;
-				transition: opacity 0.25s ease-out;
+				transition: all 0.25s ease-out;
 			}
 
 	:root {
 		--error: #d81b60;
+		--success: #4caf50;
+		--warning: #ff9800;
 		--small-border-radius: 2px;
 	}
 
@@ -39,21 +40,13 @@ body {
 		<header>
 			<h1>Bloggor Admin</h1>
 			<nav>
-				<!-- <a href="/">🏠️ Homepage</a> -->
-				<!-- <a href="/admin/articles">📰 Articles</a> -->
-				<!-- <a href="/admin/users">👥 Users</a> -->
-				<!-- <a href="/admin/tags">🏷️ Tags</a> -->
-				<!-- <a href="/admin/types">📁 Types</a> -->
-				<!-- <a href="/admin/settings">⚙️ Settings</a> -->
-				<!-- <a href="/admin/logout">↩️ Logout</a> -->
-
 				<ul>
-					<li><a class="current" href="/">🏠️ Homepage</a></li>
-					<li><a href="/admin/articles">📰 Articles</a></li>
-					<li><a href="/admin/users">👥 Users</a></li>
-					<li><a href="/admin/tags">🏷️ Tags</a></li>
-					<li><a href="/admin/types">📁 Types</a></li>
-					<li><a href="/admin/settings">⚙️ Settings</a></li>
+					<li><a href="/">🏠️ Homepage</a></li>
+					<li><a href="/admin/articles" class="{{ if eq .Page "articles" }}current{{ end }}">📰 Articles</a></li>
+					<li><a href="/admin/users" class="{{ if eq .Page "users" }}current{{ end }}">👥 Users</a></li>
+					<li><a href="/admin/tags" class="{{ if eq .Page "tags" }}current{{ end }}">🏷️ Tags</a></li>
+					<li><a href="/admin/types" class="{{ if eq .Page "types" }}current{{ end }}">📁 Types</a></li>
+					<li><a href="/admin/settings" class="{{ if eq .Page "settings" }}current{{ end }}">⚙️ Settings</a></li>
 					<li><a href="/admin/logout">↩️ Logout</a></li>
 				</ul>
 			</nav>
@@ -65,7 +58,7 @@ body {
 
 		<footer>
 			<div>Made with 🖤 using <a href="https://go.dev/" target="_blank">Go</a> + <a href="https://htmx.org/" target="_blank">HTMX</a>.</div>
-			<div>&copy; 2024 Copyright <a href="https://nixpig.dev" target="_blank">@nixpig</a>. All rights reserved.</div>
+			<div>&copy; 2024 Copyright <a href="https://github.com/nixpig" target="_blank">@nixpig</a>. All rights reserved.</div>
 		</footer>
   </body>
 </html>

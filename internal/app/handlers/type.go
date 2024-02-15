@@ -1,29 +1,64 @@
 package handlers
 
 import (
+	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/nixpig/bloggor/internal/pkg/models"
-	"github.com/nixpig/bloggor/pkg/api"
 )
 
 func AdminTypeGetHandler(c *fiber.Ctx) error {
-	a := api.WithContext(c)
+	idParam := c.Params("id")
 
-	types, err := models.Query.Type.GetAll()
-	if err != nil {
-		return err
+	if len(idParam) == 0 {
+		types, err := models.Query.Type.GetAll()
+		if err != nil {
+			return c.SendStatus(fiber.StatusInternalServerError)
+		}
+
+		pathParts := strings.Split(c.Path(), "/")
+
+		page := pathParts[len(pathParts)-1]
+
+		return c.Render("pages/admin/types", &fiber.Map{
+			"Page":  page,
+			"Types": types,
+		}, "layouts/admin")
 	}
 
-	return c.Render("pages/admin/type", &fiber.Map{
-		"Api":     a,
-		"Context": c,
-		"Types":   types,
-	}, "layouts/admin")
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	typeData, err := models.Query.Type.GetById(id)
+	if err != nil {
+		fmt.Println("handling: ", err)
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	editable := c.Query("edit")
+
+	if editable == "true" {
+		return c.Render("fragments/admin/types/type_table_row_edit", &fiber.Map{
+			"Id":       typeData.Id,
+			"Name":     typeData.Name,
+			"Template": typeData.Template,
+			"Slug":     typeData.Slug,
+		})
+	}
+
+	return c.Render("fragments/admin/types/type_table_row_view", &fiber.Map{
+		"Id":       typeData.Id,
+		"Name":     typeData.Name,
+		"Template": typeData.Template,
+		"Slug":     typeData.Slug,
+	})
 }
 
 func AdminTypePostHander(c *fiber.Ctx) error {
-	a := api.WithContext(c)
-
 	name := c.FormValue("name")
 	template := c.FormValue("template")
 	slug := c.FormValue("slug")
@@ -36,12 +71,56 @@ func AdminTypePostHander(c *fiber.Ctx) error {
 
 	createdType, err := models.Query.Type.Create(newType)
 	if err != nil {
-		return err
+		return c.Status(fiber.StatusInternalServerError).Render("fragments/admin/shared/error_list", &fiber.Map{
+			"Errors": []string{err.Error()},
+		})
 	}
 
-	return c.Render("pages/admin/type", &fiber.Map{
-		"Api":         a,
-		"Context":     c,
-		"CreatedType": createdType,
-	}, "layouts/admin")
+	return c.Render("fragments/admin/types/type_table_row_view", &fiber.Map{
+		"Id":       createdType.Id,
+		"Name":     createdType.Name,
+		"Template": createdType.Template,
+		"Slug":     createdType.Slug,
+	})
+}
+
+func AdminTypeDeleteHandler(c *fiber.Ctx) error {
+	id, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	if err := models.Query.Type.DeleteById(id); err != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	return c.Status(fiber.StatusOK).Send([]byte{})
+}
+
+func AdminTypePutHandler(c *fiber.Ctx) error {
+	id, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	typeData := models.UpdateTypeData{
+		Id:       id,
+		Name:     c.FormValue("name"),
+		Template: c.FormValue("template"),
+		Slug:     c.FormValue("slug"),
+	}
+
+	updatedType, err := models.Query.Type.UpdateById(id, typeData)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).Render("fragments/admin/types/type_update_errors", &fiber.Map{
+			"Errors": []string{err.Error()},
+		})
+	}
+
+	return c.Status(fiber.StatusOK).Render("fragments/admin/types/type_table_row_view", &fiber.Map{
+		"Id":       updatedType.Id,
+		"Name":     updatedType.Name,
+		"Template": updatedType.Template,
+		"Slug":     updatedType.Slug,
+	})
 }

@@ -44,9 +44,17 @@ func (t *Tag) Create(newTag NewTagData) (*TagData, error) {
 		return nil, err.(validator.ValidationErrors)
 	}
 
-	// TODO: check if tag name or slug already exists
-	if t.IsDuplicate(sanitisedTagData) {
-		return nil, fmt.Errorf("duplicate tag: %v", sanitisedTagData)
+	checkDuplicatesQuery := `select count(*) from tags_ where name_ = $1 or slug_ = $2`
+
+	var duplicateCount int
+
+	duplicateRow := t.Db.QueryRow(context.Background(), checkDuplicatesQuery, &sanitisedTagData.Name, &sanitisedTagData.Slug)
+	if err := duplicateRow.Scan(&duplicateCount); err != nil {
+		return nil, err
+	}
+
+	if duplicateCount > 0 {
+		return nil, fmt.Errorf("duplicate tag: '%s' '%s'", sanitisedTagData.Name, sanitisedTagData.Slug)
 	}
 
 	query := `insert into tags_ (name_, slug_) values ($1, $2) returning id_, name_, slug_`
@@ -80,9 +88,6 @@ func (t *Tag) Delete(id int) error {
 func (t *Tag) UpdateById(id int, tag UpdateTagData) (*TagData, error) {
 	validate := validator.New(validator.WithRequiredStructEnabled())
 
-	fmt.Println("ID: ", id)
-	fmt.Println("TAG: ", tag)
-
 	validate.RegisterValidation("slug", ValidateSlug)
 
 	sanitisedTagData := NewTagData{
@@ -94,13 +99,20 @@ func (t *Tag) UpdateById(id int, tag UpdateTagData) (*TagData, error) {
 		return nil, err.(validator.ValidationErrors)
 	}
 
-	if t.IsDuplicate(sanitisedTagData) {
-		return nil, fmt.Errorf("duplicate tag: %v", sanitisedTagData)
+	var duplicateCount int
+
+	duplicateQuery := `select count(*) from tags_ where (name_ = $2 or slug_ = $3) and id_ <> $1`
+
+	duplicateRows := t.Db.QueryRow(context.Background(), duplicateQuery, id, &sanitisedTagData.Name, &sanitisedTagData.Slug)
+	duplicateRows.Scan(&duplicateCount)
+
+	if duplicateCount > 0 {
+		return nil, fmt.Errorf("a tag with these attributes already exists")
 	}
 
 	query := `update tags_ set name_ = $2, slug_ = $3 where id_ = $1 returning id_, name_, slug_`
 
-	row := t.Db.QueryRow(context.Background(), query, &tag.Id, &sanitisedTagData.Name, &sanitisedTagData.Slug)
+	row := t.Db.QueryRow(context.Background(), query, id, &sanitisedTagData.Name, &sanitisedTagData.Slug)
 
 	var updatedTag TagData
 
@@ -148,16 +160,6 @@ func (t *Tag) GetAll() (*[]TagData, error) {
 	}
 
 	return &tags, nil
-}
-
-func (t *Tag) IsDuplicate(tag NewTagData) bool {
-	query := `select count(*) from tags_ where name_ = $1 or slug_ = $2`
-
-	var rowCount int
-	row := t.Db.QueryRow(context.Background(), query, &tag.Name, &tag.Slug)
-	row.Scan(&rowCount)
-
-	return rowCount > 0
 }
 
 func ValidateSlug(slug validator.FieldLevel) bool {
