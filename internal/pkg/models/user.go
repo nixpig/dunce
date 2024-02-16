@@ -16,23 +16,22 @@ type UserData struct {
 	Id       int      `validate:"required"`
 	Username string   `validate:"required,max=100"`
 	Email    string   `validate:"required,max=100"`
-	Link     string   `validate:"required,max=255"`
+	Link     string   `validate:"omitempty,url,max=255"`
 	Role     RoleName `validate:"required"`
 }
 
 type NewUserData struct {
 	Username string   `validate:"required,min=5,max=100"`
 	Email    string   `validate:"required,email,max=100"`
-	Link     string   `validate:"required,url,max=255"`
+	Link     string   `validate:"omitempty,url,max=255"`
 	Password string   `validate:"required,min=8,max=255"`
 	Role     RoleName `validate:"required"`
 }
 
 type UpdateUserData struct {
-	Id       int      `validate:"required"`
 	Username string   `validate:"required,min=5,max=100"`
 	Email    string   `validate:"required,email,max=100"`
-	Link     string   `validate:"required,url,max=255"`
+	Link     string   `validate:"omitempty,url,max=255"`
 	Role     RoleName `validate:"required"`
 }
 
@@ -61,7 +60,7 @@ func (u *User) Create(newUser *NewUserData) (*UserData, error) {
 	return &user, nil
 }
 
-func (u *User) Update(user *UpdateUserData) (*UserData, error) {
+func (u *User) Update(id int, user *UpdateUserData) (*UserData, error) {
 	validate := validator.New()
 
 	if err := validate.Struct(user); err != nil {
@@ -70,7 +69,7 @@ func (u *User) Update(user *UpdateUserData) (*UserData, error) {
 
 	query := `update users_ set username_ = $2, email_ = $3, link_ = $4, role_ = $5 where id_ = $1 returning id_, username_, email_, link_, role_`
 
-	row := u.Db.QueryRow(context.Background(), query, &user.Id, &user.Username, &user.Email, &user.Link, &user.Role)
+	row := u.Db.QueryRow(context.Background(), query, id, &user.Username, &user.Email, &user.Link, &user.Role)
 
 	var updatedUser UserData
 

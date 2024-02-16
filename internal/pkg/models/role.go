@@ -10,6 +10,10 @@ const (
 	AdminRole  RoleName = "admin"
 )
 
+var RoleNames = []string{
+	"reader", "author", "admin",
+}
+
 func (r RoleName) String() string {
 	return string(r)
 }

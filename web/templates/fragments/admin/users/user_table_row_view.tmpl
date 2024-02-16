@@ -1,0 +1,13 @@
+<div class="tr tbody" id="user-table-row-{{ .Id }}">
+  <div class="td" class="stretch">{{ .Id }}</div>
+  <div class="td">{{ .Role }}</div>
+  <div class="td">{{ .Username }}</div>
+  <div class="td">{{ .Email }}</div>
+  <div class="td">{{ .Link }}</div>
+  <div class="td"><code>********</code></div>
+  <div class="td td-actions">
+    <button hx-get="/admin/users/{{ .Id }}?edit=true" hx-target="closest #user-table-row-{{ .Id }}" hx-swap="outerHTML swap:0.25s">Edit</button>
+    <button hx-delete="/admin/users/{{ .Id }}" hx-confirm="Are you sure?" hx-target="closest #user-table-row-{{ .Id }}" hx-swap="outerHTML swap:0.25s">Delete</button>
+  </div>
+</div>
+

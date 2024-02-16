@@ -1,0 +1,25 @@
+<div id="settings-form">
+<h2>⚙️ Settings</h2>
+<form name="site" hx-post="/admin/site" hx-target="#settings-form">
+  <label for="name">Site name</label>
+  <input type="text" name="name" id="name" value="{{ .Name }}" required>
+
+  <label for="description">Description</label>
+  <input type="text" name="description" id="description" value="{{ .Description }}" required>
+
+  <label for="url">URL</label>
+  <input type="url" name="url" id="url" value="{{ .Url }}" required>
+
+  <label for="owner">Owner</label>
+  <select name="owner" id="owner">
+    {{ $owner := .Owner }}
+    {{ range $user := .Users }}
+      <option value="{{ $user.Id }}" {{ if (eq $user.Id $owner) }}selected{{ end }}>{{ $user.Username }}</option>
+    {{ end }}
+  </select>
+
+  <hr>
+
+  <button type="reset">Cancel</button> <button type="submit">Save</button>
+</form>
+</div>

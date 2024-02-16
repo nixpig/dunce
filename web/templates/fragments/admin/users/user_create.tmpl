@@ -1,0 +1,158 @@
+<style>
+	.user-create {
+		background-color: var(--accent-bg);
+		margin: 1.5rem 0;
+		
+		border: 1px solid var(--border);
+		padding: 1rem;
+	}
+
+	.user-create h3 {
+		margin-top: 0;
+	}
+
+	.user-create input+div {
+    opacity: 0;
+    max-height: 0;
+    transition: all 0.25s ease-in-out;
+	}
+
+	.user-create .errors input:user-invalid+div {
+		color: var(--text);
+		background-color: var(--error);
+		border-radius: var(--standard-border-radius);
+		padding: 0.225rem;
+		margin-bottom: 1rem;
+    max-height: 300px;
+    opacity: 1;
+    transition: all 0.25s ease-in-out;
+	}
+
+  .errors input:user-invalid {
+    border: 2px solid var(--error);
+  }
+	.errors input#username:user-invalid:placeholder-shown+div::after {
+		content: "Username is required";
+	}
+
+	.errors input#email:user-invalid:placeholder-shown+div::after {
+		content: "Email is required";
+	}
+
+	.errors input#email:user-invalid+div::after {
+		content: "Email is invalid"
+	}
+
+	.errors input#password:user-invalid:placeholder-shown+div::after {
+		content: "Password is required";
+	}
+
+	.errors input#password:user-invalid+div::after {
+		content: "Password is invalid"
+	}
+
+	.errors input#link:user-invalid:placeholder-shown+div::after {
+		content: "Link is required";
+	}
+
+	.errors input#link:user-invalid+div::after {
+		content: "Link is invalid"
+	}
+
+  #user-errors {
+    max-height: 500px;
+    overflow: hidden;
+    opacity: 1;
+    transition: all .25s ease-in-out;
+  }
+
+  #user-errors:has(.htmx-swapping) {
+    max-height: 0;
+    opacity: 0;
+    transition: all .25s ease-in-out;
+  }
+
+  .error-list li {
+		color: var(--text);
+		background-color: var(--error);
+		border: 1px dashed var(--error);
+		border-radius: var(--standard-border-radius);
+		padding: 0.225rem 0.5rem;
+		display: block;
+		margin-bottom: 1rem;
+  }
+
+  ul.error-list {
+    padding: 0;
+    margin: 0;
+  }
+</style>
+
+<div class="user-create">
+  <h3>Create new user</h3>
+
+  <div id="user-errors">
+    <ul class="error-list">
+      <span class="error-hook"></span>
+    </ul>
+  </div>
+
+  <form name="create-user" 
+    hx-post="/admin/users"
+    hx-target="#user-table .tr.thead" 
+    hx-target-5xx="#user-errors .error-hook" 
+    hx-target-4xx="#user-errors .error-hook" 
+    hx-swap="afterend swap:.25s" 
+    hx-on::after-request=" if (event.detail.xhr.status <= 399) this.reset(); " 
+    hx-on::before-request=" document.querySelectorAll('#user-errors .error-list li').forEach(e => e.remove()); "
+  >
+
+    <label for="name">
+      Username
+    </label>
+    <div class="errors">
+      <input type="text" id="username" name="username" placeholder="janedoe23" required>
+      <div class="username-input"></div>
+    </div>
+
+    <label for="email">
+      Email
+    </label>
+    <div class="errors">
+      <input type="email" id="email" name="email" placeholder="janedoe@example.org" required>
+      <div class="email-input"></div>
+    </div>
+
+    <label for="password">
+      Password
+    </label>
+    <div class="errors">
+      <input type="password" id="password" name="password" placeholder="********" required>
+      <div class="password-input"></div>
+    </div>
+
+    <label for="link">
+      Link
+    </label>
+    <div class="errors">
+      <input type="url" id="link" name="link" placeholder="https://twitter.com/janedoe23">
+      <div class="link-input"></div>
+    </div>
+
+    <label for="role">
+      Role
+    </label>
+    <div class="errors">
+      <select id="role" name="role">
+	{{ range $role := .Roles }}
+	  <option name="{{ $role }}">{{ $role }}</option>
+	{{ end }}
+      </select>
+      <div class="role-input"></div>
+    </div>
+
+    <hr>
+
+    <button type="submit">Create</button>
+  </form>
+</div>

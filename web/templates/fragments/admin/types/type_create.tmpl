@@ -28,6 +28,9 @@
     transition: all 0.25s ease-in-out;
 	}
 
+  .errors input:user-invalid {
+    border: 2px solid var(--error);
+  }
 	.errors input#name:user-invalid:placeholder-shown+div::after {
 		content: "Type name is required";
 	}

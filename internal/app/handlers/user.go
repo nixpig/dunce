@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/nixpig/bloggor/internal/pkg/models"
@@ -18,20 +20,57 @@ func UserGetHandler(c *fiber.Ctx) error {
 }
 
 func AdminUserGetHandler(c *fiber.Ctx) error {
-	a := api.WithContext(c)
+	idParam := c.Params("id")
 
-	return c.Render("pages/admin/user", fiber.Map{
-		"Context": c,
-		"Api":     a,
-		"IsEditable": func(userId int, editId string) bool {
-			editIdConv, err := strconv.Atoi(editId)
-			if err != nil {
-				return false
-			}
+	if len(idParam) == 0 {
+		users, err := models.Query.User.GetAll()
+		if err != nil {
+			return c.SendStatus(fiber.StatusInternalServerError)
+		}
 
-			return editIdConv == userId
-		},
-	}, "layouts/admin")
+		pathParts := strings.Split(c.Path(), "/")
+
+		page := pathParts[len(pathParts)-1]
+
+		return c.Render("pages/admin/users", fiber.Map{
+			"Page":  page,
+			"Users": users,
+			"Roles": models.RoleNames,
+		}, "layouts/admin")
+	}
+
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	user, err := models.Query.User.GetById(id)
+	if err != nil {
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	editable := c.Query("edit")
+	if editable == "true" {
+		return c.Render("fragments/admin/users/user_table_row_edit", &fiber.Map{
+			"Id":       user.Id,
+			"Username": user.Username,
+			"Role":     user.Role,
+			"Email":    user.Email,
+			"Link":     user.Link,
+			"Roles":    models.RoleNames,
+		})
+	}
+
+	fmt.Println(">>> SIX <<<")
+	return c.Render("fragments/admin/users/user_table_row_view", &fiber.Map{
+		"Id":       user.Id,
+		"Username": user.Username,
+		"Role":     user.Role,
+		"Email":    user.Email,
+		"Link":     user.Link,
+		"Roles":    models.RoleNames,
+	})
+
 }
 
 func AdminUserPostHandler(c *fiber.Ctx) error {
@@ -55,22 +94,24 @@ func AdminUserPostHandler(c *fiber.Ctx) error {
 
 	createdUser, err := models.Query.User.Create(&newUser)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).Render("fragments/admin/user/add_user_error", fiber.Map{
+		return c.Status(fiber.StatusInternalServerError).Render("fragments/admin/shared/error_list", fiber.Map{
 			"Errors": []error{err},
 		})
 	}
 
-	return c.Render("fragments/admin/user/add_user_success", fiber.Map{
-		"CreatedUser": createdUser,
+	return c.Render("fragments/admin/users/user_table_row_view", fiber.Map{
+		"Id":       createdUser.Id,
+		"Role":     createdUser.Role,
+		"Username": createdUser.Username,
+		"Email":    createdUser.Email,
+		"Link":     createdUser.Link,
 	})
 }
 
 func AdminUserPutHandler(c *fiber.Ctx) error {
-	a := api.WithContext(c)
-
 	id, err := strconv.Atoi(c.FormValue("id"))
 	if err != nil {
-		return err
+		return c.SendStatus(fiber.StatusBadRequest)
 	}
 
 	username := c.FormValue("username")
@@ -79,33 +120,35 @@ func AdminUserPutHandler(c *fiber.Ctx) error {
 
 	role, err := models.ParseRoleName(c.FormValue("role"))
 	if err != nil {
-		return err
+		return c.SendStatus(fiber.StatusBadRequest)
 	}
 
 	user := models.UpdateUserData{
-		Id:       id,
 		Username: username,
 		Email:    email,
 		Link:     link,
 		Role:     role,
 	}
 
-	updatedUser, err := models.Query.User.Update(&user)
+	updatedUser, err := models.Query.User.Update(id, &user)
 	if err != nil {
-		return err
+		return c.Status(fiber.StatusInternalServerError).Render("fragments/admin/users/user_update_errors", &fiber.Map{
+			"Errors": []string{err.Error()},
+		})
 	}
 
-	return c.Render("pages/admin/user", &fiber.Map{
-		"Api":         a,
-		"Context":     c,
-		"UpdatedUser": updatedUser,
-	}, "layouts/admin")
+	return c.Render("fragments/admin/users/user_table_row_view", &fiber.Map{
+		"Id":       updatedUser.Id,
+		"Role":     updatedUser.Role,
+		"Username": updatedUser.Username,
+		"Email":    updatedUser.Email,
+	})
 }
 
 func AdminUserDeleteHander(c *fiber.Ctx) error {
-	id, err := strconv.Atoi(c.FormValue("delete"))
+	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return err
+		return c.SendStatus(fiber.StatusBadRequest)
 	}
 
 	models.Query.User.Delete(id)

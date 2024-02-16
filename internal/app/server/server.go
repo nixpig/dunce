@@ -51,8 +51,9 @@ func Start(port string) {
 
 	web.Get("/admin/users", handlers.AdminUserGetHandler)
 	web.Post("/admin/users", handlers.AdminUserPostHandler)
-	web.Put("/admin/users", handlers.AdminUserPutHandler)
-	web.Delete("/admin/users", handlers.AdminUserDeleteHander)
+	web.Get("/admin/users/:id", handlers.AdminUserGetHandler)
+	web.Put("/admin/users/:id", handlers.AdminUserPutHandler)
+	web.Delete("/admin/users/:id", handlers.AdminUserDeleteHander)
 	// web.Get("/users/register", handlers.UserRegisterHandler)
 	// web.Get("/users/login", handlers.UserLoginHandler)
 
@@ -71,9 +72,9 @@ func Start(port string) {
 	web.Get("/admin/articles", handlers.AdminArticleGetHandler)
 	web.Post("/admin/articles", handlers.AdminArticlePostHandler)
 
-	// web.Get("/tags", handlers.TagHandler)
-	// web.Get("/tags/:name", handlers.TagHandler)
-	//
+	web.Get("/admin/site", handlers.AdminSiteGetHandler)
+	web.Post("/admin/site", handlers.AdminSitePostHandler)
+
 	web.Get("/:article_type", handlers.ArticleHandler)
 	web.Get("/:article_type/:article_slug", handlers.ArticleHandler)
 	//

@@ -1,7 +1,6 @@
 
 <h2>📰 Articles</h2>
 
-<p>Description of what articles are or instructions or whatever.</p>
 
 <details>
 	<summary>
@@ -67,9 +66,10 @@
 </details>
 
 
-<h3>All articles</h3>
 {{ $params := .Context.Queries }}
 {{ $articles := (call .Api.GetArticles) }}
+
+<button>Create</button>
 
 {{ if $articles }}
 	<figure>

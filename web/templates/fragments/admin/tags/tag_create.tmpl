@@ -1,44 +1,48 @@
 <style>
-	.tag-create {
-		background-color: var(--accent-bg);
-		margin: 1.5rem 0;
-		
-		border: 1px solid var(--border);
-		padding: 1rem;
-	}
+  .tag-create {
+    background-color: var(--accent-bg);
+    margin: 1.5rem 0;
+    border: 1px solid var(--border);
+    padding: 1rem;
+  }
+</style>
+<style>
+  .tag-create h3 {
+    margin-top: 0;
+  }
 
-	.tag-create h3 {
-		margin-top: 0;
-	}
-
-	.tag-create input+div {
+  .tag-create input+div {
     opacity: 0;
     max-height: 0;
     transition: all 0.25s ease-in-out;
-	}
+  }
 
-	.tag-create .errors input:user-invalid+div {
-		color: var(--text);
-		background-color: var(--error);
-		border-radius: var(--standard-border-radius);
-		padding: 0.225rem;
-		margin-bottom: 1rem;
+  .tag-create .errors input:user-invalid+div {
+    color: var(--text);
+    background-color: var(--error);
+    border-radius: var(--standard-border-radius);
+    padding: 0.225rem;
+    margin-bottom: 1rem;
     max-height: 300px;
     opacity: 1;
     transition: all 0.25s ease-in-out;
-	}
+  }
 
-	.errors input#name:user-invalid:placeholder-shown+div::after {
-		content: "Tag name is required";
-	}
+  .errors input:user-invalid {
+    border: 2px solid var(--error);
+  }
 
-	.errors input#slug:user-invalid:placeholder-shown+div::after {
-		content: "Slug is required";
-	}
+  .errors input#name:user-invalid:placeholder-shown+div::after {
+    content: "Tag name is required";
+  }
 
-	.errors input#slug:user-invalid+div::after {
-		content: "Slug is invalid"
-	}
+  .errors input#slug:user-invalid:placeholder-shown+div::after {
+    content: "Slug is required";
+  }
+
+  .errors input#slug:user-invalid+div::after {
+    content: "Slug is invalid"
+  }
 
   #tag-errors {
     max-height: 500px;
@@ -54,13 +58,13 @@
   }
 
   .error-list li {
-		color: var(--text);
-		background-color: var(--error);
-		border: 1px dashed var(--error);
-		border-radius: var(--standard-border-radius);
-		padding: 0.225rem 0.5rem;
-		display: block;
-		margin-bottom: 1rem;
+    color: var(--text);
+    background-color: var(--error);
+    border: 1px dashed var(--error);
+    border-radius: var(--standard-border-radius);
+    padding: 0.225rem 0.5rem;
+    display: block;
+    margin-bottom: 1rem;
   }
 
   ul.error-list {
