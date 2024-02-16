@@ -4,9 +4,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/nixpig/bloggor/internal/app/server"
-	"github.com/nixpig/bloggor/internal/pkg/config"
-	"github.com/nixpig/bloggor/internal/pkg/models"
+	app "github.com/nixpig/dunce/internal/app/server"
+	"github.com/nixpig/dunce/internal/pkg/config"
+	"github.com/nixpig/dunce/internal/pkg/models"
 )
 
 func main() {

@@ -1,4 +1,4 @@
-module github.com/nixpig/bloggor
+module github.com/nixpig/dunce
 
 go 1.21.3
 

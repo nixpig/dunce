@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/nixpig/bloggor/internal/pkg/models"
+	"github.com/nixpig/dunce/internal/pkg/models"
 )
 
 func GetTypes() map[string]models.TypeData {

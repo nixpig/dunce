@@ -10,7 +10,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/nixpig/bloggor/internal/pkg/config"
+	"github.com/nixpig/dunce/internal/pkg/config"
 )
 
 type DbInstance struct {

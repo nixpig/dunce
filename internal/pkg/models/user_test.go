@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/nixpig/bloggor/internal/pkg/models"
+	"github.com/nixpig/dunce/internal/pkg/models"
 	"github.com/pashagolub/pgxmock/v3"
 	"github.com/stretchr/testify/assert"
 )

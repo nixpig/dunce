@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/nixpig/bloggor/pkg/api"
+	"github.com/nixpig/dunce/pkg/api"
 )
 
 func IndexHandler(c *fiber.Ctx) error {

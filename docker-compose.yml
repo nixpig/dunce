@@ -3,25 +3,25 @@ version: "3.1"
 services:
   app:
     restart: always
-    image: registry.digitalocean.com/nixpig/bloggor:latest
+    image: registry.digitalocean.com/nixpig/dunce:latest
     depends_on:
       - db
     env_file: .env
     ports:
       - 127.0.0.1:80:8080
     networks:
-      - bloggor_net
+      - dunce_net
 
   db:
     restart: always
     image: postgres:16.0-alpine3.18
     env_file: .env
     volumes:
-      - bloggor_db_volume:/var/lib/postgresql/data
+      - dunce_db_volume:/var/lib/postgresql/data
     ports:
       - 127.0.0.1:5432:5432
     networks:
-      - bloggor_net
+      - dunce_net
 
   server:
     restart: always
@@ -37,11 +37,11 @@ services:
       - app
       - db
     networks:
-      - bloggor_net
+      - dunce_net
 
 volumes:
-  bloggor_db_volume:
+  dunce_db_volume:
 
 networks:
-  bloggor_net:
+  dunce_net:
     driver: bridge

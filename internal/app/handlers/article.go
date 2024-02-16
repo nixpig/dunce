@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/nixpig/bloggor/internal/pkg/models"
-	"github.com/nixpig/bloggor/pkg/api"
+	"github.com/nixpig/dunce/internal/pkg/models"
+	"github.com/nixpig/dunce/pkg/api"
 )
 
 func AdminArticleGetHandler(c *fiber.Ctx) error {

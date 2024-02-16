@@ -10,8 +10,8 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/template/html/v2"
-	"github.com/nixpig/bloggor/internal/app/handlers"
-	"github.com/nixpig/bloggor/internal/pkg/config"
+	"github.com/nixpig/dunce/internal/app/handlers"
+	"github.com/nixpig/dunce/internal/pkg/config"
 )
 
 func Start(port string) {

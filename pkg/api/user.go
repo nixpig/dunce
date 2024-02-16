@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/nixpig/bloggor/internal/pkg/models"
+	"github.com/nixpig/dunce/internal/pkg/models"
 )
 
 func GetUser(c *fiber.Ctx) *models.UserData {

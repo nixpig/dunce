@@ -2,7 +2,7 @@ package api
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/nixpig/bloggor/internal/pkg/models"
+	"github.com/nixpig/dunce/internal/pkg/models"
 )
 
 func WithContext(c *fiber.Ctx) map[string]interface{} {
