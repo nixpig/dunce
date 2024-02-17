@@ -71,12 +71,15 @@ func Start(port string) {
 
 	web.Get("/admin/articles", handlers.AdminArticleGetHandler)
 	web.Post("/admin/articles", handlers.AdminArticlePostHandler)
+	web.Get("/admin/articles/:id", handlers.AdminArticleGetHandler)
+	web.Put("/admin/articles/:id", handlers.AdminArticlePutHandler)
+	web.Delete("/admin/articles/:id", handlers.AdminArticleDeleteHandler)
 
 	web.Get("/admin/site", handlers.AdminSiteGetHandler)
 	web.Post("/admin/site", handlers.AdminSitePostHandler)
 
-	web.Get("/:article_type", handlers.ArticleHandler)
-	web.Get("/:article_type/:article_slug", handlers.ArticleHandler)
+	// web.Get("/:article_type", handlers.ArticleHandler)
+	// web.Get("/:article_type/:article_slug", handlers.ArticleHandler)
 	//
 	// web.Use(handlers.NotFoundHandler)
 

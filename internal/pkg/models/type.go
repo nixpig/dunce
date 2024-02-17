@@ -16,20 +16,20 @@ type TypeData struct {
 	Id       int    `validate:"required"`
 	Name     string `validate:"required,max=255"`
 	Template string `validate:"required,max=255"`
-	Slug     string `validate:"required,max=255"`
+	Slug     string `validate:"required,slug,max=255"`
 }
 
 type NewTypeData struct {
 	Name     string `validate:"required,max=255"`
 	Template string `validate:"required,max=255"`
-	Slug     string `validate:"required,max=255"`
+	Slug     string `validate:"required,slug,max=255"`
 }
 
 type UpdateTypeData struct {
 	Id       int    `validate:"required"`
 	Name     string `validate:"required,max=255"`
 	Template string `validate:"required,max=255"`
-	Slug     string `validate:"required,max=255"`
+	Slug     string `validate:"required,slug,max=255"`
 }
 
 func (t *Type) GetAll() (*[]TypeData, error) {

@@ -1,0 +1,184 @@
+<style>
+	.article-create {
+		background-color: var(--accent-bg);
+		margin: 1.5rem 0;
+		
+		border: 1px solid var(--border);
+		padding: 1rem;
+	}
+
+	.article-create h3 {
+		margin-top: 0;
+	}
+
+	.article-create input+div {
+    opacity: 0;
+    max-height: 0;
+    transition: all 0.25s ease-in-out;
+	}
+
+	.article-create .errors input:user-invalid+div {
+		color: var(--text);
+		background-color: var(--error);
+		border-radius: var(--standard-border-radius);
+		padding: 0.225rem;
+		margin-bottom: 1rem;
+    max-height: 300px;
+    opacity: 1;
+    transition: all 0.25s ease-in-out;
+	}
+
+  .errors input:user-invalid {
+    border: 2px solid var(--error);
+  }
+	.errors input#title:user-invalid:placeholder-shown+div::after {
+		content: "Title is required";
+	}
+
+  .errors input#subtitle:user-invalid:placeholder-shown+div::after {
+    content: "Subtitle is required"
+  }
+
+	.errors input#slug:user-invalid:placeholder-shown+div::after {
+		content: "Slug is required";
+	}
+
+	.errors input#slug:user-invalid+div::after {
+		content: "Slug is invalid"
+	}
+
+	.errors input#type_id:user-invalid+div::after {
+		content: "Type ID is required";
+	}
+
+	.errors input#user_id:user-invalid+div::after {
+		content: "User ID is required";
+	}
+
+	.errors input#tag_ids:user-invalid+div::after {
+		content: "Tag IDs is required";
+	}
+
+  #article-errors {
+    max-height: 500px;
+    overflow: hidden;
+    opacity: 1;
+    transition: all .25s ease-in-out;
+  }
+
+  #article-errors:has(.htmx-swapping) {
+    max-height: 0;
+    opacity: 0;
+    transition: all .25s ease-in-out;
+  }
+
+  .error-list li {
+		color: var(--text);
+		background-color: var(--error);
+		border: 1px dashed var(--error);
+		border-radius: var(--standard-border-radius);
+		padding: 0.225rem 0.5rem;
+		display: block;
+		margin-bottom: 1rem;
+  }
+
+  ul.error-list {
+    padding: 0;
+    margin: 0;
+  }
+</style>
+
+<div class="article-create">
+  <div id="article-errors">
+    <ul class="error-list">
+      <span class="error-hook"></span>
+    </ul>
+  </div>
+
+  <form name="create-article" 
+    {{ if .Id }}
+      hx-put="/admin/articles/{{ .Id }}"
+    {{ else }}
+      hx-post="/admin/articles"
+    {{ end }}
+  >
+
+    {{ if .Id }}
+      <input type="hidden" name="id" value="{{ .Id }}">
+    {{ end }}
+
+    <label for="title">
+      Title
+    </label>
+    <div class="errors">
+      <input type="text" id="title" name="title" placeholder="Article title" required value="{{ .Title }}">
+      <div class="title-input"></div>
+    </div>
+
+    <label for="subtitle">
+      Subtitle
+    </label>
+    <div class="errors">
+      <input type="text" id="subtitle" name="subtitle" placeholder="Article subtitle" required value="{{ .Subtitle }}">
+      <div class="subtitle-input"></div>
+    </div>
+
+    <label for="slug">
+      Slug
+    </label>
+    <div class="errors">
+      <input type="text" id="slug" name="slug" pattern="^[a-zA-Z0-9\-]+$" placeholder="article-slug" required value={{ .Slug }}>
+      <div class="slug-input"></div>
+    </div>
+
+    <label for="body">
+      Content
+    </label>
+    <div class="errors">
+      <textarea cols="75" name="body" id="body">{{ .Body }}</textarea>
+      <div class="body-input"></div>
+    </div>
+
+
+    <label for="created_at">
+      Created at
+    </label>
+    <input type="text" name="created_at" id="created_at" value="{{ .CreatedAt }}" readonly>
+
+    <label for="last_updated">
+      Last updated
+    </label>
+    <input type="text" id="last_updated" value="{{ .UpdatedAt }}" disabled>
+
+    <label for="type_id">
+      Type ID
+    </label>
+    <div class="errors">
+      <input type="text" id="type_id" name="type_id" value="{{ .TypeId }}" required>
+      <div class="type-id-input"></div>
+    </div>
+
+    <label for="user_id">
+      User ID
+    </label>
+    <div class="errors">
+      <input type="text" id="user_id" name="user_id" value="{{ .UserId }}" required>
+      <div class="user-id-input"></div>
+    </div>
+
+    <label for="tag_ids">
+      Tag IDs
+    </label>
+    <div class="errors">
+      <input type="text" id="tag_ids" name="tag_ids" value="{{ .TagIds }}" required>
+      <div class="tag-ids-input"></div>
+    </div>
+
+    <hr>
+
+    <div style="display: flex; gap: 1rem;">
+      <a href="/admin/articles" onclick="return confirm('This will delete any unsaved changes. Are you sure you want to continue?');" class="button">Cancel</a>
+      <button type="submit">Publish {{ if .Editable }}changes{{ else }}article{{ end }}</button>
+    </div>
+  </form>
+</div>

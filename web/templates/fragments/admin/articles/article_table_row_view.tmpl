@@ -1,0 +1,11 @@
+<div class="tr tbody" id="article-table-row-{{ .Id }}">
+  <div class="td" class="stretch">{{ .Id }}</div>
+  <div class="td">{{ .Title }}</div>
+  <div class="td">{{ .UserId }}</div>
+  <div class="td">{{ .UpdatedAt }}</div>
+  <div class="td td-actions">
+    <a href="/admin/articles/{{ .Id }}?edit=true" class="button">Edit</a>
+    <button hx-delete="/admin/articles/{{ .Id }}" hx-confirm="Are you sure?" hx-target="closest #article-table-row-{{ .Id }}" hx-swap="outerHTML swap:0.25s">Delete</button>
+  </div>
+</div>
+

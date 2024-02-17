@@ -2,12 +2,16 @@ package handlers
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/nixpig/dunce/internal/pkg/models"
 )
 
 func AdminSiteGetHandler(c *fiber.Ctx) error {
+	pathParts := strings.Split(c.Path(), "/")
+	page := pathParts[len(pathParts)-1]
+
 	siteData, err := models.Query.Site.Get()
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
@@ -19,6 +23,7 @@ func AdminSiteGetHandler(c *fiber.Ctx) error {
 	}
 
 	return c.Render("pages/admin/site", &fiber.Map{
+		"Page":        page,
 		"Name":        siteData.Name,
 		"Description": siteData.Description,
 		"Url":         siteData.Url,
