@@ -132,7 +132,7 @@ func AdminUserPutHandler(c *fiber.Ctx) error {
 
 	updatedUser, err := models.Query.User.Update(id, &user)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).Render("fragments/admin/users/user_update_errors", &fiber.Map{
+		return c.Status(fiber.StatusInternalServerError).Render("fragments/admin/shared/admin_table_errors", &fiber.Map{
 			"Errors": []string{err.Error()},
 		})
 	}

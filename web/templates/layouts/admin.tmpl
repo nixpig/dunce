@@ -1,43 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
+	<head>
+		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		
 
-    <title>Dunce Admin</title>
+		<title>Dunce Admin</title>
 
-	<link rel="stylesheet" href="/static/simple.min.css">
-	<!-- <link rel="stylesheet" href="/static/plain.min.css"> -->
-<style>
-body {
-	grid-template-columns: 1fr min(75rem, 90%) 1fr;
-}
+		<link rel="stylesheet" href="/static/simple.min.css">
+		<link rel="stylesheet" href="/static/admin.css">
+		<!-- <link rel="stylesheet" href="/static/plain.min.css"> -->
 
-			.htmx-swapping {
-				transition: all 0.25s ease-out;
-			}
-
-	:root {
-		--error: #d81b60;
-		--success: #4caf50;
-		--warning: #ff9800;
-		--small-border-radius: 2px;
-	}
-
-	label {
-		font-weight: bold;
-		margin: 0.5rem 0 0.225rem;
-	}
-</style>
 		<script src="/static/htmx.min.js"></script>
 		<script src="/static/htmx-response-targets.js"></script>
+
 		<script>
 			htmx.config.useTemplateFragments = true;
 		</script>
-  </head>
+	</head>
 
-  <body hx-ext="response-targets">
+	<body hx-ext="response-targets">
 		<header>
 			<h1>Dunce Admin</h1>
 			<nav>
@@ -61,5 +42,5 @@ body {
 			<div>Made with 🖤 using <a href="https://go.dev/" target="_blank">Go</a> + <a href="https://htmx.org/" target="_blank">HTMX</a>.</div>
 			<div>&copy; 2024 Copyright <a href="https://github.com/nixpig" target="_blank">@nixpig</a>. All rights reserved.</div>
 		</footer>
-  </body>
+	</body>
 </html>

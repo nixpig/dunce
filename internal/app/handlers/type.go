@@ -112,7 +112,7 @@ func AdminTypePutHandler(c *fiber.Ctx) error {
 
 	updatedType, err := models.Query.Type.UpdateById(id, typeData)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).Render("fragments/admin/types/type_update_errors", &fiber.Map{
+		return c.Status(fiber.StatusInternalServerError).Render("fragments/admin/shared/admin_table_errors", &fiber.Map{
 			"Errors": []string{err.Error()},
 		})
 	}

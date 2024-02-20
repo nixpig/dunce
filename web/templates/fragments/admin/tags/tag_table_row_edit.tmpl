@@ -1,51 +1,11 @@
-<style>
-	.tag-update input+div {
-    opacity: 0;
-    max-height: 0;
-    transition: all 0.25s ease-in-out;
-	}
-
-	.tag-update .errors input:user-invalid+div {
-		color: var(--text);
-		background-color: var(--error);
-		border-radius: var(--standard-border-radius);
-		padding: 0.225rem;
-		margin-bottom: 1rem;
-    max-height: 300px;
-    opacity: 1;
-    transition: all 0.25s ease-in-out;
-	}
-
-  .tag-update .name-input,
-  .tag-update .slug-input {
-    margin: 0.5rem 0.5rem 0 -0.5rem !important;
-  }
-
-  .errors input:user-invalid {
-    border: 2px solid var(--error);
-  }
-
-	.errors input#name:user-invalid:placeholder-shown+div::after {
-		content: "Tag name is required";
-	}
-
-	.errors input#slug:user-invalid:placeholder-shown+div::after {
-		content: "Slug is required";
-	}
-
-	.errors input#slug:user-invalid+div::after {
-		content: "Slug is invalid"
-	}
-</style>
-
 <form 
   name="update-tag" 
   hx-put="/admin/tags/{{ .Id }}" 
   hx-target="#tag-table-row-{{ .Id }}" 
-  hx-target-5xx="#tag-table-errors"
-  hx-target-4xx="#tag-table-errors"
+  hx-target-5xx="#admin-table-errors"
+  hx-target-4xx="#admin-table-errors"
   hx-swap="outerHTML swap:0.25s"
-  hx-on::before-request="const t = document.getElementById('tag-table-errors'); t.innerHTML = ''; t.style.maxHeight = '0px'; t.style.padding = '0px';"
+  hx-on::before-request="const t = document.getElementById('admin-table-errors'); t.innerHTML = ''; t.style.maxHeight = '0px'; t.style.padding = '0px';"
 >
   <div class="tr tbody tag-update" id="tag-table-row-{{ .Id }}">
       <div class="td">

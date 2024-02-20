@@ -135,7 +135,7 @@ func AdminArticlePutHandler(c *fiber.Ctx) error {
 
 	updated, err := models.Query.Article.UpdateById(id, articleUpdate)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).Render("fragments/admin/articles/article_update_errors", &fiber.Map{
+		return c.Status(fiber.StatusInternalServerError).Render("fragments/admin/shared/admin_table_errors", &fiber.Map{
 			"Errors": []string{err.Error()},
 		})
 	}
@@ -193,10 +193,20 @@ func AdminArticlePostHandler(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Render("pages/admin/article", &fiber.Map{
+	return c.Render("pages/admin/articles", &fiber.Map{
 		"Api":            a,
 		"Context":        c,
 		"CreatedArticle": createdArticle,
+	}, "layouts/admin")
+}
+
+func AdminArticleCreateGetHandler(c *fiber.Ctx) error {
+	page := "articles"
+
+	return c.Render("pages/admin/articles", &fiber.Map{
+		"Page":     page,
+		"New":      true,
+		"Editable": nil,
 	}, "layouts/admin")
 }
 

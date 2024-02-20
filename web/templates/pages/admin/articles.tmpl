@@ -1,29 +1,16 @@
-<style>
-	.article-layout {
-		display: flex;
-		align-items: flex-start;
-		align-content: flex-start;
-		gap: 2rem;
-
-		@media (max-width: 992px) {
-			flex-direction: column-reverse;
-			align-items: stretch;
-			align-content: stretch;
-		}
-	}
-</style>
-
 <h2>
 	📰 
 	{{ if .Editable }}
 		Edit article
+	{{ else if .New }}
+		New article
 	{{ else }}
 		Articles
 	{{ end }}
 </h2>
 
-<div class="article-layout">
-	{{ if .Editable }}
+<div class="admin__layout--two-col">
+	{{ if or .Editable .New }}
 		{{ template "fragments/admin/articles/article_edit" . }}
 
 	{{ else }}

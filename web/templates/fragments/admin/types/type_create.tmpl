@@ -1,85 +1,7 @@
-<style>
-	.type-create {
-		background-color: var(--accent-bg);
-		margin: 1.5rem 0;
-		
-		border: 1px solid var(--border);
-		padding: 1rem;
-	}
-
-	.type-create h3 {
-		margin-top: 0;
-	}
-
-	.type-create input+div {
-    opacity: 0;
-    max-height: 0;
-    transition: all 0.25s ease-in-out;
-	}
-
-	.type-create .errors input:user-invalid+div {
-		color: var(--text);
-		background-color: var(--error);
-		border-radius: var(--standard-border-radius);
-		padding: 0.225rem;
-		margin-bottom: 1rem;
-    max-height: 300px;
-    opacity: 1;
-    transition: all 0.25s ease-in-out;
-	}
-
-  .errors input:user-invalid {
-    border: 2px solid var(--error);
-  }
-	.errors input#name:user-invalid:placeholder-shown+div::after {
-		content: "Type name is required";
-	}
-
-  .errors input#template:user-invalid:placeholder-shown+div::after {
-    content: "Template path is required"
-  }
-
-	.errors input#slug:user-invalid:placeholder-shown+div::after {
-		content: "Slug is required";
-	}
-
-	.errors input#slug:user-invalid+div::after {
-		content: "Slug is invalid"
-	}
-
-  #type-errors {
-    max-height: 500px;
-    overflow: hidden;
-    opacity: 1;
-    transition: all .25s ease-in-out;
-  }
-
-  #type-errors:has(.htmx-swapping) {
-    max-height: 0;
-    opacity: 0;
-    transition: all .25s ease-in-out;
-  }
-
-  .error-list li {
-		color: var(--text);
-		background-color: var(--error);
-		border: 1px dashed var(--error);
-		border-radius: var(--standard-border-radius);
-		padding: 0.225rem 0.5rem;
-		display: block;
-		margin-bottom: 1rem;
-  }
-
-  ul.error-list {
-    padding: 0;
-    margin: 0;
-  }
-</style>
-
-<div class="type-create">
+<div class="admin__create">
   <h3>Create new type</h3>
 
-  <div id="type-errors">
+  <div id="create-errors">
     <ul class="error-list">
       <span class="error-hook"></span>
     </ul>
@@ -88,11 +10,11 @@
   <form name="create-type" 
     hx-post="/admin/types"
     hx-target="#type-table .tr.thead" 
-    hx-target-5xx="#type-errors .error-hook" 
-    hx-target-4xx="#type-errors .error-hook" 
+    hx-target-5xx="#create-errors .error-hook" 
+    hx-target-4xx="#create-errors .error-hook" 
     hx-swap="afterend swap:.25s" 
     hx-on::after-request=" if (event.detail.xhr.status <= 399) this.reset(); " 
-    hx-on::before-request=" document.querySelectorAll('#type-errors .error-list li').forEach(e => e.remove()); "
+    hx-on::before-request=" document.querySelectorAll('#create-errors .error-list li').forEach(e => e.remove()); "
   >
 
     <label for="name">

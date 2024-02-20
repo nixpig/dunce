@@ -68,7 +68,7 @@ func AdminTagUpdateHandler(c *fiber.Ctx) error {
 
 	updatedTag, err := models.Query.Tag.UpdateById(id, tag)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).Render("fragments/admin/tags/tag_update_errors", &fiber.Map{
+		return c.Status(fiber.StatusInternalServerError).Render("fragments/admin/shared/admin_table_errors", &fiber.Map{
 			"Errors": []string{err.Error()},
 		})
 	}

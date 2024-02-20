@@ -1,21 +1,6 @@
-<style>
-	.user-layout {
-		display: flex;
-		align-items: flex-start;
-		align-content: flex-start;
-		gap: 2rem;
-
-		@media (max-width: 992px) {
-			flex-direction: column-reverse;
-			align-items: stretch;
-			align-content: stretch;
-		}
-	}
-</style>
-
 <h2>👥 Users</h2>
 
-<div class="user-layout">
+<div class="admin__layout--two-col">
 	{{ template "fragments/admin/users/user_table" . }}
 
 	{{ template "fragments/admin/users/user_create" . }}

@@ -1,64 +1,11 @@
-<style>
-	.user-update input+div {
-    opacity: 0;
-    max-height: 0;
-    transition: all 0.25s ease-in-out;
-	}
-
-	.user-update .errors input:user-invalid+div {
-		color: var(--text);
-		background-color: var(--error);
-		border-radius: var(--standard-border-radius);
-		padding: 0.225rem;
-		margin-bottom: 1rem;
-    max-height: 300px;
-    opacity: 1;
-    transition: all 0.25s ease-in-out;
-	}
-
-  .user-update .username-input,
-  .user-update .link-input,
-  .user-update .email-input {
-    margin: 0.5rem 0.5rem 0 -0.5rem !important;
-  }
-
-  .errors input:user-invalid {
-    border: 2px solid var(--error);
-  }
-
-	.errors input#username:user-invalid+div::after {
-		content: "Username is invalid"
-	}
-
-	.errors input#username:user-invalid:placeholder-shown+div::after {
-		content: "Username is required";
-	}
-
-	.errors input#link:user-invalid:placeholder-shown+div::after {
-		content: "Link is required";
-	}
-
-	.errors input#link:user-invalid+div::after {
-		content: "Link is invalid"
-	}
-
-	.errors input#email:user-invalid:placeholder-shown+div::after {
-		content: "Email is required";
-	}
-
-	.errors input#email:user-invalid+div::after {
-		content: "Email is invalid"
-	}
-</style>
-
 <form 
   name="update-user" 
   hx-put="/admin/users/{{ .Id }}" 
   hx-target="#user-table-row-{{ .Id }}" 
-  hx-target-5xx="#user-table-errors"
-  hx-target-4xx="#user-table-errors"
+  hx-target-5xx="#admin-table-errors"
+  hx-target-4xx="#admin-table-errors"
   hx-swap="outerHTML swap:0.25s"
-  hx-on::before-request="const t = document.getElementById('user-table-errors'); t.innerHTML = ''; t.style.maxHeight = '0px'; t.style.padding = '0px';"
+  hx-on::before-request="const t = document.getElementById('admin-table-errors'); t.innerHTML = ''; t.style.maxHeight = '0px'; t.style.padding = '0px';"
 >
   <div class="tr tbody user-update" id="user-table-row-{{ .Id }}">
       <div class="td">

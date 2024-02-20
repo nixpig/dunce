@@ -1,63 +1,5 @@
 <style>
-	.article-create {
-		background-color: var(--accent-bg);
-		margin: 1.5rem 0;
-		
-		border: 1px solid var(--border);
-		padding: 1rem;
-	}
 
-	.article-create h3 {
-		margin-top: 0;
-	}
-
-	.article-create input+div {
-    opacity: 0;
-    max-height: 0;
-    transition: all 0.25s ease-in-out;
-	}
-
-	.article-create .errors input:user-invalid+div {
-		color: var(--text);
-		background-color: var(--error);
-		border-radius: var(--standard-border-radius);
-		padding: 0.225rem;
-		margin-bottom: 1rem;
-    max-height: 300px;
-    opacity: 1;
-    transition: all 0.25s ease-in-out;
-	}
-
-  .errors input:user-invalid {
-    border: 2px solid var(--error);
-  }
-	.errors input#title:user-invalid:placeholder-shown+div::after {
-		content: "Title is required";
-	}
-
-  .errors input#subtitle:user-invalid:placeholder-shown+div::after {
-    content: "Subtitle is required"
-  }
-
-	.errors input#slug:user-invalid:placeholder-shown+div::after {
-		content: "Slug is required";
-	}
-
-	.errors input#slug:user-invalid+div::after {
-		content: "Slug is invalid"
-	}
-
-	.errors input#type_id:user-invalid+div::after {
-		content: "Type ID is required";
-	}
-
-	.errors input#user_id:user-invalid+div::after {
-		content: "User ID is required";
-	}
-
-	.errors input#tag_ids:user-invalid+div::after {
-		content: "Tag IDs is required";
-	}
 
   #article-errors {
     max-height: 500px;
@@ -72,23 +14,9 @@
     transition: all .25s ease-in-out;
   }
 
-  .error-list li {
-		color: var(--text);
-		background-color: var(--error);
-		border: 1px dashed var(--error);
-		border-radius: var(--standard-border-radius);
-		padding: 0.225rem 0.5rem;
-		display: block;
-		margin-bottom: 1rem;
-  }
-
-  ul.error-list {
-    padding: 0;
-    margin: 0;
-  }
 </style>
 
-<div class="article-create">
+<div class="admin__create">
   <div id="article-errors">
     <ul class="error-list">
       <span class="error-hook"></span>
@@ -154,7 +82,7 @@
       Type ID
     </label>
     <div class="errors">
-      <input type="text" id="type_id" name="type_id" value="{{ .TypeId }}" required>
+      <input type="number" id="type_id" name="type_id" value="{{ .TypeId }}" required>
       <div class="type-id-input"></div>
     </div>
 
@@ -162,7 +90,7 @@
       User ID
     </label>
     <div class="errors">
-      <input type="text" id="user_id" name="user_id" value="{{ .UserId }}" required>
+      <input type="number" id="user_id" name="user_id" value="{{ .UserId }}" required>
       <div class="user-id-input"></div>
     </div>
 
@@ -170,7 +98,7 @@
       Tag IDs
     </label>
     <div class="errors">
-      <input type="text" id="tag_ids" name="tag_ids" value="{{ .TagIds }}" required>
+      <input type="number" id="tag_ids" name="tag_ids" value="{{ .TagIds }}" required>
       <div class="tag-ids-input"></div>
     </div>
 

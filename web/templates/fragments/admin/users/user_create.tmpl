@@ -17,47 +17,8 @@
     transition: all 0.25s ease-in-out;
 	}
 
-	.user-create .errors input:user-invalid+div {
-		color: var(--text);
-		background-color: var(--error);
-		border-radius: var(--standard-border-radius);
-		padding: 0.225rem;
-		margin-bottom: 1rem;
-    max-height: 300px;
-    opacity: 1;
-    transition: all 0.25s ease-in-out;
-	}
 
-  .errors input:user-invalid {
-    border: 2px solid var(--error);
-  }
-	.errors input#username:user-invalid:placeholder-shown+div::after {
-		content: "Username is required";
-	}
 
-	.errors input#email:user-invalid:placeholder-shown+div::after {
-		content: "Email is required";
-	}
-
-	.errors input#email:user-invalid+div::after {
-		content: "Email is invalid"
-	}
-
-	.errors input#password:user-invalid:placeholder-shown+div::after {
-		content: "Password is required";
-	}
-
-	.errors input#password:user-invalid+div::after {
-		content: "Password is invalid"
-	}
-
-	.errors input#link:user-invalid:placeholder-shown+div::after {
-		content: "Link is required";
-	}
-
-	.errors input#link:user-invalid+div::after {
-		content: "Link is invalid"
-	}
 
   #user-errors {
     max-height: 500px;
@@ -72,20 +33,6 @@
     transition: all .25s ease-in-out;
   }
 
-  .error-list li {
-		color: var(--text);
-		background-color: var(--error);
-		border: 1px dashed var(--error);
-		border-radius: var(--standard-border-radius);
-		padding: 0.225rem 0.5rem;
-		display: block;
-		margin-bottom: 1rem;
-  }
-
-  ul.error-list {
-    padding: 0;
-    margin: 0;
-  }
 </style>
 
 <div class="user-create">
