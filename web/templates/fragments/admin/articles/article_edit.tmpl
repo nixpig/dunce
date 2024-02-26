@@ -1,23 +1,5 @@
-<style>
-
-
-  #article-errors {
-    max-height: 500px;
-    overflow: hidden;
-    opacity: 1;
-    transition: all .25s ease-in-out;
-  }
-
-  #article-errors:has(.htmx-swapping) {
-    max-height: 0;
-    opacity: 0;
-    transition: all .25s ease-in-out;
-  }
-
-</style>
-
 <div class="admin__create">
-  <div id="article-errors">
+  <div id="create-errors">
     <ul class="error-list">
       <span class="error-hook"></span>
     </ul>
