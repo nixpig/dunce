@@ -46,4 +46,3 @@ CREATE TABLE IF NOT EXISTS articles_ (
     user_id_ integer references users_(id_) NOT NULL,
     tag_ids_ character varying(255)
 );
-

@@ -25,6 +25,7 @@ type Queries struct {
 	Type    *Type
 	Article *Article
 	Site    *Site
+	Login   *Login
 }
 
 var Query Queries
@@ -37,6 +38,7 @@ func BuildQueries(db Dbconn) {
 			Type:    &Type{Db: db},
 			Article: &Article{Db: db},
 			Site:    &Site{Db: db},
+			Login:   &Login{Db: db},
 		}
 }
 

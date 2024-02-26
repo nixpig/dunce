@@ -51,7 +51,7 @@ func (u *User) Create(newUser *NewUserData) (*UserData, error) {
 
 	var user UserData
 
-	row := u.Db.QueryRow(context.Background(), query, &newUser.Username, &newUser.Email, &newUser.Link, &newUser.Role, &hashedPassword)
+	row := u.Db.QueryRow(context.Background(), query, &newUser.Username, &newUser.Email, &newUser.Link, &newUser.Role, string(hashedPassword))
 
 	if err := row.Scan(&user.Id, &user.Username, &user.Email, &user.Link, &user.Role); err != nil {
 		return nil, err
