@@ -26,6 +26,53 @@ type Session struct {
 	ExpiresAt int64
 }
 
+type Claims struct {
+	UserId   int    `json:"user_id"`
+	UserRole string `json:"user_role"`
+	jwt.RegisteredClaims
+}
+
+func GenerateToken(user *UserData) (string, error) {
+	claims := Claims{
+		UserId:   user.Id,
+		UserRole: user.Role.String(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 12)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	accessToken, err := token.SignedString([]byte(config.Get("SECRET")))
+	if err != nil {
+		return "", err
+	}
+
+	return accessToken, nil
+}
+
+func ValidateToken(tokenString string) (*Claims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("invalid token signing method")
+		}
+
+		return []byte(config.Get("SECRET")), nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	claims, ok := token.Claims.(*Claims)
+	if !ok || !token.Valid {
+		return nil, fmt.Errorf("invalid token")
+	}
+
+	return claims, nil
+}
+
 func (l *Login) WithUsernamePassword(user *LoginDetails) (string, error) {
 	getUserQuery := `select password_ from users_ where username_ = $1`
 	row := l.Db.QueryRow(context.Background(), getUserQuery, user.Username)
@@ -51,31 +98,17 @@ func (l *Login) WithUsernamePassword(user *LoginDetails) (string, error) {
 	}
 
 	if err := l.Logout(userId); err != nil {
-		return "", fmt.Errorf("user is already logged in and unable to logout")
+		return "", fmt.Errorf("user is already logged out and unable to logout")
 	}
 
-	token := jwt.New(jwt.SigningMethodHS256)
-
-	claims := token.Claims.(jwt.MapClaims)
-
-	signedToken, err := token.SignedString([]byte(config.Get("SECRET")))
+	signedToken, err := GenerateToken(&UserData{Id: userId, Role: userRole})
 	if err != nil {
-		return "", fmt.Errorf("unable to login")
+		return "", err
 	}
-
-	issuedAt := time.Now().Unix()
-	expiresAt := time.Now().Add(time.Hour * 24).Unix()
-
-	claims["user_id"] = userId
-	claims["user_role"] = userRole
-	claims["iat"] = issuedAt
-	claims["exp"] = expiresAt
 
 	session := &Session{
-		Token:     signedToken,
-		UserId:    userId,
-		IssuedAt:  issuedAt,
-		ExpiresAt: expiresAt,
+		Token:  signedToken,
+		UserId: userId,
 	}
 
 	// save this new session for user

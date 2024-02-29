@@ -7,6 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/compress"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/encryptcookie"
 	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/template/html/v2"
@@ -28,6 +29,12 @@ func Start(port string) {
 		Views:        engine,
 		ErrorHandler: handlers.ErrorHandler,
 	})
+
+	cookieKey := encryptcookie.GenerateKey()
+
+	app.Use(encryptcookie.New(encryptcookie.Config{
+		Key: cookieKey,
+	}))
 
 	app.Static("/static", "./web/static")
 	app.Static("robots.txt", "./web/robots.txt")
@@ -52,6 +59,7 @@ func Start(port string) {
 	// admin -> login
 	web.Get("/admin/login", handlers.AdminLoginGetHandler)
 	web.Post("/admin/login", handlers.AdminLoginPostHandler)
+	web.Get("/admin/logout", handlers.AdminLogoutHandler)
 
 	// admin -> users
 	web.Get("/admin/users", handlers.AdminUserGetHandler)
