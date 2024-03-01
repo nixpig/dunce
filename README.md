@@ -2,6 +2,10 @@
 
 A HATEOAS-first headless (brainless) content publishing engine.
 
+## TODO
+
+> MOVE OFF OF FIBER
+
 ## ⚠️ WORK IN PROGRESS
 
 Don't try to use this yet. It probably doesn't even run.
@@ -60,3 +64,9 @@ Frankly, pretty fed up with REST APIs and had a crazy idea for a _headless_ HTML
 | -                      | -           |
 | `Login`                |             |
 | `Logout`               |             |
+
+## Admin API
+
+```
+
+```

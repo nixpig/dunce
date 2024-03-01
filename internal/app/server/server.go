@@ -12,6 +12,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/template/html/v2"
 	"github.com/nixpig/dunce/internal/app/handlers"
+	"github.com/nixpig/dunce/internal/app/middleware"
 	"github.com/nixpig/dunce/internal/pkg/config"
 )
 
@@ -50,52 +51,56 @@ func Start(port string) {
 	}))
 
 	web := app.Group(fmt.Sprintf("/%s", "/"))
+	admin := app.Group("/admin")
+
+	m := middleware.Protected{}
+	admin.Use(m.New(middleware.ProtectedConfig{}))
 
 	web.Get("/", handlers.IndexHandler)
 
 	web.Get("/users/:id", handlers.UserGetHandler)
 	web.Get("/users", handlers.UserGetHandler)
 
-	// admin -> login
-	web.Get("/admin/login", handlers.AdminLoginGetHandler)
-	web.Post("/admin/login", handlers.AdminLoginPostHandler)
-	web.Get("/admin/logout", handlers.AdminLogoutHandler)
+	// login
+	web.Get("/login", handlers.AdminLoginGetHandler)
+	web.Post("/login", handlers.AdminLoginPostHandler)
+	web.Get("/logout", handlers.AdminLogoutHandler)
 
 	// admin -> users
-	web.Get("/admin/users", handlers.AdminUserGetHandler)
-	web.Post("/admin/users", handlers.AdminUserPostHandler)
-	web.Get("/admin/users/:id", handlers.AdminUserGetHandler)
-	web.Put("/admin/users/:id", handlers.AdminUserPutHandler)
-	web.Delete("/admin/users/:id", handlers.AdminUserDeleteHander)
+	admin.Get("/users", handlers.AdminUserGetHandler)
+	admin.Post("/users", handlers.AdminUserPostHandler)
+	admin.Get("/users/:id", handlers.AdminUserGetHandler)
+	admin.Put("/users/:id", handlers.AdminUserPutHandler)
+	admin.Delete("/users/:id", handlers.AdminUserDeleteHander)
 	// web.Get("/users/register", handlers.UserRegisterHandler)
 	// web.Get("/users/login", handlers.UserLoginHandler)
 	// web.Get("/users/logout", handlers.UserLogoutHandler)
 
 	// admin -> tags
-	web.Get("/admin/tags", handlers.AdminTagGetHandler)
-	web.Post("/admin/tags", handlers.AdminTagPostHandler)
-	web.Get("/admin/tags/:id", handlers.AdminTagGetHandler)
-	web.Put("/admin/tags/:id", handlers.AdminTagUpdateHandler)
-	web.Delete("/admin/tags/:id", handlers.AdminTagDeleteHandler)
+	admin.Get("/tags", handlers.AdminTagGetHandler)
+	admin.Post("/tags", handlers.AdminTagPostHandler)
+	admin.Get("/tags/:id", handlers.AdminTagGetHandler)
+	admin.Put("/tags/:id", handlers.AdminTagUpdateHandler)
+	admin.Delete("/tags/:id", handlers.AdminTagDeleteHandler)
 
 	// admin -> types
-	web.Get("/admin/types", handlers.AdminTypeGetHandler)
-	web.Post("/admin/types", handlers.AdminTypePostHander)
-	web.Get("/admin/types/:id", handlers.AdminTypeGetHandler)
-	web.Put("/admin/types/:id", handlers.AdminTypePutHandler)
-	web.Delete("/admin/types/:id", handlers.AdminTypeDeleteHandler)
+	admin.Get("/types", handlers.AdminTypeGetHandler)
+	admin.Post("/types", handlers.AdminTypePostHander)
+	admin.Get("/types/:id", handlers.AdminTypeGetHandler)
+	admin.Put("/types/:id", handlers.AdminTypePutHandler)
+	admin.Delete("/types/:id", handlers.AdminTypeDeleteHandler)
 
 	// admin -> articles
-	web.Get("/admin/articles", handlers.AdminArticleGetHandler)
-	web.Post("/admin/articles", handlers.AdminArticlePostHandler)
-	web.Get("/admin/articles/:id", handlers.AdminArticleGetHandler)
-	web.Put("/admin/articles/:id", handlers.AdminArticlePutHandler)
-	web.Delete("/admin/articles/:id", handlers.AdminArticleDeleteHandler)
-	web.Get("/admin/create", handlers.AdminArticleCreateGetHandler)
+	admin.Get("/articles", handlers.AdminArticleGetHandler)
+	admin.Post("/articles", handlers.AdminArticlePostHandler)
+	admin.Get("/articles/:id", handlers.AdminArticleGetHandler)
+	admin.Put("/articles/:id", handlers.AdminArticlePutHandler)
+	admin.Delete("/articles/:id", handlers.AdminArticleDeleteHandler)
+	admin.Get("/create", handlers.AdminArticleCreateGetHandler)
 
 	// admin -> site
-	web.Get("/admin/site", handlers.AdminSiteGetHandler)
-	web.Post("/admin/site", handlers.AdminSitePostHandler)
+	admin.Get("/site", handlers.AdminSiteGetHandler)
+	admin.Post("/site", handlers.AdminSitePostHandler)
 
 	// web.Get("/:article_type", handlers.ArticleHandler)
 	// web.Get("/:article_type/:article_slug", handlers.ArticleHandler)
