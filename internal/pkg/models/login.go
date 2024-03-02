@@ -32,7 +32,7 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-func GenerateToken(user *UserData) (string, error) {
+func GenerateToken(user *User) (string, error) {
 	claims := Claims{
 		UserId:   user.Id,
 		UserRole: user.Role.String(),
@@ -101,7 +101,7 @@ func (l *Login) WithUsernamePassword(user *LoginDetails) (string, error) {
 		return "", fmt.Errorf("user is already logged out and unable to logout")
 	}
 
-	signedToken, err := GenerateToken(&UserData{Id: userId, Role: userRole})
+	signedToken, err := GenerateToken(&User{Id: userId, UserData: UserData{Role: userRole}})
 	if err != nil {
 		return "", err
 	}

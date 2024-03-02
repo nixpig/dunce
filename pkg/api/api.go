@@ -8,7 +8,7 @@ import (
 func WithContext(c *fiber.Ctx) map[string]interface{} {
 	return map[string]interface{}{
 		// Users
-		"GetUser":  func() *models.UserData { return GetUser(c) },
+		"GetUser":  func() *models.User { return GetUser(c) },
 		"GetUsers": GetUsers,
 		// TODO: GetUserById
 		// TODO:  GetUserByUsername
@@ -27,10 +27,10 @@ func WithContext(c *fiber.Ctx) map[string]interface{} {
 		// Articles
 		"GetArticles": GetArticles,
 		// TODO: GetArticleById
-		"GetArticleBySlug": func() *models.ArticleData { return GetArticleBySlug(c.Params("article_slug")) },
+		"GetArticleBySlug": func() *models.Article { return GetArticleBySlug(c.Params("article_slug")) },
 		// TODO: GetAllArticlesByAuthor
 		// TODO: GetAllArticlesByTag
-		"GetArticlesByTypeName": func() *map[string]models.ArticleData { return GetArticlesByTypeName(c.Params("article_type")) },
+		"GetArticlesByTypeName": func() *map[string]models.Article { return GetArticlesByTypeName(c.Params("article_type")) },
 
 		// Site
 		// TODO: SiteName

@@ -8,7 +8,7 @@ import (
 	"github.com/nixpig/dunce/internal/pkg/models"
 )
 
-func GetUser(c *fiber.Ctx) *models.UserData {
+func GetUser(c *fiber.Ctx) *models.User {
 	user_id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		fmt.Println(fmt.Errorf("unable to convert ID: %v", err))
@@ -24,14 +24,14 @@ func GetUser(c *fiber.Ctx) *models.UserData {
 	return user
 }
 
-func GetUsers() map[string]models.UserData {
+func GetUsers() map[string]models.User {
 	users, err := models.Query.User.GetAll()
 	if err != nil {
 		fmt.Println(fmt.Errorf("Error getting users: %v", err))
 		return nil
 	}
 
-	usermap := make(map[string]models.UserData)
+	usermap := make(map[string]models.User)
 
 	for index, item := range *users {
 		usermap[strconv.Itoa(index)] = item

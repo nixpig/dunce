@@ -38,7 +38,7 @@ func AdminSitePostHandler(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
 
-	siteData := models.SiteData{
+	siteData := models.Site{
 		Name:        c.FormValue("name"),
 		Description: c.FormValue("description"),
 		Url:         c.FormValue("url"),

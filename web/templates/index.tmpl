@@ -4,7 +4,7 @@
 {{ if $articles }}
   <ul>
     {{ range $article := $articles }}
-      <li><a href="/{{ $article.TypeName }}/{{ $article.Slug }}">{{ $article.Title }} - {{ $article.UpdatedAt }}</a></li>
+      <li><a href="/{{ $article.TypeId }}/{{ $article.Slug }}">{{ $article.Title }} - {{ $article.UpdatedAt }}</a></li>
     {{ end }}
   </ul>
 {{ end }}

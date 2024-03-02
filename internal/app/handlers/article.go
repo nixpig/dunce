@@ -36,33 +36,15 @@ func AdminArticleGetHandler(c *fiber.Ctx) error {
 
 		if editable {
 			return c.Render("pages/admin/articles", &fiber.Map{
-				"Page":      page,
-				"Editable":  editable,
-				"Id":        article.Id,
-				"Title":     article.Title,
-				"Subtitle":  article.Subtitle,
-				"Slug":      article.Slug,
-				"Body":      article.Body,
-				"CreatedAt": article.CreatedAt,
-				"UpdatedAt": article.UpdatedAt,
-				"UserId":    article.UserId,
-				"TypeId":    article.TypeId,
-				"TagIds":    article.TagIds,
+				"Article":  article,
+				"Page":     page,
+				"Editable": editable,
 			}, "layouts/admin")
 
 		}
 
 		return c.Render("fragments/admin/articles/article_table_row_view", &fiber.Map{
-			"Id":        article.Id,
-			"Title":     article.Title,
-			"Subtitle":  article.Subtitle,
-			"Slug":      article.Slug,
-			"Body":      article.Body,
-			"CreatedAt": article.CreatedAt,
-			"UpdatedAt": article.UpdatedAt,
-			"UserId":    article.UserId,
-			"TypeId":    article.TypeId,
-			"TagIds":    article.TagIds,
+			"Article": article,
 		})
 	}
 
@@ -120,17 +102,19 @@ func AdminArticlePutHandler(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
 
-	articleUpdate := models.ArticleData{
-		Id:        id,
-		Title:     c.FormValue("title"),
-		Subtitle:  c.FormValue("subtitle"),
-		Slug:      c.FormValue("slug"),
-		Body:      c.FormValue("body"),
-		UpdatedAt: time.Now(),
-		CreatedAt: createdAt,
-		TypeId:    typeId,
-		UserId:    userId,
-		TagIds:    c.FormValue("tag_ids"),
+	articleUpdate := models.Article{
+		Id: id,
+		ArticleData: models.ArticleData{
+			Title:     c.FormValue("title"),
+			Subtitle:  c.FormValue("subtitle"),
+			Slug:      c.FormValue("slug"),
+			Body:      c.FormValue("body"),
+			UpdatedAt: time.Now(),
+			CreatedAt: createdAt,
+			TypeId:    typeId,
+			UserId:    userId,
+			TagIds:    c.FormValue("tag_ids"),
+		},
 	}
 
 	updated, err := models.Query.Article.UpdateById(id, articleUpdate)
@@ -141,16 +125,7 @@ func AdminArticlePutHandler(c *fiber.Ctx) error {
 	}
 
 	return c.Render("fragments/admin/articles/article_table_row_view", &fiber.Map{
-		"Id":        updated.Id,
-		"Title":     updated.Title,
-		"Subtitle":  updated.Subtitle,
-		"Slug":      updated.Slug,
-		"Body":      updated.Body,
-		"UpdatedAt": updated.UpdatedAt,
-		"CreatedAt": updated.CreatedAt,
-		"TypeId":    updated.TypeId,
-		"UserId":    updated.UserId,
-		"TagIds":    updated.TagIds,
+		"Article": updated,
 	})
 }
 
@@ -176,7 +151,7 @@ func AdminArticlePostHandler(c *fiber.Ctx) error {
 		return err
 	}
 
-	newArticle := models.NewArticleData{
+	newArticle := models.ArticleData{
 		Title:     title,
 		Subtitle:  subtitle,
 		Slug:      slug,

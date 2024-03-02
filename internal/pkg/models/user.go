@@ -8,48 +8,37 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type User struct {
+type UserModel struct {
 	Db Dbconn
 }
 
 type UserData struct {
-	Id       int      `validate:"required"`
-	Username string   `validate:"required,max=100"`
-	Email    string   `validate:"required,max=100"`
-	Link     string   `validate:"omitempty,url,max=255"`
-	Role     RoleName `validate:"required"`
-}
-
-type NewUserData struct {
-	Username string   `validate:"required,min=5,max=100"`
-	Email    string   `validate:"required,email,max=100"`
-	Link     string   `validate:"omitempty,url,max=255"`
-	Password string   `validate:"required,min=8,max=255"`
-	Role     RoleName `validate:"required"`
-}
-
-type UpdateUserData struct {
 	Username string   `validate:"required,min=5,max=100"`
 	Email    string   `validate:"required,email,max=100"`
 	Link     string   `validate:"omitempty,url,max=255"`
 	Role     RoleName `validate:"required"`
 }
 
-func (u *User) Create(newUser *NewUserData) (*UserData, error) {
+type User struct {
+	Id int `validate:"required"`
+	UserData
+}
+
+func (u *UserModel) Create(newUser *UserData, password string) (*User, error) {
 	validate := validator.New()
 
 	if err := validate.Struct(newUser); err != nil {
 		return nil, err
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), 14)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	if err != nil {
 		return nil, err
 	}
 
 	query := `insert into users_ (username_, email_, link_, role_, password_) values($1, $2, $3, $4, $5) returning id_, username_, email_, link_, role_`
 
-	var user UserData
+	var user User
 
 	row := u.Db.QueryRow(context.Background(), query, &newUser.Username, &newUser.Email, &newUser.Link, &newUser.Role, string(hashedPassword))
 
@@ -60,7 +49,7 @@ func (u *User) Create(newUser *NewUserData) (*UserData, error) {
 	return &user, nil
 }
 
-func (u *User) Update(id int, user *UpdateUserData) (*UserData, error) {
+func (u *UserModel) Update(id int, user *UserData) (*User, error) {
 	validate := validator.New()
 
 	if err := validate.Struct(user); err != nil {
@@ -71,7 +60,7 @@ func (u *User) Update(id int, user *UpdateUserData) (*UserData, error) {
 
 	row := u.Db.QueryRow(context.Background(), query, id, &user.Username, &user.Email, &user.Link, &user.Role)
 
-	var updatedUser UserData
+	var updatedUser User
 
 	if err := row.Scan(&updatedUser.Id, &updatedUser.Username, &updatedUser.Email, &updatedUser.Link, &updatedUser.Role); err != nil {
 		return nil, err
@@ -80,7 +69,7 @@ func (u *User) Update(id int, user *UpdateUserData) (*UserData, error) {
 	return &updatedUser, nil
 }
 
-func (u *User) GetAll() (*[]UserData, error) {
+func (u *UserModel) GetAll() (*[]User, error) {
 	query := `select id_, username_, email_, link_, role_ from users_`
 
 	rows, err := u.Db.Query(context.Background(), query)
@@ -90,10 +79,10 @@ func (u *User) GetAll() (*[]UserData, error) {
 
 	defer rows.Close()
 
-	var users []UserData
+	var users []User
 
 	for rows.Next() {
-		var user UserData
+		var user User
 
 		if err := rows.Scan(&user.Id, &user.Username, &user.Email, &user.Link, &user.Role); err != nil {
 			return nil, err
@@ -105,7 +94,7 @@ func (u *User) GetAll() (*[]UserData, error) {
 	return &users, nil
 }
 
-func (u *User) GetByRole(role RoleName) (*[]UserData, error) {
+func (u *UserModel) GetByRole(role RoleName) (*[]User, error) {
 	query := `select id_, username_, email_, link_, role_ from users_ where role_ = $1`
 
 	rows, err := u.Db.Query(context.Background(), query, role)
@@ -115,10 +104,10 @@ func (u *User) GetByRole(role RoleName) (*[]UserData, error) {
 
 	defer rows.Close()
 
-	var users []UserData
+	var users []User
 
 	for rows.Next() {
-		var user UserData
+		var user User
 
 		if err := rows.Scan(&user.Id, &user.Username, &user.Email, &user.Link, &user.Role); err != nil {
 			return nil, err
@@ -130,10 +119,10 @@ func (u *User) GetByRole(role RoleName) (*[]UserData, error) {
 	return &users, nil
 }
 
-func (u *User) GetById(id int) (*UserData, error) {
+func (u *UserModel) GetById(id int) (*User, error) {
 	query := `select id_, username_, email_, link_, role_ from users_ where id_ = $1`
 
-	var user UserData
+	var user User
 
 	row := u.Db.QueryRow(context.Background(), query, id)
 
@@ -144,12 +133,12 @@ func (u *User) GetById(id int) (*UserData, error) {
 	return &user, nil
 }
 
-func (u *User) GetByUsername(username string) (*UserData, error) {
+func (u *UserModel) GetByUsername(username string) (*User, error) {
 	query := `select id_, username_, email_, link_, role_ from users_ where username_ = $1`
 
 	row := u.Db.QueryRow(context.Background(), query, username)
 
-	var user UserData
+	var user User
 
 	if err := row.Scan(&user.Id, &user.Username, &user.Email, &user.Link, &user.Role); err != nil {
 		return nil, err
@@ -158,12 +147,12 @@ func (u *User) GetByUsername(username string) (*UserData, error) {
 	return &user, nil
 }
 
-func (u *User) GetByEmail(email string) (*UserData, error) {
+func (u *UserModel) GetByEmail(email string) (*User, error) {
 	query := `select id_, username_, email_, link_, role_ from users_ where email = $1`
 
 	row := u.Db.QueryRow(context.Background(), query, email)
 
-	var user UserData
+	var user User
 
 	if err := row.Scan(&user.Id, &user.Username, &user.Email, &user.Link, &user.Role); err != nil {
 		return nil, err
@@ -172,7 +161,7 @@ func (u *User) GetByEmail(email string) (*UserData, error) {
 	return &user, nil
 }
 
-func (u *User) Exists(s string) (bool, error) {
+func (u *UserModel) Exists(s string) (bool, error) {
 	query := `select id_ from users_ where username_ = $1 or email_ = $1`
 
 	fmt.Println("check if exists: ", s)
@@ -187,7 +176,7 @@ func (u *User) Exists(s string) (bool, error) {
 	return rows.Next(), nil
 }
 
-func (u *User) Delete(id int) error {
+func (u *UserModel) Delete(id int) error {
 	query := `delete from users_ where id_ = $1`
 
 	res, err := u.Db.Exec(context.Background(), query, id)

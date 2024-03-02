@@ -84,15 +84,14 @@ func AdminUserPostHandler(c *fiber.Ctx) error {
 		return err
 	}
 
-	newUser := models.NewUserData{
+	newUser := models.UserData{
 		Username: username,
 		Email:    email,
 		Link:     link,
-		Password: password,
 		Role:     role,
 	}
 
-	createdUser, err := models.Query.User.Create(&newUser)
+	createdUser, err := models.Query.User.Create(&newUser, password)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).Render("fragments/admin/shared/error_list", fiber.Map{
 			"Errors": []error{err},
@@ -123,7 +122,7 @@ func AdminUserPutHandler(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
 
-	user := models.UpdateUserData{
+	user := models.UserData{
 		Username: username,
 		Email:    email,
 		Link:     link,

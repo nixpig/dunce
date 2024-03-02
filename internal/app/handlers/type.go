@@ -63,7 +63,7 @@ func AdminTypePostHander(c *fiber.Ctx) error {
 	template := c.FormValue("template")
 	slug := c.FormValue("slug")
 
-	newType := models.NewTypeData{
+	newType := models.TypeData{
 		Name:     name,
 		Template: template,
 		Slug:     slug,
@@ -103,8 +103,7 @@ func AdminTypePutHandler(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
 
-	typeData := models.UpdateTypeData{
-		Id:       id,
+	typeData := models.TypeData{
 		Name:     c.FormValue("name"),
 		Template: c.FormValue("template"),
 		Slug:     c.FormValue("slug"),

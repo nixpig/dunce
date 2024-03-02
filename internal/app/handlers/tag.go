@@ -61,7 +61,7 @@ func AdminTagUpdateHandler(c *fiber.Ctx) error {
 	}
 	fmt.Println("AdminTagUpdateHandler: ", id)
 
-	tag := models.UpdateTagData{
+	tag := models.TagData{
 		Name: c.FormValue("name"),
 		Slug: c.FormValue("slug"),
 	}
@@ -97,7 +97,7 @@ func AdminTagPostHandler(c *fiber.Ctx) error {
 	name := c.FormValue("name")
 	slug := c.FormValue("slug")
 
-	newTag := models.NewTagData{
+	newTag := models.TagData{
 		Name: name,
 		Slug: slug,
 	}

@@ -20,11 +20,11 @@ type DbInstance struct {
 var DB DbInstance
 
 type Queries struct {
-	User    *User
-	Tag     *Tag
-	Type    *Type
-	Article *Article
-	Site    *Site
+	User    *UserModel
+	Tag     *TagModel
+	Type    *TypeModel
+	Article *ArticleModel
+	Site    *SiteModel
 	Login   *Login
 }
 
@@ -33,11 +33,11 @@ var Query Queries
 func BuildQueries(db Dbconn) {
 	Query =
 		Queries{
-			User:    &User{Db: db},
-			Tag:     &Tag{Db: db},
-			Type:    &Type{Db: db},
-			Article: &Article{Db: db},
-			Site:    &Site{Db: db},
+			User:    &UserModel{Db: db},
+			Tag:     &TagModel{Db: db},
+			Type:    &TypeModel{Db: db},
+			Article: &ArticleModel{Db: db},
+			Site:    &SiteModel{Db: db},
 			Login:   &Login{Db: db},
 		}
 }

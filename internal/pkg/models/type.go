@@ -8,31 +8,22 @@ import (
 	"github.com/mrz1836/go-sanitize"
 )
 
-type Type struct {
+type TypeModel struct {
 	Db Dbconn
 }
 
 type TypeData struct {
-	Id       int    `validate:"required"`
 	Name     string `validate:"required,max=255"`
 	Template string `validate:"required,max=255"`
 	Slug     string `validate:"required,slug,max=255"`
 }
 
-type NewTypeData struct {
-	Name     string `validate:"required,max=255"`
-	Template string `validate:"required,max=255"`
-	Slug     string `validate:"required,slug,max=255"`
+type Type struct {
+	Id int `validate:"required"`
+	TypeData
 }
 
-type UpdateTypeData struct {
-	Id       int    `validate:"required"`
-	Name     string `validate:"required,max=255"`
-	Template string `validate:"required,max=255"`
-	Slug     string `validate:"required,slug,max=255"`
-}
-
-func (t *Type) GetAll() (*[]TypeData, error) {
+func (t *TypeModel) GetAll() (*[]Type, error) {
 	query := `select id_, name_, template_, slug_ from types_`
 
 	rows, err := t.Db.Query(context.Background(), query)
@@ -42,10 +33,10 @@ func (t *Type) GetAll() (*[]TypeData, error) {
 
 	defer rows.Close()
 
-	var types []TypeData
+	var types []Type
 
 	for rows.Next() {
-		var typeData TypeData
+		var typeData Type
 
 		if err := rows.Scan(&typeData.Id, &typeData.Name, &typeData.Template, &typeData.Slug); err != nil {
 			return nil, err
@@ -57,8 +48,8 @@ func (t *Type) GetAll() (*[]TypeData, error) {
 	return &types, nil
 }
 
-func (t *Type) Create(newType NewTypeData) (*TypeData, error) {
-	sanitisedTypeData := NewTypeData{
+func (t *TypeModel) Create(newType TypeData) (*Type, error) {
+	sanitisedTypeData := TypeData{
 		Name:     sanitize.XSS(newType.Name),
 		Template: sanitize.URI(newType.Template),
 		Slug:     sanitize.PathName(newType.Slug),
@@ -89,7 +80,7 @@ func (t *Type) Create(newType NewTypeData) (*TypeData, error) {
 
 	row := t.Db.QueryRow(context.Background(), query, &sanitisedTypeData.Name, &sanitisedTypeData.Template, &sanitisedTypeData.Slug)
 
-	var createdType TypeData
+	var createdType Type
 
 	if err := row.Scan(&createdType.Id, &createdType.Name, &createdType.Template, &createdType.Slug); err != nil {
 		return nil, err
@@ -98,12 +89,12 @@ func (t *Type) Create(newType NewTypeData) (*TypeData, error) {
 	return &createdType, nil
 }
 
-func (t *Type) GetById(id int) (*TypeData, error) {
+func (t *TypeModel) GetById(id int) (*Type, error) {
 	query := `select id_, name_, template_, slug_ from types_ where id_ = $1`
 
 	row := t.Db.QueryRow(context.Background(), query, id)
 
-	var typeData TypeData
+	var typeData Type
 
 	if err := row.Scan(&typeData.Id, &typeData.Name, &typeData.Template, &typeData.Slug); err != nil {
 		return nil, err
@@ -112,7 +103,7 @@ func (t *Type) GetById(id int) (*TypeData, error) {
 	return &typeData, nil
 }
 
-func (t *Type) DeleteById(id int) error {
+func (t *TypeModel) DeleteById(id int) error {
 	query := `delete from types_ where id_ = $1`
 
 	res, err := t.Db.Exec(context.Background(), query, id)
@@ -127,8 +118,8 @@ func (t *Type) DeleteById(id int) error {
 	return nil
 }
 
-func (t *Type) UpdateById(id int, typeData UpdateTypeData) (*TypeData, error) {
-	sanitisedTypeData := NewTypeData{
+func (t *TypeModel) UpdateById(id int, typeData TypeData) (*Type, error) {
+	sanitisedTypeData := TypeData{
 		Name:     sanitize.XSS(typeData.Name),
 		Template: sanitize.URI(typeData.Template),
 		Slug:     sanitize.PathName(typeData.Slug),
@@ -160,7 +151,7 @@ func (t *Type) UpdateById(id int, typeData UpdateTypeData) (*TypeData, error) {
 
 	updated := t.Db.QueryRow(context.Background(), query, id, &sanitisedTypeData.Name, &sanitisedTypeData.Template, &sanitisedTypeData.Slug)
 
-	var updatedType TypeData
+	var updatedType Type
 
 	if err := updated.Scan(&updatedType.Id, &updatedType.Name, &updatedType.Template, &updatedType.Slug); err != nil {
 		return nil, err

@@ -9,12 +9,11 @@ import (
 	"github.com/mrz1836/go-sanitize"
 )
 
-type Article struct {
+type ArticleModel struct {
 	Db Dbconn
 }
 
 type ArticleData struct {
-	Id        int
 	Title     string    `validate:"required,max=255"`
 	Subtitle  string    `validate:"required,max=255"`
 	Slug      string    `validate:"required,slug,max=255"`
@@ -26,48 +25,47 @@ type ArticleData struct {
 	TagIds    string    `validate:"required"` // stored as comma separated list in db
 }
 
-type NewArticleData struct {
-	Title     string    `validate:"required,max=255"`
-	Subtitle  string    `validate:"required,max=255"`
-	Slug      string    `validate:"required,slug,max=255"`
-	Body      string    `validate:"required"`
-	CreatedAt time.Time `validate:"required"`
-	UpdatedAt time.Time `validate:"required"`
-	TypeId    int       `validate:"required"`
-	UserId    int       `validate:"required"`
-	TagIds    string    `validate:"required"` // stored as comma separated list in db
+type Article struct {
+	Id int
+	ArticleData
+
+	Type Type `validate:"required"`
+	// Tags []TagData `validate:"required"`
+	// User UserData  `validate:"required"`
 }
 
-func (a *Article) GetById(id int) (*ArticleData, error) {
-	query := `select id_, title_, subtitle_, slug_, body_, created_at_, updated_at_, type_id_, user_id_, tag_ids_ from articles_ where id_ = $1`
+func (a *ArticleModel) GetById(id int) (*Article, error) {
+	fmt.Println("get by id")
+	query := `select a.id_, a.title_, a.subtitle_, a.slug_, a.body_, a.created_at_, a.updated_at_, a.type_id_, a.user_id_, a.tag_ids_, t.id_, t.name_, t.slug_ from articles_ a inner join types_ t on a.type_id_ = t.id_ where a.id_ = $1`
 
 	row := a.Db.QueryRow(context.Background(), query, id)
 
-	var article ArticleData
+	var article Article
 
-	if err := row.Scan(&article.Id, &article.Title, &article.Subtitle, &article.Slug, &article.Body, &article.CreatedAt, &article.UpdatedAt, &article.TypeId, &article.UserId, &article.TagIds); err != nil {
+	if err := row.Scan(&article.Id, &article.Title, &article.Subtitle, &article.Slug, &article.Body, &article.CreatedAt, &article.UpdatedAt, &article.TypeId, &article.UserId, &article.TagIds, &article.Type.Id, &article.Type.Name, &article.Type.Slug); err != nil {
+		fmt.Println("errored: ", err)
 		return nil, err
 	}
 
 	return &article, nil
 }
 
-func (a *Article) GetBySlug(slug string) (*ArticleData, error) {
-	query := `select a.id_, a.title_, a.subtitle_, a.slug_, a.body_, a.created_at_, a.updated_at_, a.type_id_, a.user_id_, a.tag_ids_ where a.slug_ = $1`
+func (a *ArticleModel) GetBySlug(slug string) (*Article, error) {
+	query := `select a.id_, a.title_, a.subtitle_, a.slug_, a.body_, a.created_at_, a.updated_at_, a.type_id_, a.user_id_, a.tag_ids_, t.id_, t.name_, t.slug_ from articles_ a inner join types_ t on a.type_id_ = t.id_ where a.slug_ = $1`
 
 	row := a.Db.QueryRow(context.Background(), query, slug)
 
-	var article ArticleData
+	var article Article
 
-	if err := row.Scan(&article.Id, &article.Title, &article.Subtitle, &article.Slug, &article.Body, &article.CreatedAt, &article.UpdatedAt, &article.TypeId, &article.UserId, &article.TagIds); err != nil {
+	if err := row.Scan(&article.Id, &article.Title, &article.Subtitle, &article.Slug, &article.Body, &article.CreatedAt, &article.UpdatedAt, &article.TypeId, &article.UserId, &article.TagIds, &article.Type.Id, &article.Type.Name, &article.Type.Slug); err != nil {
 		return nil, err
 	}
 
 	return &article, nil
 }
 
-func (a *Article) GetAll() (*[]ArticleData, error) {
-	query := `select id_, title_, subtitle_, slug_, body_, created_at_, updated_at_, type_id_, user_id_, tag_ids_ from articles_`
+func (a *ArticleModel) GetAll() (*[]Article, error) {
+	query := `select a.id_, a.title_, a.subtitle_, a.slug_, a.body_, a.created_at_, a.updated_at_, a.type_id_, a.user_id_, a.tag_ids_, t.id_, t.name_, t.slug_ from articles_ a inner join types_ t on a.type_id_ = t.id_`
 
 	rows, err := a.Db.Query(context.Background(), query)
 	if err != nil {
@@ -76,12 +74,12 @@ func (a *Article) GetAll() (*[]ArticleData, error) {
 
 	defer rows.Close()
 
-	var articles []ArticleData
+	var articles []Article
 
 	for rows.Next() {
-		var article ArticleData
+		var article Article
 
-		if err := rows.Scan(&article.Id, &article.Title, &article.Subtitle, &article.Slug, &article.Body, &article.CreatedAt, &article.UpdatedAt, &article.TypeId, &article.UserId, &article.TagIds); err != nil {
+		if err := rows.Scan(&article.Id, &article.Title, &article.Subtitle, &article.Slug, &article.Body, &article.CreatedAt, &article.UpdatedAt, &article.TypeId, &article.UserId, &article.TagIds, &article.Type.Id, &article.Type.Name, &article.Type.Slug); err != nil {
 			return nil, err
 		}
 
@@ -91,8 +89,8 @@ func (a *Article) GetAll() (*[]ArticleData, error) {
 	return &articles, nil
 }
 
-func (a *Article) GetByTypeName(typeName string) (*[]ArticleData, error) {
-	query := `select a.id_, a.title_, a.subtitle_, a.slug_, a.body_, a.created_at_, a.updated_at_, a.type_id_, a.user_id_, a.tag_ids_, t.name_ from articles_ a inner join types_ t on a.type_id_ = t.id_ where t.name_ = $1`
+func (a *ArticleModel) GetByTypeName(typeName string) (*[]Article, error) {
+	query := `select a.id_, a.title_, a.subtitle_, a.slug_, a.body_, a.created_at_, a.updated_at_, a.type_id_, a.user_id_, a.tag_ids_, t.id_, t.name_, t.slug_, from articles_ a inner join types_ t on a.type_id_ = t.id_ where t.name_ = $1`
 
 	rows, err := a.Db.Query(context.Background(), query, typeName)
 	if err != nil {
@@ -101,12 +99,12 @@ func (a *Article) GetByTypeName(typeName string) (*[]ArticleData, error) {
 
 	defer rows.Close()
 
-	var articles []ArticleData
+	var articles []Article
 
 	for rows.Next() {
-		var article ArticleData
+		var article Article
 
-		if err := rows.Scan(&article.Id, &article.Title, &article.Subtitle, &article.Slug, &article.Body, &article.CreatedAt, &article.UpdatedAt, &article.TypeId, &article.UserId, &article.TagIds); err != nil {
+		if err := rows.Scan(&article.Id, &article.Title, &article.Subtitle, &article.Slug, &article.Body, &article.CreatedAt, &article.UpdatedAt, &article.TypeId, &article.UserId, &article.TagIds, &article.Type.Id, &article.Type.Name, &article.Type.Slug); err != nil {
 			return nil, err
 		}
 
@@ -116,8 +114,8 @@ func (a *Article) GetByTypeName(typeName string) (*[]ArticleData, error) {
 	return &articles, nil
 }
 
-func (a *Article) Create(newArticle NewArticleData) (*ArticleData, error) {
-	sanitisedData := NewArticleData{
+func (a *ArticleModel) Create(newArticle ArticleData) (*Article, error) {
+	sanitisedData := ArticleData{
 		Title:     sanitize.XSS(newArticle.Title),
 		Subtitle:  sanitize.XSS(newArticle.Subtitle),
 		Slug:      sanitize.PathName(newArticle.Slug),
@@ -155,7 +153,7 @@ func (a *Article) Create(newArticle NewArticleData) (*ArticleData, error) {
 
 	row := a.Db.QueryRow(context.Background(), query, &sanitisedData.Title, &sanitisedData.Subtitle, &sanitisedData.Slug, &sanitisedData.Body, &sanitisedData.CreatedAt, &sanitisedData.UpdatedAt, &sanitisedData.TypeId, &sanitisedData.UserId, &sanitisedData.TagIds)
 
-	var createdArticle ArticleData
+	var createdArticle Article
 
 	if err := row.Scan(&createdArticle.Id, &createdArticle.Title, &createdArticle.Subtitle, &createdArticle.Slug, &createdArticle.Body, &createdArticle.CreatedAt, &createdArticle.UpdatedAt, &createdArticle.TypeId, &createdArticle.UserId, &createdArticle.TagIds); err != nil {
 		return nil, err
@@ -164,17 +162,19 @@ func (a *Article) Create(newArticle NewArticleData) (*ArticleData, error) {
 	return &createdArticle, nil
 }
 
-func (a *Article) UpdateById(id int, updateArticle ArticleData) (*ArticleData, error) {
-	sanitisedData := ArticleData{
-		Title:     sanitize.XSS(updateArticle.Title),
-		Subtitle:  sanitize.XSS(updateArticle.Subtitle),
-		Slug:      sanitize.PathName(updateArticle.Slug),
-		Body:      sanitize.XSS(updateArticle.Body),
-		CreatedAt: updateArticle.CreatedAt,
-		UpdatedAt: updateArticle.UpdatedAt,
-		TypeId:    updateArticle.TypeId,
-		UserId:    updateArticle.UserId,
-		TagIds:    sanitize.XSS(updateArticle.TagIds),
+func (a *ArticleModel) UpdateById(id int, updateArticle Article) (*Article, error) {
+	sanitisedData := Article{
+		ArticleData: ArticleData{
+			Title:     sanitize.XSS(updateArticle.Title),
+			Subtitle:  sanitize.XSS(updateArticle.Subtitle),
+			Slug:      sanitize.PathName(updateArticle.Slug),
+			Body:      sanitize.XSS(updateArticle.Body),
+			CreatedAt: updateArticle.CreatedAt,
+			UpdatedAt: updateArticle.UpdatedAt,
+			TypeId:    updateArticle.TypeId,
+			UserId:    updateArticle.UserId,
+			TagIds:    sanitize.XSS(updateArticle.TagIds),
+		},
 	}
 
 	validate := validator.New(validator.WithRequiredStructEnabled())
@@ -203,7 +203,7 @@ func (a *Article) UpdateById(id int, updateArticle ArticleData) (*ArticleData, e
 
 	row := a.Db.QueryRow(context.Background(), query, id, &sanitisedData.Title, &sanitisedData.Subtitle, &sanitisedData.Slug, &sanitisedData.Body, &sanitisedData.CreatedAt, &sanitisedData.UpdatedAt, &sanitisedData.TypeId, &sanitisedData.UserId, &sanitisedData.TagIds)
 
-	var updatedArticleData ArticleData
+	var updatedArticleData Article
 
 	if err := row.Scan(&updatedArticleData.Id, &updatedArticleData.Title, &updatedArticleData.Subtitle, &updatedArticleData.Slug, &updatedArticleData.Body, &updatedArticleData.CreatedAt, &updatedArticleData.UpdatedAt, &updatedArticleData.TypeId, &updatedArticleData.UserId, &updatedArticleData.TagIds); err != nil {
 		return nil, err
@@ -212,7 +212,7 @@ func (a *Article) UpdateById(id int, updateArticle ArticleData) (*ArticleData, e
 	return &updatedArticleData, nil
 }
 
-func (a *Article) DeleteById(id int) error {
+func (a *ArticleModel) DeleteById(id int) error {
 	query := `delete from articles_ where id_ = $1`
 
 	res, err := a.Db.Exec(context.Background(), query, id)

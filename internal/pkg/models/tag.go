@@ -9,29 +9,22 @@ import (
 	"github.com/mrz1836/go-sanitize"
 )
 
-type Tag struct {
+type TagModel struct {
 	Db Dbconn
 }
 
 type TagData struct {
-	Id   int
-	Name string
-	Slug string
-}
-
-type NewTagData struct {
 	Name string `validate:"required,max=100"`
 	Slug string `validate:"required,slug,max=100"`
 }
 
-type UpdateTagData struct {
-	Id   int    `validate:"required,number"`
-	Name string `validate:"required,alphanumunicode,max=100"`
-	Slug string `validate:"required,slug,max=100"`
+type Tag struct {
+	Id int
+	TagData
 }
 
-func (t *Tag) Create(newTag NewTagData) (*TagData, error) {
-	sanitisedTagData := NewTagData{
+func (t *TagModel) Create(newTag TagData) (*Tag, error) {
+	sanitisedTagData := TagData{
 		Name: sanitize.XSS(newTag.Name),
 		Slug: sanitize.PathName(newTag.Slug),
 	}
@@ -59,7 +52,7 @@ func (t *Tag) Create(newTag NewTagData) (*TagData, error) {
 
 	query := `insert into tags_ (name_, slug_) values ($1, $2) returning id_, name_, slug_`
 
-	var tag TagData
+	var tag Tag
 
 	row := t.Db.QueryRow(context.Background(), query, &sanitisedTagData.Name, &sanitisedTagData.Slug)
 
@@ -70,7 +63,7 @@ func (t *Tag) Create(newTag NewTagData) (*TagData, error) {
 	return &tag, nil
 }
 
-func (t *Tag) Delete(id int) error {
+func (t *TagModel) Delete(id int) error {
 	query := `delete from tags_ where id_ = $1`
 
 	res, err := t.Db.Exec(context.Background(), query, id)
@@ -85,12 +78,12 @@ func (t *Tag) Delete(id int) error {
 	return nil
 }
 
-func (t *Tag) UpdateById(id int, tag UpdateTagData) (*TagData, error) {
+func (t *TagModel) UpdateById(id int, tag TagData) (*Tag, error) {
 	validate := validator.New(validator.WithRequiredStructEnabled())
 
 	validate.RegisterValidation("slug", ValidateSlug)
 
-	sanitisedTagData := NewTagData{
+	sanitisedTagData := TagData{
 		Name: sanitize.XSS(tag.Name),
 		Slug: sanitize.PathName(tag.Slug),
 	}
@@ -114,7 +107,7 @@ func (t *Tag) UpdateById(id int, tag UpdateTagData) (*TagData, error) {
 
 	row := t.Db.QueryRow(context.Background(), query, id, &sanitisedTagData.Name, &sanitisedTagData.Slug)
 
-	var updatedTag TagData
+	var updatedTag Tag
 
 	if err := row.Scan(&updatedTag.Id, &updatedTag.Name, &updatedTag.Slug); err != nil {
 		return nil, err
@@ -123,12 +116,12 @@ func (t *Tag) UpdateById(id int, tag UpdateTagData) (*TagData, error) {
 	return &updatedTag, nil
 }
 
-func (t *Tag) GetById(id int) (*TagData, error) {
+func (t *TagModel) GetById(id int) (*Tag, error) {
 	query := `select id_, name_, slug_ from tags_ where id_ = $1`
 
 	row := t.Db.QueryRow(context.Background(), query, id)
 
-	var tag TagData
+	var tag Tag
 
 	if err := row.Scan(&tag.Id, &tag.Name, &tag.Slug); err != nil {
 		return nil, err
@@ -137,7 +130,7 @@ func (t *Tag) GetById(id int) (*TagData, error) {
 	return &tag, nil
 }
 
-func (t *Tag) GetAll() (*[]TagData, error) {
+func (t *TagModel) GetAll() (*[]Tag, error) {
 	query := `select id_, name_, slug_ from tags_`
 
 	rows, err := t.Db.Query(context.Background(), query)
@@ -147,10 +140,10 @@ func (t *Tag) GetAll() (*[]TagData, error) {
 
 	defer rows.Close()
 
-	var tags []TagData
+	var tags []Tag
 
 	for rows.Next() {
-		var tag TagData
+		var tag Tag
 
 		if err := rows.Scan(&tag.Id, &tag.Name, &tag.Slug); err != nil {
 			return nil, err

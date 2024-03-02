@@ -19,19 +19,20 @@ func TestCreateUser(t *testing.T) {
 
 	models.BuildQueries(mock)
 
-	newUser := models.NewUserData{
+	newUser := models.UserData{
 		Username: "some username",
 		Email:    "some email",
 		Link:     "some link",
 		Role:     models.AdminRole,
-		Password: "some password",
 	}
 
+	password := "some password"
+
 	mock.ExpectQuery(regexp.QuoteMeta(`insert into user_ (username_, email_, link_, role_, password_) values($1, $2, $3, $4, $5) returning id_, username_, email_, link_, role_`)).
-		WithArgs(newUser.Username, newUser.Email, newUser.Link, newUser.Role, newUser.Password).
+		WithArgs(newUser.Username, newUser.Email, newUser.Link, newUser.Role, password).
 		WillReturnRows(mock.NewRows([]string{"id_", "username_", "email_", "link_", "role_"}).AddRow(23, newUser.Username, newUser.Email, newUser.Link, newUser.Role))
 
-	createdUser, err := models.Query.User.Create(&newUser)
+	createdUser, err := models.Query.User.Create(&newUser, password)
 	if err != nil {
 		t.Errorf("%v", err)
 	}
@@ -40,12 +41,14 @@ func TestCreateUser(t *testing.T) {
 		t.Errorf("%v", err)
 	}
 
-	assert.Equal(t, &models.UserData{
-		Id:       23,
-		Username: newUser.Username,
-		Email:    newUser.Email,
-		Link:     newUser.Link,
-		Role:     newUser.Role,
+	assert.Equal(t, &models.User{
+		Id: 23,
+		UserData: models.UserData{
+			Username: newUser.Username,
+			Email:    newUser.Email,
+			Link:     newUser.Link,
+			Role:     newUser.Role,
+		},
 	}, createdUser)
 }
 
@@ -70,9 +73,9 @@ func TestGetUsers(t *testing.T) {
 		t.Fatalf("unable to get users: %v", err)
 	}
 
-	assert.Equal(t, &[]models.UserData{
-		{Id: 1, Username: "user1", Email: "test_one@example.com", Link: "http://example.com", Role: models.AdminRole},
-		{Id: 2, Username: "user2", Email: "test_two@example.org", Link: "https://example.org", Role: models.AuthorRole},
+	assert.Equal(t, &[]models.User{
+		{Id: 1, UserData: models.UserData{Username: "user1", Email: "test_one@example.com", Link: "http://example.com", Role: models.AdminRole}},
+		{Id: 2, UserData: models.UserData{Username: "user2", Email: "test_two@example.org", Link: "https://example.org", Role: models.AuthorRole}},
 	}, users)
 }
 
@@ -100,9 +103,9 @@ func TestGetUsersByRole(t *testing.T) {
 		t.Fatalf("unable to get users with Admin role: %v", err)
 	}
 
-	assert.Equal(t, &[]models.UserData{
-		{Id: 1, Username: "admin1", Email: "admin1@example.com", Link: "https://admin1-example.org", Role: models.AdminRole},
-		{Id: 6, Username: "admin2", Email: "admin2@example.com", Link: "https://admin2-example.org", Role: models.AdminRole},
+	assert.Equal(t, &[]models.User{
+		{Id: 1, UserData: models.UserData{Username: "admin1", Email: "admin1@example.com", Link: "https://admin1-example.org", Role: models.AdminRole}},
+		{Id: 6, UserData: models.UserData{Username: "admin2", Email: "admin2@example.com", Link: "https://admin2-example.org", Role: models.AdminRole}},
 	}, adminUsers)
 
 	mockRowsAuthor := mock.NewRows([]string{"id_", "username_", "email_", "link_", "role_"}).
@@ -120,10 +123,10 @@ func TestGetUsersByRole(t *testing.T) {
 		t.Fatalf("unable to get users with Author role: %v", err)
 	}
 
-	assert.Equal(t, &[]models.UserData{
-		{Id: 2, Username: "author1", Email: "author1@example.com", Link: "https://author1-example.org", Role: models.AuthorRole},
-		{Id: 4, Username: "author2", Email: "author2@example.com", Link: "https://author2-example.org", Role: models.AuthorRole},
-		{Id: 5, Username: "author3", Email: "author3@example.com", Link: "https://author3-example.org", Role: models.AuthorRole},
+	assert.Equal(t, &[]models.User{
+		{Id: 2, UserData: models.UserData{Username: "author1", Email: "author1@example.com", Link: "https://author1-example.org", Role: models.AuthorRole}},
+		{Id: 4, UserData: models.UserData{Username: "author2", Email: "author2@example.com", Link: "https://author2-example.org", Role: models.AuthorRole}},
+		{Id: 5, UserData: models.UserData{Username: "author3", Email: "author3@example.com", Link: "https://author3-example.org", Role: models.AuthorRole}},
 	}, authorUsers)
 
 	mockRowsReader := mock.NewRows([]string{"id_", "username_", "email_", "link_", "role_"}).
@@ -140,9 +143,9 @@ func TestGetUsersByRole(t *testing.T) {
 		t.Fatalf("unable to get users with Reader role: %v", err)
 	}
 
-	assert.Equal(t, &[]models.UserData{
-		{Id: 3, Username: "reader1", Email: "reader1@example.com", Link: "https://reader1-example.org", Role: models.ReaderRole},
-		{Id: 7, Username: "reader2", Email: "reader2@example.com", Link: "https://reader2-example.org", Role: models.ReaderRole},
+	assert.Equal(t, &[]models.User{
+		{Id: 3, UserData: models.UserData{Username: "reader1", Email: "reader1@example.com", Link: "https://reader1-example.org", Role: models.ReaderRole}},
+		{Id: 7, UserData: models.UserData{Username: "reader2", Email: "reader2@example.com", Link: "https://reader2-example.org", Role: models.ReaderRole}},
 	}, readerUsers)
 
 	mockRowsEmpty := mock.NewRows([]string{"id_", "username_", "email_", "link_", "role_"})
@@ -180,12 +183,13 @@ func TestGetUserById(t *testing.T) {
 		t.Fatalf("unable to get user 23: %v", err)
 	}
 
-	assert.Equal(t, &models.UserData{
-		Id:       23,
-		Username: "test_user",
-		Email:    "test@example.com",
-		Link:     "http://example.com",
-		Role:     models.AuthorRole,
+	assert.Equal(t, &models.User{
+		Id: 23,
+		UserData: models.UserData{Username: "test_user",
+			Email: "test@example.com",
+			Link:  "http://example.com",
+			Role:  models.AuthorRole,
+		},
 	}, user23)
 
 	mock.ExpectQuery(regexp.QuoteMeta(`select id_, username_, email_, link_, role_ from user_ where id_ = $1`)).

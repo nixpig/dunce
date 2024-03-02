@@ -47,16 +47,17 @@ func AdminLogoutHandler(c *fiber.Ctx) error {
 			return err
 		}
 
-		// set expiry to now
-		c.Cookie(&fiber.Cookie{
-			Name:     "dunce_jwt",
-			Value:    tokenString,
-			Secure:   true,
-			Expires:  time.Now(),
-			SameSite: "strict",
-			HTTPOnly: true,
-		})
 	}
+
+	// set cookie expiry to now
+	c.Cookie(&fiber.Cookie{
+		Name:     "dunce_jwt",
+		Value:    "",
+		Secure:   true,
+		Expires:  time.Now(),
+		SameSite: "strict",
+		HTTPOnly: true,
+	})
 
 	return c.Redirect("/login")
 }

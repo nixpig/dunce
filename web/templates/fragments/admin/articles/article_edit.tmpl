@@ -6,22 +6,22 @@
   </div>
 
   <form name="create-article" 
-    {{ if .Id }}
-      hx-put="/admin/articles/{{ .Id }}"
+    {{ if .Article.Id }}
+      hx-put="/admin/articles/{{ .Article.Id }}"
     {{ else }}
       hx-post="/admin/articles"
     {{ end }}
   >
 
-    {{ if .Id }}
-      <input type="hidden" name="id" value="{{ .Id }}">
+    {{ if .Article.Id }}
+      <input type="hidden" name="id" value="{{ .Article.Id }}">
     {{ end }}
 
     <label for="title">
       Title
     </label>
     <div class="errors">
-      <input type="text" id="title" name="title" placeholder="Article title" required value="{{ .Title }}">
+      <input type="text" id="title" name="title" placeholder="Article title" required value="{{ .Article.Title }}">
       <div class="title-input"></div>
     </div>
 
@@ -29,15 +29,15 @@
       Subtitle
     </label>
     <div class="errors">
-      <input type="text" id="subtitle" name="subtitle" placeholder="Article subtitle" required value="{{ .Subtitle }}">
+      <input type="text" id="subtitle" name="subtitle" placeholder="Article subtitle" required value="{{ .Article.Subtitle }}">
       <div class="subtitle-input"></div>
     </div>
 
     <label for="slug">
-      Slug
+      Slug 
     </label>
     <div class="errors">
-      <input type="text" id="slug" name="slug" pattern="^[a-zA-Z0-9\-]+$" placeholder="article-slug" required value={{ .Slug }}>
+      <input type="text" id="slug" name="slug" pattern="^[a-zA-Z0-9\-]+$" placeholder="article-slug" required value={{ .Article.Slug }}>
       <div class="slug-input"></div>
     </div>
 
@@ -45,7 +45,7 @@
       Content
     </label>
     <div class="errors">
-      <textarea cols="75" name="body" id="body">{{ .Body }}</textarea>
+      <textarea cols="75" name="body" id="body">{{ .Article.Body }}</textarea>
       <div class="body-input"></div>
     </div>
 
@@ -53,18 +53,18 @@
     <label for="created_at">
       Created at
     </label>
-    <input type="text" name="created_at" id="created_at" value="{{ .CreatedAt }}" readonly>
+    <input type="text" name="created_at" id="created_at" value="{{ .Article.CreatedAt }}" readonly>
 
     <label for="last_updated">
       Last updated
     </label>
-    <input type="text" id="last_updated" value="{{ .UpdatedAt }}" disabled>
+    <input type="text" id="last_updated" value="{{ .Article.UpdatedAt }}" disabled>
 
     <label for="type_id">
-      Type ID
+      Type ID ({{ .Article.Type.Name }} : {{ .Article.Type.Slug }})
     </label>
     <div class="errors">
-      <input type="number" id="type_id" name="type_id" value="{{ .TypeId }}" required>
+      <input type="number" id="type_id" name="type_id" value="{{ .Article.TypeId }}" required>
       <div class="type-id-input"></div>
     </div>
 
@@ -72,15 +72,15 @@
       User ID
     </label>
     <div class="errors">
-      <input type="number" id="user_id" name="user_id" value="{{ .UserId }}" required>
+      <input type="number" id="user_id" name="user_id" value="{{ .Article.UserId }}" required>
       <div class="user-id-input"></div>
     </div>
 
     <label for="tag_ids">
-      Tag IDs
+      Tag IDs 
     </label>
     <div class="errors">
-      <input type="number" id="tag_ids" name="tag_ids" value="{{ .TagIds }}" required>
+      <input type="number" id="tag_ids" name="tag_ids" value="{{ .Article.TagIds }}" required>
       <div class="tag-ids-input"></div>
     </div>
 
