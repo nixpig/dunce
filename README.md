@@ -71,53 +71,53 @@ Frankly, pretty fed up with REST APIs and had a crazy idea for a _headless_ HTML
 
 | Implemented | Model Method  | Params                               | Returns     |
 | ----------- | ------------- | ------------------------------------ | ----------- |
-| - [ ]       | `Create`      | `article ArticleData`                | `Article`   |
-| - [ ]       | `GetAll`      |                                      | `[]Article` |
-| - [ ]       | `GetByType`   | `typeId int`                         | `[]Article` |
-| - [ ]       | `GetByAuthor` | `authorId int`                       | `[]Article` |
-| - [ ]       | `GetById`     | `articleId int`                      | `Article`   |
-| - [ ]       | `GetBySlug`   | `articleSlug string`                 | `Article`   |
-| - [ ]       | `GetByTag`    | `tagId int`                          | `[]Article` |
-| - [ ]       | `UpdateById`  | `articleId int, article ArticleData` | `Article`   |
-| - [ ]       | `DeleteById`  | `articleId int`                      | `bool`      |
+| [ ]         | `Create`      | `article ArticleData`                | `Article`   |
+| [ ]         | `GetAll`      |                                      | `[]Article` |
+| [ ]         | `GetByType`   | `typeId int`                         | `[]Article` |
+| [ ]         | `GetByAuthor` | `authorId int`                       | `[]Article` |
+| [ ]         | `GetById`     | `articleId int`                      | `Article`   |
+| [ ]         | `GetBySlug`   | `articleSlug string`                 | `Article`   |
+| [ ]         | `GetByTag`    | `tagId int`                          | `[]Article` |
+| [ ]         | `UpdateById`  | `articleId int, article ArticleData` | `Article`   |
+| [ ]         | `DeleteById`  | `articleId int`                      | `bool`      |
 
 ### Users
 
 | Implemented | Model Method    | Params                           | Returns  |
 | ----------- | --------------- | -------------------------------- | -------- |
-| - [ ]       | `Create`        | `user UserData, password string` | `User`   |
-| - [ ]       | `GetAll`        |                                  | `[]User` |
-| - [ ]       | `GetById`       | `userId int`                     | `User`   |
-| - [ ]       | `GetByUsername` | `username string`                | `User`   |
-| - [ ]       | `GetByEmail`    | `email string`                   | `User`   |
-| - [ ]       | `GetByRole`     | `role RoleName`                  | `[]User` |
-| - [ ]       | `UpdateById`    | `userId int, user UserData`      | `User`   |
-| - [ ]       | `DeleteById`    | `userId int`                     | `bool`   |
+| [ ]         | `Create`        | `user UserData, password string` | `User`   |
+| [ ]         | `GetAll`        |                                  | `[]User` |
+| [ ]         | `GetById`       | `userId int`                     | `User`   |
+| [ ]         | `GetByUsername` | `username string`                | `User`   |
+| [ ]         | `GetByEmail`    | `email string`                   | `User`   |
+| [ ]         | `GetByRole`     | `role RoleName`                  | `[]User` |
+| [ ]         | `UpdateById`    | `userId int, user UserData`      | `User`   |
+| [ ]         | `DeleteById`    | `userId int`                     | `bool`   |
 
 ### Tags
 
 | Implemented | Model Method | Params                   | Returns |
 | ----------- | ------------ | ------------------------ | ------- |
-| - [ ]       | `Create`     | `tag TagData`            | `Tag`   |
-| - [ ]       | `GetAll`     |                          | `[]Tag` |
-| - [ ]       | `GetById`    | `tagId int`              | `Tag`   |
-| - [ ]       | `GetBySlug`  | `tagSlug string`         | `Tag`   |
-| - [ ]       | `UpdateById` | `tagId int, tag TagData` | `Tag`   |
-| - [ ]       | `DeleteById` | `tagId int`              | `bool`  |
+| [ ]         | `Create`     | `tag TagData`            | `Tag`   |
+| [ ]         | `GetAll`     |                          | `[]Tag` |
+| [ ]         | `GetById`    | `tagId int`              | `Tag`   |
+| [ ]         | `GetBySlug`  | `tagSlug string`         | `Tag`   |
+| [ ]         | `UpdateById` | `tagId int, tag TagData` | `Tag`   |
+| [ ]         | `DeleteById` | `tagId int`              | `bool`  |
 
 ### Types
 
 | Implemented | Model Method | Params                      | Returns  |
 | ----------- | ------------ | --------------------------- | -------- |
-| - [ ]       | `Create`     | `type TypeData`             | `Type`   |
-| - [ ]       | `GetAll`     |                             | `[]Type` |
-| - [ ]       | `GetById`    | `typeId int`                | `Type`   |
-| - [ ]       | `GetBySlug`  | `typeSlug string`           | `Type`   |
-| - [ ]       | `UpdateById` | `typeId int, type TypeData` | `Type`   |
-| - [ ]       | `DeleteById` | `typeId int`                | `bool`   |
+| [ ]         | `Create`     | `type TypeData`             | `Type`   |
+| [ ]         | `GetAll`     |                             | `[]Type` |
+| [ ]         | `GetById`    | `typeId int`                | `Type`   |
+| [ ]         | `GetBySlug`  | `typeSlug string`           | `Type`   |
+| [ ]         | `UpdateById` | `typeId int, type TypeData` | `Type`   |
+| [ ]         | `DeleteById` | `typeId int`                | `bool`   |
 
 ### Site
 
 | Implemented | Model Method | Params      | Returns |
 | ----------- | ------------ | ----------- | ------- |
-| - [ ]       | `Update`     | `site Site` | `Site`  |
+| [ ]         | `Update`     | `site Site` | `Site`  |
