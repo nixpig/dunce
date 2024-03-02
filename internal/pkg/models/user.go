@@ -28,22 +28,22 @@ func (u *UserModel) Create(newUser *UserData, password string) (*User, error) {
 	validate := validator.New()
 
 	if err := validate.Struct(newUser); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid user: %v", err)
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to encrypt password: %v", err)
 	}
 
 	query := `insert into users_ (username_, email_, link_, role_, password_) values($1, $2, $3, $4, $5) returning id_, username_, email_, link_, role_`
 
 	var user User
 
-	row := u.Db.QueryRow(context.Background(), query, &newUser.Username, &newUser.Email, &newUser.Link, &newUser.Role, string(hashedPassword))
+	row := u.Db.QueryRow(context.Background(), query, newUser.Username, newUser.Email, newUser.Link, newUser.Role, string(hashedPassword))
 
 	if err := row.Scan(&user.Id, &user.Username, &user.Email, &user.Link, &user.Role); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to scan row: %v", err)
 	}
 
 	return &user, nil

@@ -69,23 +69,23 @@ Frankly, pretty fed up with REST APIs and had a crazy idea for a _headless_ HTML
 
 ### Articles
 
-| Implemented | Model Method  | Params                               | Returns     |
-| ----------- | ------------- | ------------------------------------ | ----------- |
-| [ ]         | `Create`      | `article ArticleData`                | `Article`   |
-| [ ]         | `GetAll`      |                                      | `[]Article` |
-| [ ]         | `GetByType`   | `typeId int`                         | `[]Article` |
-| [ ]         | `GetByAuthor` | `authorId int`                       | `[]Article` |
-| [ ]         | `GetById`     | `articleId int`                      | `Article`   |
-| [ ]         | `GetBySlug`   | `articleSlug string`                 | `Article`   |
-| [ ]         | `GetByTag`    | `tagId int`                          | `[]Article` |
-| [ ]         | `UpdateById`  | `articleId int, article ArticleData` | `Article`   |
-| [ ]         | `DeleteById`  | `articleId int`                      | `bool`      |
+| Implemented | Model Method  | Params                               | Returns               |
+| ----------- | ------------- | ------------------------------------ | --------------------- |
+| [ ]         | `Create`      | `( article ArticleData )`            | `( *Article, error )` |
+| [ ]         | `GetAll`      |                                      | `[]Article`           |
+| [ ]         | `GetByType`   | `typeId int`                         | `[]Article`           |
+| [ ]         | `GetByAuthor` | `authorId int`                       | `[]Article`           |
+| [ ]         | `GetById`     | `articleId int`                      | `Article`             |
+| [ ]         | `GetBySlug`   | `articleSlug string`                 | `Article`             |
+| [ ]         | `GetByTag`    | `tagId int`                          | `[]Article`           |
+| [ ]         | `UpdateById`  | `articleId int, article ArticleData` | `Article`             |
+| [ ]         | `DeleteById`  | `articleId int`                      | `bool`                |
 
 ### Users
 
 | Implemented | Model Method    | Params                           | Returns  |
 | ----------- | --------------- | -------------------------------- | -------- |
-| [ ]         | `Create`        | `user UserData, password string` | `User`   |
+| [x]         | `Create`        | `user UserData, password string` | `User`   |
 | [ ]         | `GetAll`        |                                  | `[]User` |
 | [ ]         | `GetById`       | `userId int`                     | `User`   |
 | [ ]         | `GetByUsername` | `username string`                | `User`   |
