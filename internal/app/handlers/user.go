@@ -94,7 +94,7 @@ func AdminUserPostHandler(c *fiber.Ctx) error {
 	createdUser, err := models.Query.User.Create(&newUser, password)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).Render("fragments/admin/shared/error_list", fiber.Map{
-			"Errors": []error{err},
+			"Errors": err,
 		})
 	}
 

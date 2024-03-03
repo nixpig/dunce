@@ -16,15 +16,14 @@ func (a AnyPassword) Match(v interface{}) bool {
 	return ok
 }
 
-func TestCreateUser(t *testing.T) {
-	mock, err := pgxmock.NewPool()
-	if err != nil {
-		t.Fatalf("unable to create mock database pool")
-	}
+// TODO: test that invalid details (e.g. invalid email or url) return error
+// TODO: test that unable to insert duplicate username or email
 
-	defer mock.Close()
+func testCreateUserDuplicateDetails(t *testing.T, mock pgxmock.PgxPoolIface) {}
 
-	models.BuildQueries(mock)
+func testCreateUserInvalidDetails(t *testing.T, mock pgxmock.PgxPoolIface) {}
+
+func testCreateUserValid(t *testing.T, mock pgxmock.PgxPoolIface) {
 
 	newUser := models.UserData{
 		Username: "username",
@@ -34,8 +33,6 @@ func TestCreateUser(t *testing.T) {
 	}
 
 	password := "some password"
-	// hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	// assert.NotNil(t, err)
 
 	mockRows := mock.
 		NewRows([]string{"id_", "username_", "email_", "link_", "role_"}).
@@ -49,7 +46,6 @@ func TestCreateUser(t *testing.T) {
 			newUser.Email,
 			newUser.Link,
 			newUser.Role,
-			// string(hashedPassword),
 			AnyPassword{},
 		).
 		WillReturnRows(mockRows)
@@ -72,6 +68,28 @@ func TestCreateUser(t *testing.T) {
 			Role:     newUser.Role,
 		},
 	}, createdUser)
+
+}
+
+func TestCreateUser(t *testing.T) {
+	for scenario, fn := range map[string]func(t *testing.T, mock pgxmock.PgxPoolIface){
+		"reject duplicate user details": testCreateUserDuplicateDetails,
+		"reject invalid user details":   testCreateUserInvalidDetails,
+		"inserts valid user details":    testCreateUserValid,
+	} {
+		t.Run(scenario, func(t *testing.T) {
+			mock, err := pgxmock.NewPool()
+			if err != nil {
+				t.Fatalf("unable to create mock database pool")
+			}
+
+			defer mock.Close()
+
+			models.BuildQueries(mock)
+
+			fn(t, mock)
+		})
+	}
 }
 
 // func TestGetUsers(t *testing.T) {
