@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/jackc/pgx/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -72,7 +73,6 @@ func (u *UserModel) Create(newUser *UserData, password string) (*User, error) {
 
 	if err := validate.Struct(newUser); err != nil {
 		userError := NewUserError(err)
-
 		return nil, userError
 	}
 
@@ -85,6 +85,18 @@ func (u *UserModel) Create(newUser *UserData, password string) (*User, error) {
 	if err != nil {
 		log.Println("unable to encrypt password: ", err)
 		return nil, fmt.Errorf("unable to encrypt password")
+	}
+
+	dupeCheckQuery := `select count(id_) from users_ where username_ = $1 or email_ = $2`
+	dupeRows := u.Db.QueryRow(context.Background(), dupeCheckQuery, newUser.Username, newUser.Email)
+
+	var dupeCount int
+	if err := dupeRows.Scan(&dupeCount); err != nil && err != pgx.ErrNoRows {
+		return nil, err
+	}
+
+	if dupeCount > 0 {
+		return nil, UserError{"User already exists"}
 	}
 
 	query := `insert into users_ (username_, email_, link_, role_, password_) values($1, $2, $3, $4, $5) returning id_, username_, email_, link_, role_`

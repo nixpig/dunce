@@ -40,7 +40,56 @@ func TestCreateUser(t *testing.T) {
 }
 
 func testRejectDuplicateUser(t *testing.T, mock pgxmock.PgxPoolIface) {
+	existingUser := models.UserData{
+		Username: "somebody",
+		Email:    "sombody@example.org",
+		Link:     "",
+		Role:     models.AuthorRole,
+	}
 
+	dupeCheckQuery := `select count(id_) from users_ where username_ = $1 or email_ = $2`
+
+	dupeUsernameRows := mock.
+		NewRows([]string{"count"}).
+		AddRow(1)
+
+	mock.
+		ExpectQuery(regexp.QuoteMeta(dupeCheckQuery)).
+		WithArgs(existingUser.Username, "not_a_duplicate@example.net").
+		WillReturnRows(dupeUsernameRows)
+
+	dupeUsernameUser, err := models.Query.User.Create(&models.UserData{
+		Username: existingUser.Username,
+		Email:    "not_a_duplicate@example.net",
+		Link:     "",
+		Role:     models.ReaderRole,
+	}, "somepassword")
+
+	require.Nil(t, dupeUsernameUser)
+	require.Equal(t, models.UserError{"User already exists"}, err)
+
+	dupeEmailRows := mock.
+		NewRows([]string{"count"}).
+		AddRow(1)
+
+	mock.
+		ExpectQuery(regexp.QuoteMeta(dupeCheckQuery)).
+		WithArgs("uniqueusername", existingUser.Email).
+		WillReturnRows(dupeEmailRows)
+
+	dupeEmailUser, err := models.Query.User.Create(&models.UserData{
+		Username: "uniqueusername",
+		Email:    existingUser.Email,
+		Link:     "",
+		Role:     models.ReaderRole,
+	}, "somepassword")
+
+	require.Nil(t, dupeEmailUser)
+	require.Equal(t, models.UserError{"User already exists"}, err)
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatalf("expectations were not met")
+	}
 }
 
 func testRejectInvalidUser(t *testing.T, mock pgxmock.PgxPoolIface) {
@@ -86,6 +135,9 @@ func testRejectInvalidUser(t *testing.T, mock pgxmock.PgxPoolIface) {
 	require.Nil(t, createdInvalidUser)
 	require.Equal(t, models.UserError{"Password must be longer than 7 characters"}, err)
 
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatalf("expectations were not met")
+	}
 }
 
 func testRejectEmptyUser(t *testing.T, mock pgxmock.PgxPoolIface) {
@@ -120,9 +172,16 @@ func testInsertValidUser(t *testing.T, mock pgxmock.PgxPoolIface) {
 		NewRows([]string{"id_", "username_", "email_", "link_", "role_"}).
 		AddRow(23, newUser.Username, newUser.Email, newUser.Link, newUser.Role)
 
+	dupeCheckQuery := `select count(id_) from users_ where username_ = $1 or email_ = $2 `
 	expectQuery := `insert into users_ (username_, email_, link_, role_, password_) values($1, $2, $3, $4, $5) returning id_, username_, email_, link_, role_`
 
-	mock.ExpectQuery(regexp.QuoteMeta(expectQuery)).
+	mock.
+		ExpectQuery(regexp.QuoteMeta(dupeCheckQuery)).
+		WithArgs(newUser.Username, newUser.Email).
+		WillReturnRows(mock.NewRows([]string{"id_"}))
+
+	mock.
+		ExpectQuery(regexp.QuoteMeta(expectQuery)).
 		WithArgs(
 			newUser.Username,
 			newUser.Email,
