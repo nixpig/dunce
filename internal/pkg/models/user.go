@@ -16,7 +16,7 @@ type UserModel struct {
 }
 
 type UserData struct {
-	Username string   `validate:"required,min=5,max=100"`
+	Username string   `validate:"required,min=5,max=16"`
 	Email    string   `validate:"required,email,max=100"`
 	Link     string   `validate:"omitempty,url,max=255"`
 	Role     RoleName `validate:"required"`
@@ -74,6 +74,10 @@ func (u *UserModel) Create(newUser *UserData, password string) (*User, error) {
 		userError := NewUserError(err)
 
 		return nil, userError
+	}
+
+	if len(password) < 8 {
+		return nil, NewUserError(errors.New("Password must be longer than 7 characters"))
 	}
 
 	// TODO: interface out and inject encryption library (will be able to test properly then!)

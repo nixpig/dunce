@@ -7,6 +7,7 @@ import (
 	"github.com/nixpig/dunce/internal/pkg/models"
 	"github.com/pashagolub/pgxmock/v3"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type AnyPassword struct{}
@@ -16,15 +17,96 @@ func (a AnyPassword) Match(v interface{}) bool {
 	return ok
 }
 
-// TODO: test that invalid details (e.g. invalid email or url) return error
-// TODO: test that unable to insert duplicate username or email
+func TestCreateUser(t *testing.T) {
+	for scenario, fn := range map[string]func(t *testing.T, mock pgxmock.PgxPoolIface){
+		"inserts valid user details":    testInsertValidUser,
+		"reject duplicate user details": testRejectDuplicateUser,
+		"reject invalid user details":   testRejectInvalidUser,
+		"reject empty user details":     testRejectEmptyUser,
+	} {
+		t.Run(scenario, func(t *testing.T) {
+			mock, err := pgxmock.NewPool()
+			if err != nil {
+				t.Fatalf("unable to create mock database pool")
+			}
 
-func testCreateUserDuplicateDetails(t *testing.T, mock pgxmock.PgxPoolIface) {}
+			defer mock.Close()
 
-func testCreateUserInvalidDetails(t *testing.T, mock pgxmock.PgxPoolIface) {}
+			models.BuildQueries(mock)
 
-func testCreateUserValid(t *testing.T, mock pgxmock.PgxPoolIface) {
+			fn(t, mock)
+		})
+	}
+}
 
+func testRejectDuplicateUser(t *testing.T, mock pgxmock.PgxPoolIface) {
+
+}
+
+func testRejectInvalidUser(t *testing.T, mock pgxmock.PgxPoolIface) {
+	invalidUser1 := models.UserData{
+		Username: "u",     // username too short
+		Email:    "foo",   // invalid email address
+		Link:     "bar",   // invalid URL
+		Role:     "admin", // not a valid role
+	}
+
+	createdUser1, err := models.Query.User.Create(&invalidUser1, "some password")
+	require.Nil(t, createdUser1)
+	require.Equal(t, models.UserError{
+		"Username field requires a min length of 5; length of value provided is 1",
+		"Email field requires an email but received foo",
+		"Link field requires a URL but received bar",
+	}, err)
+
+	invalidUser2 := models.UserData{
+		Username: "username is way too long to be valid", // too long username
+		Email:    "test_name_for_an_email_address_that_is_way_too_long_to_be_realtest_name_for_an_email_address_that_is_way_too_long_to_be_realtest_name_for_an_email_address_that_is_way_too_long_to_be_realtest_name_for_an_email_address_that_is_way_too_long_to_be_real@somewhere.com",
+		Link:     "https://link_that_may_well_be_valid_in_structure_but_that_is_too_long_for_our_likinglink_that_may_well_be_valid_in_structure_but_that_is_too_long_for_our_likingslink_that_may_well_be_valid_in_structure_but_that_is_too_long_for_our_likingsslink_that_may_well_be_valid_in_structure_but_that_is_too_long_for_our_likings.com/some_really_long_path_under_the_url_link",
+		Role:     "author",
+	}
+
+	createdUser2, err := models.Query.User.Create(&invalidUser2, "some password")
+	require.Nil(t, createdUser2)
+	require.Equal(t, models.UserError{
+		"Username field has a max length of 16; length of value provided is 36",
+		"Email field has a max length of 100; length of value provided is 262",
+		"Link field has a max length of 255; length of value provided is 361",
+	}, err)
+
+	invalidPassword := "foobar"
+	validUser := models.UserData{
+		Username: "username",
+		Email:    "somebody@somewhere.com",
+		Link:     "https://somewhere.com/somebody",
+		Role:     models.AdminRole,
+	}
+
+	createdInvalidUser, err := models.Query.User.Create(&validUser, invalidPassword)
+	require.Nil(t, createdInvalidUser)
+	require.Equal(t, models.UserError{"Password must be longer than 7 characters"}, err)
+
+}
+
+func testRejectEmptyUser(t *testing.T, mock pgxmock.PgxPoolIface) {
+	newUser := models.UserData{
+		Username: "",
+		Email:    "",
+		Link:     "",
+	}
+
+	password := ""
+
+	createdUser, err := models.Query.User.Create(&newUser, password)
+	require.Nil(t, createdUser)
+	require.Equal(t, models.UserError{
+		"Username field is required but is empty",
+		"Email field is required but is empty",
+		"Role field is required but is empty",
+	}, err)
+}
+
+func testInsertValidUser(t *testing.T, mock pgxmock.PgxPoolIface) {
 	newUser := models.UserData{
 		Username: "username",
 		Email:    "somebody@somewhere.com",
@@ -69,27 +151,6 @@ func testCreateUserValid(t *testing.T, mock pgxmock.PgxPoolIface) {
 		},
 	}, createdUser)
 
-}
-
-func TestCreateUser(t *testing.T) {
-	for scenario, fn := range map[string]func(t *testing.T, mock pgxmock.PgxPoolIface){
-		"reject duplicate user details": testCreateUserDuplicateDetails,
-		"reject invalid user details":   testCreateUserInvalidDetails,
-		"inserts valid user details":    testCreateUserValid,
-	} {
-		t.Run(scenario, func(t *testing.T) {
-			mock, err := pgxmock.NewPool()
-			if err != nil {
-				t.Fatalf("unable to create mock database pool")
-			}
-
-			defer mock.Close()
-
-			models.BuildQueries(mock)
-
-			fn(t, mock)
-		})
-	}
 }
 
 // func TestGetUsers(t *testing.T) {
