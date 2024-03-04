@@ -145,12 +145,12 @@ func (u *UserModel) GetAll() (*[]User, error) {
 	rows, err := u.Db.Query(context.Background(), query)
 	if err != nil {
 		log.Println("unable to execute query: ", err)
-		return nil, fmt.Errorf("unable to execut query")
+		return nil, fmt.Errorf("unable to execute query")
 	}
 
 	defer rows.Close()
 
-	var users []User
+	users := []User{}
 
 	for rows.Next() {
 		var user User
