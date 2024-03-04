@@ -39,6 +39,135 @@ func TestCreateUser(t *testing.T) {
 	}
 }
 
+func TestUpdateUser(t *testing.T) {
+	for scenario, fn := range map[string]func(t *testing.T, mock pgxmock.PgxPoolIface){
+		"update valid user details":          testUpdateValidUser,
+		"reject update invalid user details": testUpdateInvalidUser,
+		"reject update non-existent user":    testUpdateNonExistentUser,
+	} {
+		t.Run(scenario, func(t *testing.T) {
+			mock, err := pgxmock.NewPool()
+			if err != nil {
+				t.Fatalf("failed to create mock connection pool")
+			}
+
+			defer mock.Close()
+
+			models.BuildQueries(mock)
+
+			fn(t, mock)
+		})
+	}
+}
+
+func testUpdateNonExistentUser(t *testing.T, mock pgxmock.PgxPoolIface) {
+	updatedUser := models.UserData{
+		Username: "differentname",
+		Email:    "different@somewhere.com",
+		Link:     "https://twitter.com",
+		Role:     models.AdminRole,
+	}
+
+	mockRows := mock.
+		NewRows([]string{"id_", "username_", "email_", "link_", "role_"})
+
+	mockUpdateQuery := `update users_ set username_ = $2, email_ = $3, link_ = $4, role_ = $5 where id_ = $1 returning id_, username_, email_, link_, role_`
+	mock.
+		ExpectQuery(regexp.QuoteMeta(mockUpdateQuery)).
+		WithArgs(23, &updatedUser.Username, &updatedUser.Email, &updatedUser.Link, &updatedUser.Role).
+		WillReturnRows(mockRows)
+
+	user, err := models.Query.User.UpdateById(23, &updatedUser)
+	require.Error(t, err)
+	require.Equal(t, models.UserError{"User does not exist"}, err)
+	require.Nil(t, user)
+
+	err = mock.ExpectationsWereMet()
+	require.NoError(t, err)
+}
+
+func testUpdateInvalidUser(t *testing.T, mock pgxmock.PgxPoolIface) {
+	invalidUser1 := models.UserData{
+		Username: "u",     // username too short
+		Email:    "foo",   // invalid email address
+		Link:     "bar",   // invalid URL
+		Role:     "admin", // not a valid role
+	}
+
+	createdUser1, err := models.Query.User.UpdateById(23, &invalidUser1)
+	require.Nil(t, createdUser1)
+	require.Equal(t, models.UserError{
+		"Username field requires a min length of 5; length of value provided is 1",
+		"Email field requires an email but received foo",
+		"Link field requires a URL but received bar",
+	}, err)
+
+	invalidUser2 := models.UserData{
+		Username: "username is way too long to be valid", // too long username
+		Email:    "test_name_for_an_email_address_that_is_way_too_long_to_be_realtest_name_for_an_email_address_that_is_way_too_long_to_be_realtest_name_for_an_email_address_that_is_way_too_long_to_be_realtest_name_for_an_email_address_that_is_way_too_long_to_be_real@somewhere.com",
+		Link:     "https://link_that_may_well_be_valid_in_structure_but_that_is_too_long_for_our_likinglink_that_may_well_be_valid_in_structure_but_that_is_too_long_for_our_likingslink_that_may_well_be_valid_in_structure_but_that_is_too_long_for_our_likingsslink_that_may_well_be_valid_in_structure_but_that_is_too_long_for_our_likings.com/some_really_long_path_under_the_url_link",
+		Role:     "author",
+	}
+
+	createdUser2, err := models.Query.User.UpdateById(23, &invalidUser2)
+	require.Nil(t, createdUser2)
+	require.Equal(t, models.UserError{
+		"Username field has a max length of 16; length of value provided is 36",
+		"Email field has a max length of 100; length of value provided is 262",
+		"Link field has a max length of 255; length of value provided is 361",
+	}, err)
+
+	invalidPassword := "foobar"
+	validUser := models.UserData{
+		Username: "username",
+		Email:    "somebody@somewhere.com",
+		Link:     "https://somewhere.com/somebody",
+		Role:     models.AdminRole,
+	}
+
+	createdInvalidUser, err := models.Query.User.Create(&validUser, invalidPassword)
+	require.Nil(t, createdInvalidUser)
+	require.Equal(t, models.UserError{"Password must be longer than 7 characters"}, err)
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatalf("expectations were not met")
+	}
+}
+
+func testUpdateValidUser(t *testing.T, mock pgxmock.PgxPoolIface) {
+	updatedUser := models.UserData{
+		Username: "differentname",
+		Email:    "different@somewhere.com",
+		Link:     "https://twitter.com",
+		Role:     models.AdminRole,
+	}
+
+	mockRows := mock.
+		NewRows([]string{"id_", "username_", "email_", "link_", "role_"}).
+		AddRow(23, updatedUser.Username, updatedUser.Email, updatedUser.Link, updatedUser.Role)
+
+	mockUpdateQuery := `update users_ set username_ = $2, email_ = $3, link_ = $4, role_ = $5 where id_ = $1 returning id_, username_, email_, link_, role_`
+	mock.
+		ExpectQuery(regexp.QuoteMeta(mockUpdateQuery)).
+		WithArgs(23, &updatedUser.Username, &updatedUser.Email, &updatedUser.Link, &updatedUser.Role).
+		WillReturnRows(mockRows)
+
+	user, err := models.Query.User.UpdateById(23, &updatedUser)
+	require.NoError(t, err)
+	require.Equal(t, &models.User{
+		Id: 23,
+		UserData: models.UserData{
+			Username: updatedUser.Username,
+			Email:    "different@somewhere.com",
+			Link:     "https://twitter.com",
+			Role:     models.AdminRole,
+		},
+	}, user)
+
+	err = mock.ExpectationsWereMet()
+	require.NoError(t, err)
+}
+
 func testRejectDuplicateUser(t *testing.T, mock pgxmock.PgxPoolIface) {
 	existingUser := models.UserData{
 		Username: "somebody",

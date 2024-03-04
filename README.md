@@ -81,7 +81,10 @@ Frankly, pretty fed up with REST APIs and had a crazy idea for a _headless_ HTML
 | [ ]         | `UpdateById`  | `articleId int, article ArticleData` | `Article`             |
 | [ ]         | `DeleteById`  | `articleId int`                      | `bool`                |
 
-### Users
+### `UserModel`
+
+- [x] `func (u *UserModel) Create(newUser *UserData, password string) (*User, error)`
+- [x] `func (u *UserModel) UpdateById(id int, user *UserData) (*User, error)`
 
 | Implemented | Model Method    | Params                           | Returns  |
 | ----------- | --------------- | -------------------------------- | -------- |
@@ -91,7 +94,7 @@ Frankly, pretty fed up with REST APIs and had a crazy idea for a _headless_ HTML
 | [ ]         | `GetByUsername` | `username string`                | `User`   |
 | [ ]         | `GetByEmail`    | `email string`                   | `User`   |
 | [ ]         | `GetByRole`     | `role RoleName`                  | `[]User` |
-| [ ]         | `UpdateById`    | `userId int, user UserData`      | `User`   |
+| [x]         | `UpdateById`    | `userId int, user UserData`      | `User`   |
 | [ ]         | `DeleteById`    | `userId int`                     | `bool`   |
 
 ### Tags

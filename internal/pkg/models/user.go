@@ -113,12 +113,12 @@ func (u *UserModel) Create(newUser *UserData, password string) (*User, error) {
 	return &user, nil
 }
 
-func (u *UserModel) Update(id int, user *UserData) (*User, error) {
+func (u *UserModel) UpdateById(id int, user *UserData) (*User, error) {
 	validate := validator.New()
 
 	if err := validate.Struct(user); err != nil {
-		log.Println("unable to validate user: ", err)
-		return nil, fmt.Errorf("invalid user")
+		userError := NewUserError(err)
+		return nil, userError
 	}
 
 	query := `update users_ set username_ = $2, email_ = $3, link_ = $4, role_ = $5 where id_ = $1 returning id_, username_, email_, link_, role_`
@@ -127,7 +127,11 @@ func (u *UserModel) Update(id int, user *UserData) (*User, error) {
 
 	var updatedUser User
 
-	if err := row.Scan(&updatedUser.Id, &updatedUser.Username, &updatedUser.Email, &updatedUser.Link, &updatedUser.Role); err != nil {
+	err := row.Scan(&updatedUser.Id, &updatedUser.Username, &updatedUser.Email, &updatedUser.Link, &updatedUser.Role)
+
+	if err == pgx.ErrNoRows {
+		return nil, UserError{"User does not exist"}
+	} else if err != nil {
 		log.Println("unable to scan row: ", err)
 		return nil, fmt.Errorf("unable to scan row")
 	}
