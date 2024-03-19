@@ -71,7 +71,7 @@ Frankly, pretty fed up with REST APIs and had a crazy idea for a _headless_ HTML
 
 | Implemented | Model Method  | Params                               | Returns               |
 | ----------- | ------------- | ------------------------------------ | --------------------- |
-| [ ]         | `Create`      | `( article ArticleData )`            | `( *Article, error )` |
+| [ ]         | `Create`      | `article ArticleData`                | `( *Article, error )` |
 | [ ]         | `GetAll`      |                                      | `[]Article`           |
 | [ ]         | `GetByType`   | `typeId int`                         | `[]Article`           |
 | [ ]         | `GetByAuthor` | `authorId int`                       | `[]Article`           |
@@ -83,19 +83,16 @@ Frankly, pretty fed up with REST APIs and had a crazy idea for a _headless_ HTML
 
 ### `UserModel`
 
-- [x] `func (u *UserModel) Create(newUser *UserData, password string) (*User, error)`
-- [x] `func (u *UserModel) UpdateById(id int, user *UserData) (*User, error)`
-
-| Implemented | Model Method    | Params                           | Returns  |
-| ----------- | --------------- | -------------------------------- | -------- |
-| [x]         | `Create`        | `user UserData, password string` | `User`   |
-| [ ]         | `GetAll`        |                                  | `[]User` |
-| [ ]         | `GetById`       | `userId int`                     | `User`   |
-| [ ]         | `GetByUsername` | `username string`                | `User`   |
-| [ ]         | `GetByEmail`    | `email string`                   | `User`   |
-| [ ]         | `GetByRole`     | `role RoleName`                  | `[]User` |
-| [x]         | `UpdateById`    | `userId int, user UserData`      | `User`   |
-| [ ]         | `DeleteById`    | `userId int`                     | `bool`   |
+| Implemented | Model Method    | Params                               | Returns          |
+| ----------- | --------------- | ------------------------------------ | ---------------- |
+| [x]         | `Create`        | `newUser *UserData, password string` | `*User, error`   |
+| [x]         | `UpdateById`    | `id int, user *UserData`             | `*User, error`   |
+| [x]         | `GetAll`        |                                      | `*[]User, error` |
+| [ ]         | `GetById`       | `userId int`                         | `*User, error`   |
+| [ ]         | `GetByUsername` | `username string`                    | `User`           |
+| [ ]         | `GetByEmail`    | `email string`                       | `User`           |
+| [ ]         | `GetByRole`     | `role RoleName`                      | `[]User`         |
+| [ ]         | `DeleteById`    | `userId int`                         | `bool`           |
 
 ### Tags
 

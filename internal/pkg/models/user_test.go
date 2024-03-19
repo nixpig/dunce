@@ -81,6 +81,62 @@ func TestGetAllUsers(t *testing.T) {
 	}
 }
 
+func TestGetUserById(t *testing.T) {
+	for scenario, fn := range map[string]func(t *testing.T, mock pgxmock.PgxPoolIface){
+		"test get user with valid id":   testGetUserWithValidId,
+		"test get user with invalid id": testGetUserWithInvalidId,
+	} {
+		t.Run(scenario, func(t *testing.T) {
+			mock, err := pgxmock.NewPool()
+			if err != nil {
+				t.Fatalf("unable to create mock db connection pool")
+			}
+
+			defer mock.Close()
+
+			models.BuildQueries(mock)
+
+			fn(t, mock)
+		})
+	}
+}
+
+func testGetUserWithValidId(t *testing.T, mock pgxmock.PgxPoolIface) {
+	mockResult := mock.
+		NewRows([]string{"id_", "username_", "email_", "link_", "role_"}).
+		AddRow(23, "user", "user@example.org", "https://t.com/u", models.AdminRole)
+
+	selectQuery := "select id_, username_, email_, link_, role_ from users_ where id_ = $1"
+
+	mock.ExpectQuery(regexp.QuoteMeta(selectQuery)).WithArgs(23).WillReturnRows(mockResult)
+
+	user, err := models.Query.User.GetById(23)
+	require.Nil(t, err, "expected not to error")
+
+	require.Equal(t, &models.User{
+		Id: 23,
+		UserData: models.UserData{
+			Username: "user",
+			Email:    "user@example.org",
+			Link:     "https://t.com/u",
+			Role:     models.AdminRole,
+		},
+	}, user)
+}
+
+func testGetUserWithInvalidId(t *testing.T, mock pgxmock.PgxPoolIface) {
+	emptyResult := mock.NewRows([]string{"id_", "username_", "email_", "link_", "role_"})
+
+	selectQuery := "select id_, username_, email_, link_, role_ from users_ where id_ = $1"
+
+	mock.ExpectQuery(regexp.QuoteMeta(selectQuery)).WithArgs(23).WillReturnRows(emptyResult)
+
+	user, err := models.Query.User.GetById(23)
+
+	require.Nil(t, user, "user should be empty")
+	require.NotNil(t, err, "should return an error")
+}
+
 func testGetAllUsersMultipleResults(t *testing.T, mock pgxmock.PgxPoolIface) {
 	multipleResults := mock.
 		NewRows([]string{"id_", "username_", "email_", "link_", "role_"}).
