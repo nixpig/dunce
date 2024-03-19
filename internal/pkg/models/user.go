@@ -28,6 +28,12 @@ type User struct {
 	UserData
 }
 
+type GetUserError string
+
+func NewGetUserError(e error) GetUserError {
+	return GetUserError(fmt.Errorf("error getting user(s): %v", e.Error()).Error())
+}
+
 type UserError []string
 
 func NewUserError(e error) UserError {

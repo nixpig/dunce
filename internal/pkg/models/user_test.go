@@ -17,6 +17,26 @@ func (a AnyPassword) Match(v interface{}) bool {
 	return ok
 }
 
+func TestGetUserByUsername(t *testing.T) {
+	for scenario, fn := range map[string]func(t *testing.T, mock pgxmock.PgxPoolIface){
+		"get user with valid username":   testGetUserWithValidUsername,
+		"get user with invalid username": testGetUserWithInvalidUsername,
+	} {
+		t.Run(scenario, func(t *testing.T) {
+			mock, err := pgxmock.NewPool()
+			if err != nil {
+				t.Fatalf("unable to create db connection pool")
+			}
+
+			defer mock.Close()
+
+			models.BuildQueries(mock)
+
+			fn(t, mock)
+		})
+	}
+}
+
 func TestCreateUser(t *testing.T) {
 	for scenario, fn := range map[string]func(t *testing.T, mock pgxmock.PgxPoolIface){
 		"inserts valid user details":    testInsertValidUser,
@@ -491,5 +511,38 @@ func testInsertValidUser(t *testing.T, mock pgxmock.PgxPoolIface) {
 			Role:     newUser.Role,
 		},
 	}, createdUser)
+}
 
+func testGetUserWithValidUsername(t *testing.T, mock pgxmock.PgxPoolIface) {
+	query := "select id_, username_, email_, link_, role_ from users_ where username_ = $1"
+
+	mockRow := mock.
+		NewRows([]string{"id_", "username_", "email_", "link_", "role_"}).
+		AddRow(23, "someuser", "somebody@example.com", "https://g.com/user", models.ReaderRole)
+
+	mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs("someuser").WillReturnRows(mockRow)
+
+	user, err := models.Query.User.GetByUsername("someuser")
+	require.Nil(t, err, "should not error")
+	require.Equal(t, &models.User{
+		Id: 23,
+		UserData: models.UserData{
+			Username: "someuser",
+			Email:    "somebody@example.com",
+			Link:     "https://g.com/user",
+			Role:     models.ReaderRole,
+		},
+	}, user)
+}
+
+func testGetUserWithInvalidUsername(t *testing.T, mock pgxmock.PgxPoolIface) {
+	query := "select id_, username_, email_, link_, role_ from users_ where username_ = $1"
+
+	mockEmptyRows := mock.NewRows([]string{"id_", "username_", "email_", "link_", "role_"})
+
+	mock.ExpectQuery(regexp.QuoteMeta(query)).WillReturnRows(mockEmptyRows)
+
+	user, err := models.Query.User.GetByUsername("foobar")
+	require.Nil(t, user, "no user should be returned")
+	require.NotNil(t, err, "error should be returned")
 }

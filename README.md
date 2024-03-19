@@ -88,11 +88,11 @@ Frankly, pretty fed up with REST APIs and had a crazy idea for a _headless_ HTML
 | [x]         | `Create`        | `newUser *UserData, password string` | `*User, error`   |
 | [x]         | `UpdateById`    | `id int, user *UserData`             | `*User, error`   |
 | [x]         | `GetAll`        |                                      | `*[]User, error` |
-| [ ]         | `GetById`       | `userId int`                         | `*User, error`   |
-| [ ]         | `GetByUsername` | `username string`                    | `User`           |
-| [ ]         | `GetByEmail`    | `email string`                       | `User`           |
-| [ ]         | `GetByRole`     | `role RoleName`                      | `[]User`         |
-| [ ]         | `DeleteById`    | `userId int`                         | `bool`           |
+| [x]         | `GetById`       | `userId int`                         | `*User, error`   |
+| [x]         | `GetByUsername` | `username string`                    | `*User, error`   |
+| [ ]         | `GetByEmail`    | `email string`                       | `*User, error`   |
+| [ ]         | `GetByRole`     | `role RoleName`                      | `*[]User, error` |
+| [ ]         | `DeleteById`    | `userId int`                         | `error`          |
 
 ### Tags
 
