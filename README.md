@@ -90,7 +90,7 @@ Frankly, pretty fed up with REST APIs and had a crazy idea for a _headless_ HTML
 | [x]         | `GetAll`        |                                      | `*[]User, error` |
 | [x]         | `GetById`       | `userId int`                         | `*User, error`   |
 | [x]         | `GetByUsername` | `username string`                    | `*User, error`   |
-| [ ]         | `GetByEmail`    | `email string`                       | `*User, error`   |
+| [x]         | `GetByEmail`    | `email string`                       | `*User, error`   |
 | [ ]         | `GetByRole`     | `role RoleName`                      | `*[]User, error` |
 | [ ]         | `DeleteById`    | `userId int`                         | `error`          |
 

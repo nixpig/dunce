@@ -230,7 +230,7 @@ func (u *UserModel) GetByUsername(username string) (*User, error) {
 }
 
 func (u *UserModel) GetByEmail(email string) (*User, error) {
-	query := `select id_, username_, email_, link_, role_ from users_ where email = $1`
+	query := `select id_, username_, email_, link_, role_ from users_ where email_ = $1`
 
 	row := u.Db.QueryRow(context.Background(), query, email)
 
