@@ -29,10 +29,9 @@ jobs:
       - name: Run unit tests with coverage
         run: make test_coverage
 
-      - name: Install goveralls
-        run: go install github.com/mattn/goveralls@latest
-
       - name: Upload coverage
         env:
           COVERALLS_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
-        run: goveralls -coverprofile=coverage.out -service=github
+        run: |
+          go install github.com/mattn/goveralls@latest \
+            && goveralls -coverprofile=coverage.out -service=github
