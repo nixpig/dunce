@@ -6,6 +6,7 @@ import (
 	"regexp"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/gofiber/fiber/v2/log"
 	"github.com/mrz1836/go-sanitize"
 )
 
@@ -34,6 +35,7 @@ func (t *TagModel) Create(newTag TagData) (*Tag, error) {
 	validate.RegisterValidation("slug", ValidateSlug)
 
 	if err := validate.Struct(sanitisedTagData); err != nil {
+		log.Errorf("failed validating: %v", err)
 		return nil, err.(validator.ValidationErrors)
 	}
 
@@ -43,10 +45,12 @@ func (t *TagModel) Create(newTag TagData) (*Tag, error) {
 
 	duplicateRow := t.Db.QueryRow(context.Background(), checkDuplicatesQuery, &sanitisedTagData.Name, &sanitisedTagData.Slug)
 	if err := duplicateRow.Scan(&duplicateCount); err != nil {
+		log.Errorf("failed scanning duplicate: %v", err)
 		return nil, err
 	}
 
 	if duplicateCount > 0 {
+		log.Error("duplicate tag")
 		return nil, fmt.Errorf("duplicate tag: '%s' '%s'", sanitisedTagData.Name, sanitisedTagData.Slug)
 	}
 
@@ -57,6 +61,7 @@ func (t *TagModel) Create(newTag TagData) (*Tag, error) {
 	row := t.Db.QueryRow(context.Background(), query, &sanitisedTagData.Name, &sanitisedTagData.Slug)
 
 	if err := row.Scan(&tag.Id, &tag.Name, &tag.Slug); err != nil {
+		log.Errorf("failed scanning tag: %v", err)
 		return nil, err
 	}
 
