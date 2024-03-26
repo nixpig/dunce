@@ -1,3 +1,6 @@
+[![Workflow Status](https://github.com/nixpig/dunce/actions/workflows/general.yml/badge.svg?branch=main)](https://github.com/nixpig/joubini/actions/workflows/validate.yml?query=branch%3Amain)
+[![Coverage Status](https://coveralls.io/repos/github/nixpig/dunce/badge.svg?branch=main)](https://coveralls.io/github/nixpig/dunce?branch=main)
+
 # 🧠 dunce
 
 A HATEOAS-first headless (brainless) content publishing engine.
