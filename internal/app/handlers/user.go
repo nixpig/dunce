@@ -150,7 +150,7 @@ func AdminUserDeleteHander(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
 
-	models.Query.User.Delete(id)
+	models.Query.User.DeleteById(id)
 
 	return c.Status(200).Send([]byte{})
 }

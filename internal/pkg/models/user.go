@@ -260,7 +260,7 @@ func (u *UserModel) Exists(s string) (bool, error) {
 	return rows.Next(), nil
 }
 
-func (u *UserModel) Delete(id int) error {
+func (u *UserModel) DeleteById(id int) error {
 	query := `delete from users_ where id_ = $1`
 
 	res, err := u.Db.Exec(context.Background(), query, id)

@@ -17,6 +17,28 @@ func (a AnyPassword) Match(v interface{}) bool {
 	return ok
 }
 
+func TestDeleteUserById(t *testing.T) {
+	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface){
+		"delete existing user by ID":     testDeleteExistingUserById,
+		"delete non-existent user by ID": testDeleteNonExistentUserById,
+	}
+
+	for scenario, fn := range scenarios {
+		t.Run(scenario, func(t *testing.T) {
+			mock, err := pgxmock.NewPool()
+			if err != nil {
+				t.Fatal("unable to create mock db connection pool")
+			}
+
+			defer mock.Close()
+
+			models.BuildQueries(mock)
+
+			fn(t, mock)
+		})
+	}
+}
+
 func TestGetUsersByRole(t *testing.T) {
 	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface){
 		"get users by role - multiple results": getUsersByRoleMultipleResults,
@@ -729,4 +751,28 @@ func getUsersByRoleNoResults(t *testing.T, mock pgxmock.PgxPoolIface) {
 	users, err := models.Query.User.GetByRole(models.ReaderRole)
 	require.Nil(t, err, "should be an error when no results")
 	require.Empty(t, users, "should not return any users")
+}
+
+func testDeleteExistingUserById(t *testing.T, mock pgxmock.PgxPoolIface) {
+	query := `delete from users_ where id_ = $1`
+
+	mockResult := pgxmock.NewResult("delete", 1)
+
+	mock.ExpectExec(regexp.QuoteMeta(query)).WithArgs(23).WillReturnResult(mockResult)
+
+	err := models.Query.User.DeleteById(23)
+
+	require.Nil(t, err, "should not error out")
+}
+
+func testDeleteNonExistentUserById(t *testing.T, mock pgxmock.PgxPoolIface) {
+	query := `delete from users_ where id_ = $1`
+
+	mockResult := pgxmock.NewResult("delete", 0)
+
+	mock.ExpectExec(regexp.QuoteMeta(query)).WithArgs(42).WillReturnResult(mockResult)
+
+	err := models.Query.User.DeleteById(42)
+
+	require.NotNil(t, err, "should error out when no users deleted")
 }
