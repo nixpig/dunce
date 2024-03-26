@@ -25,17 +25,21 @@ type Tag struct {
 }
 
 func (t *TagModel) Create(newTag TagData) (*Tag, error) {
+	log.Infof("creating new tag: %v", newTag)
+
 	sanitisedTagData := TagData{
 		Name: sanitize.XSS(newTag.Name),
 		Slug: sanitize.PathName(newTag.Slug),
 	}
+
+	log.Infof("sanitised tag data: %v", sanitisedTagData)
 
 	validate := validator.New(validator.WithRequiredStructEnabled())
 
 	validate.RegisterValidation("slug", ValidateSlug)
 
 	if err := validate.Struct(sanitisedTagData); err != nil {
-		log.Errorf("failed validating: %v", err)
+		log.Errorf("failed to validate tag data: %v", err)
 		return nil, err.(validator.ValidationErrors)
 	}
 
@@ -43,14 +47,14 @@ func (t *TagModel) Create(newTag TagData) (*Tag, error) {
 
 	var duplicateCount int
 
-	duplicateRow := t.Db.QueryRow(context.Background(), checkDuplicatesQuery, &sanitisedTagData.Name, &sanitisedTagData.Slug)
+	duplicateRow := t.Db.QueryRow(context.Background(), checkDuplicatesQuery, sanitisedTagData.Name, sanitisedTagData.Slug)
 	if err := duplicateRow.Scan(&duplicateCount); err != nil {
-		log.Errorf("failed scanning duplicate: %v", err)
+		log.Errorf("failed to scan duplicate tag count: %v", err)
 		return nil, err
 	}
 
 	if duplicateCount > 0 {
-		log.Error("duplicate tag")
+		log.Errorf("duplicate tag: %v", sanitisedTagData)
 		return nil, fmt.Errorf("duplicate tag: '%s' '%s'", sanitisedTagData.Name, sanitisedTagData.Slug)
 	}
 
@@ -58,10 +62,10 @@ func (t *TagModel) Create(newTag TagData) (*Tag, error) {
 
 	var tag Tag
 
-	row := t.Db.QueryRow(context.Background(), query, &sanitisedTagData.Name, &sanitisedTagData.Slug)
+	row := t.Db.QueryRow(context.Background(), query, sanitisedTagData.Name, sanitisedTagData.Slug)
 
 	if err := row.Scan(&tag.Id, &tag.Name, &tag.Slug); err != nil {
-		log.Errorf("failed scanning tag: %v", err)
+		log.Errorf("failed to scan created tag row: %v", err)
 		return nil, err
 	}
 

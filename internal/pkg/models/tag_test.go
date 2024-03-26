@@ -54,12 +54,12 @@ func testCreateNewTag(t *testing.T, mock pgxmock.PgxPoolIface) {
 
 	mock.
 		ExpectQuery(regexp.QuoteMeta(duplicateQuery)).
-		WithArgs(&newTag.Name, &newTag.Slug).
+		WithArgs(newTag.Name, newTag.Slug).
 		WillReturnRows(noDuplicateRows)
 
 	mock.
 		ExpectQuery(regexp.QuoteMeta(insertQuery)).
-		WithArgs(&newTag.Name, &newTag.Slug).
+		WithArgs(newTag.Name, newTag.Slug).
 		WillReturnRows(insertedRow)
 
 	tag, err := models.Query.Tag.Create(newTag)
@@ -75,7 +75,47 @@ func testCreateNewTag(t *testing.T, mock pgxmock.PgxPoolIface) {
 }
 
 func testSanitiseNewTag(t *testing.T, mock pgxmock.PgxPoolIface) {
+	newTag := models.TagData{
+		Name: "<script>alert('xss');</script>",
+		Slug: "\\ tag-& slug*($$)",
+	}
 
+	sanitisedTagData := models.TagData{
+		Name: ">alert('xss');</",
+		Slug: "tag-slug",
+	}
+
+	duplicateQuery := "select count(*) from tags_ where name_ = $1 or slug_ = $2"
+	insertQuery := "insert into tags_ (name_, slug_) values ($1, $2) returning id_, name_, slug_"
+
+	noDuplicateRows := mock.
+		NewRows([]string{"count"}).
+		AddRow(0)
+
+	insertedRow := mock.
+		NewRows([]string{"id_", "name_", "slug_"}).
+		AddRow(1, ">alert('xss');</", "tag-slug")
+
+	mock.
+		ExpectQuery(regexp.QuoteMeta(duplicateQuery)).
+		WithArgs(sanitisedTagData.Name, sanitisedTagData.Slug).
+		WillReturnRows(noDuplicateRows)
+
+	mock.
+		ExpectQuery(regexp.QuoteMeta(insertQuery)).
+		WithArgs(sanitisedTagData.Name, sanitisedTagData.Slug).
+		WillReturnRows(insertedRow)
+
+	tag, err := models.Query.Tag.Create(newTag)
+
+	require.Nil(t, err, "should not return error")
+	require.Equal(t, &models.Tag{
+		Id: 1,
+		TagData: models.TagData{
+			Name: ">alert('xss');</",
+			Slug: "tag-slug",
+		},
+	}, tag, "should return created sanitised tag")
 }
 
 func testFailCreateTagDuplicateName(t *testing.T, mock pgxmock.PgxPoolIface) {
