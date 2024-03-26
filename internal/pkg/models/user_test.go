@@ -17,11 +17,36 @@ func (a AnyPassword) Match(v interface{}) bool {
 	return ok
 }
 
+func TestGetUsersByRole(t *testing.T) {
+	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface){
+		"get users by role - multiple results": getUsersByRoleMultipleResults,
+		"get users by role - single result":    getUsersByRoleSingleResult,
+		"get users by role - no results":       getUsersByRoleNoResults,
+	}
+
+	for scenario, fn := range scenarios {
+		t.Run(scenario, func(t *testing.T) {
+			mock, err := pgxmock.NewPool()
+			if err != nil {
+				t.Fatal("unable to create database connection pool")
+			}
+
+			defer mock.Close()
+
+			models.BuildQueries(mock)
+
+			fn(t, mock)
+		})
+	}
+}
+
 func TestGetUserByEmail(t *testing.T) {
-	for scenario, fn := range map[string]func(t *testing.T, mock pgxmock.PgxPoolIface){
+	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface){
 		"get user with valid email":   testGetUserWithValidEmail,
 		"get user with invalid email": testGetUserWithInvalidEmail,
-	} {
+	}
+
+	for scenario, fn := range scenarios {
 		t.Run(scenario, func(t *testing.T) {
 			mock, err := pgxmock.NewPool()
 			if err != nil {
@@ -39,10 +64,12 @@ func TestGetUserByEmail(t *testing.T) {
 }
 
 func TestGetUserByUsername(t *testing.T) {
-	for scenario, fn := range map[string]func(t *testing.T, mock pgxmock.PgxPoolIface){
+	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface){
 		"get user with valid username":   testGetUserWithValidUsername,
 		"get user with invalid username": testGetUserWithInvalidUsername,
-	} {
+	}
+
+	for scenario, fn := range scenarios {
 		t.Run(scenario, func(t *testing.T) {
 			mock, err := pgxmock.NewPool()
 			if err != nil {
@@ -59,12 +86,14 @@ func TestGetUserByUsername(t *testing.T) {
 }
 
 func TestCreateUser(t *testing.T) {
-	for scenario, fn := range map[string]func(t *testing.T, mock pgxmock.PgxPoolIface){
+	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface){
 		"inserts valid user details":    testInsertValidUser,
 		"reject duplicate user details": testRejectDuplicateUser,
 		"reject invalid user details":   testRejectInvalidUser,
 		"reject empty user details":     testRejectEmptyUser,
-	} {
+	}
+
+	for scenario, fn := range scenarios {
 		t.Run(scenario, func(t *testing.T) {
 			mock, err := pgxmock.NewPool()
 			if err != nil {
@@ -81,11 +110,13 @@ func TestCreateUser(t *testing.T) {
 }
 
 func TestUpdateUser(t *testing.T) {
-	for scenario, fn := range map[string]func(t *testing.T, mock pgxmock.PgxPoolIface){
+	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface){
 		"update valid user details":          testUpdateValidUser,
 		"reject update invalid user details": testUpdateInvalidUser,
 		"reject update non-existent user":    testUpdateNonExistentUser,
-	} {
+	}
+
+	for scenario, fn := range scenarios {
 		t.Run(scenario, func(t *testing.T) {
 			mock, err := pgxmock.NewPool()
 			if err != nil {
@@ -102,11 +133,13 @@ func TestUpdateUser(t *testing.T) {
 }
 
 func TestGetAllUsers(t *testing.T) {
-	for scenario, fn := range map[string]func(t *testing.T, mock pgxmock.PgxPoolIface){
+	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface){
 		"test get all users with multiple results": testGetAllUsersMultipleResults,
 		"test get all users with single result":    testGetAllUsersSingleResult,
 		"test get all users with no results":       testGetAllUsersNoResults,
-	} {
+	}
+
+	for scenario, fn := range scenarios {
 		t.Run(scenario, func(t *testing.T) {
 			mock, err := pgxmock.NewPool()
 			if err != nil {
@@ -123,10 +156,12 @@ func TestGetAllUsers(t *testing.T) {
 }
 
 func TestGetUserById(t *testing.T) {
-	for scenario, fn := range map[string]func(t *testing.T, mock pgxmock.PgxPoolIface){
+	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface){
 		"test get user with valid id":   testGetUserWithValidId,
 		"test get user with invalid id": testGetUserWithInvalidId,
-	} {
+	}
+
+	for scenario, fn := range scenarios {
 		t.Run(scenario, func(t *testing.T) {
 			mock, err := pgxmock.NewPool()
 			if err != nil {
@@ -603,4 +638,95 @@ func testGetUserWithInvalidEmail(t *testing.T, mock pgxmock.PgxPoolIface) {
 	require.NotNil(t, err, "should error")
 	require.Nil(t, user, "should be nil")
 
+}
+
+func getUsersByRoleMultipleResults(t *testing.T, mock pgxmock.PgxPoolIface) {
+	query := "select id_, username_, email_, link_, role_ from users_ where role_ = $1"
+
+	mockRows := mock.
+		NewRows([]string{"id_", "username_", "email_", "link_", "role_"}).
+		AddRows([][]any{
+			{
+				23, "userone", "userone@example.org", "https://t.com/1", models.ReaderRole,
+			},
+			{
+				52, "usertwo", "usertwo@example.com", "https://t.com/2", models.ReaderRole,
+			},
+		}...)
+
+	mock.
+		ExpectQuery(regexp.QuoteMeta(query)).
+		WithArgs(models.ReaderRole).
+		WillReturnRows(mockRows)
+
+	users, err := models.Query.User.GetByRole(models.ReaderRole)
+	require.Nil(t, err, "should not error")
+	require.Equal(t, &[]models.User{
+		{
+			Id: 23,
+			UserData: models.UserData{
+				Username: "userone",
+				Email:    "userone@example.org",
+				Link:     "https://t.com/1",
+				Role:     models.ReaderRole,
+			},
+		},
+		{
+			Id: 52,
+			UserData: models.UserData{
+				Username: "usertwo",
+				Email:    "usertwo@example.com",
+				Link:     "https://t.com/2",
+				Role:     models.ReaderRole,
+			},
+		},
+	}, users, "should return users by role")
+}
+
+func getUsersByRoleSingleResult(t *testing.T, mock pgxmock.PgxPoolIface) {
+	query := "select id_, username_, email_, link_, role_ from users_ where role_ = $1"
+
+	mockRow := mock.
+		NewRows([]string{"id_", "username_", "email_", "link_", "role_"}).
+		AddRows([][]any{
+			{
+
+				23, "userone", "userone@example.org", "https://t.com/1", models.ReaderRole,
+			},
+		}...)
+
+	mock.
+		ExpectQuery(regexp.QuoteMeta(query)).
+		WithArgs(models.ReaderRole).
+		WillReturnRows(mockRow)
+
+	users, err := models.Query.User.GetByRole(models.ReaderRole)
+	require.Nil(t, err, "should not error")
+	require.Equal(t, &[]models.User{
+		{
+			Id: 23,
+			UserData: models.UserData{
+				Username: "userone",
+				Email:    "userone@example.org",
+				Link:     "https://t.com/1",
+				Role:     models.ReaderRole,
+			},
+		},
+	}, users, "should return users by role")
+}
+
+func getUsersByRoleNoResults(t *testing.T, mock pgxmock.PgxPoolIface) {
+	query := "select id_, username_, email_, link_, role_ from users_ where role_ = $1"
+
+	mockRow := mock.
+		NewRows([]string{"id_", "username_", "email_", "link_", "role_"})
+
+	mock.
+		ExpectQuery(regexp.QuoteMeta(query)).
+		WithArgs(models.ReaderRole).
+		WillReturnRows(mockRow)
+
+	users, err := models.Query.User.GetByRole(models.ReaderRole)
+	require.Nil(t, err, "should be an error when no results")
+	require.Empty(t, users, "should not return any users")
 }
