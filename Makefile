@@ -26,7 +26,7 @@ test:
 
 .PHONY: test_coverage
 test_coverage:
-	go test -v -race -buildvcs -coverprofile=coverage.out ./...
+	go test -v -race -buildvcs -covermode atomic -coverprofile=coverage.out ./...
 	go tool cover -html=coverage.out
 
 .PHONY: build_app

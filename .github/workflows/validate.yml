@@ -18,5 +18,15 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Run unit tests
-        run: make test
+      - name: Install dependecies
+        run: go mod download
+
+      - name: Run unit tests with coverage
+        run: make test_coverage
+
+      - name: Upload coverage
+        env:
+          COVERALLS_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
+        run: |
+          go install github.com/mattn/goveralls@latest \
+            && goveralls -coverprofile=coverage.out -service=github
