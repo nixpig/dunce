@@ -1,6 +1,7 @@
 package models_test
 
 import (
+	"fmt"
 	"regexp"
 	"testing"
 
@@ -13,8 +14,7 @@ func TestCreateTag(t *testing.T) {
 	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface){
 		"successfully create new tag":                    testCreateNewTag,
 		"successfully sanitise name and slug of new tag": testSanitiseNewTag,
-		"fail to create tag with duplicate name":         testFailCreateTagDuplicateName,
-		"fail to create tag with duplicate slug":         testFailCreateTagDuplicateSlug,
+		"fail to create duplicate":                       testFailCreateDuplicateTag,
 		"fail to create tag with invalid name":           testFailCreateTagInvalidName,
 		"fail to create tag with invalid slug":           testFailCreateTagInvalidSlug,
 	}
@@ -118,18 +118,41 @@ func testSanitiseNewTag(t *testing.T, mock pgxmock.PgxPoolIface) {
 	}, tag, "should return created sanitised tag")
 }
 
-func testFailCreateTagDuplicateName(t *testing.T, mock pgxmock.PgxPoolIface) {
+func testFailCreateDuplicateTag(t *testing.T, mock pgxmock.PgxPoolIface) {
+	newTag := models.TagData{
+		Name: "newtag",
+		Slug: "new-tag",
+	}
 
-}
+	existingTagRows := mock.NewRows([]string{"count"}).AddRow(1)
 
-func testFailCreateTagDuplicateSlug(t *testing.T, mock pgxmock.PgxPoolIface) {
+	duplicateTagQuery := "select count(*) from tags_ where name_ = $1 or slug_ = $2"
 
+	mock.ExpectQuery(regexp.QuoteMeta(duplicateTagQuery)).WithArgs(newTag.Name, newTag.Slug).WillReturnRows(existingTagRows)
+
+	tag, err := models.Query.Tag.Create(newTag)
+	require.Nil(t, tag, "should not return a tag")
+	require.Equal(t, fmt.Errorf("duplicate tag: '%s' '%s'", newTag.Name, newTag.Slug), err, "should return an error")
 }
 
 func testFailCreateTagInvalidSlug(t *testing.T, mock pgxmock.PgxPoolIface) {
+	newTag := models.TagData{
+		Name: "newtag",
+		Slug: "long-slug-long-slug-long-slug-long-slug-long-slug-long-slug-long-slug-long-slug-long-slug-long-slug-long-slug",
+	}
 
+	tag, err := models.Query.Tag.Create(newTag)
+	require.Nil(t, tag, "should not return a tag")
+	require.NotNil(t, err, "should return an error")
 }
 
 func testFailCreateTagInvalidName(t *testing.T, mock pgxmock.PgxPoolIface) {
+	newTag := models.TagData{
+		Name: "longnamelongnamelongnamelongnamelongnamelongnamelongnamelongnamelongnamelongnamelongnamelongnamelongnamelongname",
+		Slug: "long-slug",
+	}
 
+	tag, err := models.Query.Tag.Create(newTag)
+	require.Nil(t, tag, "should not return a tag")
+	require.NotNil(t, err, "should return an error")
 }

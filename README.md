@@ -101,7 +101,7 @@ Frankly, pretty fed up with REST APIs and had a crazy idea for a _headless_ HTML
 
 | Implemented | Model Method | Params                   | Returns |
 | ----------- | ------------ | ------------------------ | ------- |
-| [ ]         | `Create`     | `tag TagData`            | `Tag`   |
+| [x]         | `Create`     | `tag TagData`            | `Tag`   |
 | [ ]         | `GetAll`     |                          | `[]Tag` |
 | [ ]         | `GetById`    | `tagId int`              | `Tag`   |
 | [ ]         | `GetBySlug`  | `tagSlug string`         | `Tag`   |
