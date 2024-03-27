@@ -103,7 +103,7 @@ Frankly, pretty fed up with REST APIs and had a crazy idea for a _headless_ HTML
 | ----------- | ------------ | ------------------------ | ------- |
 | [x]         | `Create`     | `tag TagData`            | `Tag`   |
 | [x]         | `GetAll`     |                          | `[]Tag` |
-| [ ]         | `GetById`    | `tagId int`              | `Tag`   |
+| [x]         | `GetById`    | `tagId int`              | `Tag`   |
 | [ ]         | `GetBySlug`  | `tagSlug string`         | `Tag`   |
 | [ ]         | `UpdateById` | `tagId int, tag TagData` | `Tag`   |
 | [ ]         | `DeleteById` | `tagId int`              | `bool`  |

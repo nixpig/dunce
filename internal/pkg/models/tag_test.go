@@ -10,6 +10,28 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestGetTagById(t *testing.T) {
+	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface){
+		"get tag by id when exists":         testGetExistingTagById,
+		"get tag by id when does not exist": testGetNonexistentTagById,
+	}
+
+	for scenario, fn := range scenarios {
+		t.Run(scenario, func(t *testing.T) {
+			mock, err := pgxmock.NewPool()
+			if err != nil {
+				t.Fatal("unable to create mock db pool")
+			}
+
+			defer mock.Close()
+
+			models.BuildQueries(mock)
+
+			fn(t, mock)
+		})
+	}
+}
+
 func TestGetAllTags(t *testing.T) {
 	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface){
 		"get all tags when none exist":       testGetAllTagsNoResults,
@@ -250,4 +272,36 @@ func testGetAllTagsMultipleResults(t *testing.T, mock pgxmock.PgxPoolIface) {
 		},
 	}, tags, "should return all tag results")
 	require.Nil(t, err, "should not return an error")
+}
+
+func testGetExistingTagById(t *testing.T, mock pgxmock.PgxPoolIface) {
+	query := `select id_, name_, slug_ from tags_ where id_ = $1`
+
+	row := mock.NewRows([]string{"id_", "name_", "slug_"}).AddRow(23, "tagname", "tag-slug")
+
+	mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs(23).WillReturnRows(row)
+
+	tag, err := models.Query.Tag.GetById(23)
+
+	require.Nil(t, err, "should not return error")
+	require.Equal(t, &models.Tag{
+		Id: 23,
+		TagData: models.TagData{
+			Name: "tagname",
+			Slug: "tag-slug",
+		},
+	}, tag, "should return corresponding tag")
+}
+
+func testGetNonexistentTagById(t *testing.T, mock pgxmock.PgxPoolIface) {
+	query := `select id_, name_, slug_ from tags_ where id_ = $1`
+
+	noResults := mock.NewRows([]string{"id_", "name_", "slug_"})
+
+	mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs(23).WillReturnRows(noResults)
+
+	tag, err := models.Query.Tag.GetById(23)
+
+	require.Nil(t, tag, "should not return a tag")
+	require.NotNil(t, err, "should return an error")
 }
