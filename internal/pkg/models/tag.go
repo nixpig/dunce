@@ -139,6 +139,20 @@ func (t *TagModel) GetById(id int) (*Tag, error) {
 	return &tag, nil
 }
 
+func (t *TagModel) GetBySlug(slug string) (*Tag, error) {
+	query := `select id_, name_, slug_ from tags_ where slug_ = $1`
+
+	row := t.Db.QueryRow(context.Background(), query, slug)
+
+	var tag Tag
+
+	if err := row.Scan(&tag.Id, &tag.Name, &tag.Slug); err != nil {
+		return nil, err
+	}
+
+	return &tag, nil
+}
+
 func (t *TagModel) GetAll() (*[]Tag, error) {
 	query := `select id_, name_, slug_ from tags_`
 
