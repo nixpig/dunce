@@ -749,7 +749,7 @@ func getUsersByRoleNoResults(t *testing.T, mock pgxmock.PgxPoolIface) {
 		WillReturnRows(mockRow)
 
 	users, err := models.Query.User.GetByRole(models.ReaderRole)
-	require.Nil(t, err, "should be an error when no results")
+	require.Nil(t, err, "should not be an error when no results")
 	require.Empty(t, users, "should not return any users")
 }
 

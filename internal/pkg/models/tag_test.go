@@ -10,6 +10,29 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestGetAllTags(t *testing.T) {
+	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface){
+		"get all tags when none exist":       testGetAllTagsNoResults,
+		"get all tags when one exists":       testGetAllTagsSingleResult,
+		"get all tags when multiple results": testGetAllTagsMultipleResults,
+	}
+
+	for scenario, fn := range scenarios {
+		t.Run(scenario, func(t *testing.T) {
+			mock, err := pgxmock.NewPool()
+			if err != nil {
+				t.Fatal("failed to create mock connection pool")
+			}
+
+			defer mock.Close()
+
+			models.BuildQueries(mock)
+
+			fn(t, mock)
+		})
+	}
+}
+
 func TestCreateTag(t *testing.T) {
 	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface){
 		"successfully create new tag":                    testCreateNewTag,
@@ -155,4 +178,76 @@ func testFailCreateTagInvalidName(t *testing.T, mock pgxmock.PgxPoolIface) {
 	tag, err := models.Query.Tag.Create(newTag)
 	require.Nil(t, tag, "should not return a tag")
 	require.NotNil(t, err, "should return an error")
+}
+
+func testGetAllTagsNoResults(t *testing.T, mock pgxmock.PgxPoolIface) {
+	query := `select id_, name_, slug_ from tags_`
+
+	emptyResults := mock.NewRows([]string{"id_", "name_", "slug_"})
+
+	mock.ExpectQuery(regexp.QuoteMeta(query)).WillReturnRows(emptyResults)
+
+	tags, err := models.Query.Tag.GetAll()
+	require.Empty(t, tags, "should return empty result set")
+	require.Nil(t, err, "should not return an error")
+}
+
+func testGetAllTagsSingleResult(t *testing.T, mock pgxmock.PgxPoolIface) {
+	query := `select id_, name_, slug_ from tags_`
+
+	singleResult := mock.
+		NewRows([]string{"id_", "name_", "slug_"}).
+		AddRow(23, "tagname", "tag-slug")
+
+	mock.ExpectQuery(regexp.QuoteMeta(query)).WillReturnRows(singleResult)
+
+	tags, err := models.Query.Tag.GetAll()
+	require.Equal(t, &[]models.Tag{
+		{
+			Id: 23,
+			TagData: models.TagData{
+				Name: "tagname",
+				Slug: "tag-slug",
+			},
+		},
+	}, tags, "should return tag result")
+	require.Nil(t, err, "should not return an error")
+}
+
+func testGetAllTagsMultipleResults(t *testing.T, mock pgxmock.PgxPoolIface) {
+	query := `select id_, name_, slug_ from tags_`
+
+	singleResult := mock.
+		NewRows([]string{"id_", "name_", "slug_"}).
+		AddRow(23, "tagname1", "tag-slug-1").
+		AddRow(42, "tagname2", "tag-slug-2").
+		AddRow(69, "tagname3", "tag-slug-3")
+
+	mock.ExpectQuery(regexp.QuoteMeta(query)).WillReturnRows(singleResult)
+
+	tags, err := models.Query.Tag.GetAll()
+	require.Equal(t, &[]models.Tag{
+		{
+			Id: 23,
+			TagData: models.TagData{
+				Name: "tagname1",
+				Slug: "tag-slug-1",
+			},
+		},
+		{
+			Id: 42,
+			TagData: models.TagData{
+				Name: "tagname2",
+				Slug: "tag-slug-2",
+			},
+		},
+		{
+			Id: 69,
+			TagData: models.TagData{
+				Name: "tagname3",
+				Slug: "tag-slug-3",
+			},
+		},
+	}, tags, "should return all tag results")
+	require.Nil(t, err, "should not return an error")
 }
