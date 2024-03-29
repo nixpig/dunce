@@ -15,8 +15,8 @@ type TagModel struct {
 }
 
 type TagData struct {
-	Name string `validate:"required,max=100"`
-	Slug string `validate:"required,slug,max=100"`
+	Name string `validate:"required,min=5,max=30"`
+	Slug string `validate:"required,slug,min=5,max=50"`
 }
 
 type Tag struct {
@@ -24,7 +24,7 @@ type Tag struct {
 	TagData
 }
 
-func (t *TagModel) Create(newTag TagData) (*Tag, error) {
+func (t *TagModel) Create(newTag *TagData) (*Tag, error) {
 	log.Infof("creating new tag: %v", newTag)
 
 	sanitisedTagData := TagData{
@@ -72,7 +72,7 @@ func (t *TagModel) Create(newTag TagData) (*Tag, error) {
 	return &tag, nil
 }
 
-func (t *TagModel) Delete(id int) error {
+func (t *TagModel) DeleteById(id int) error {
 	query := `delete from tags_ where id_ = $1`
 
 	res, err := t.Db.Exec(context.Background(), query, id)
@@ -87,7 +87,7 @@ func (t *TagModel) Delete(id int) error {
 	return nil
 }
 
-func (t *TagModel) UpdateById(id int, tag TagData) (*Tag, error) {
+func (t *TagModel) UpdateById(id int, tag *TagData) (*Tag, error) {
 	log.Infof("updating tag: %d %v", id, tag)
 
 	validate := validator.New(validator.WithRequiredStructEnabled())

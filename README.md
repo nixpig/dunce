@@ -105,8 +105,8 @@ Frankly, pretty fed up with REST APIs and had a crazy idea for a _headless_ HTML
 | [x]         | `GetAll`     |                          | `*[]Tag, error` |
 | [x]         | `GetById`    | `tagId int`              | `*Tag, error`   |
 | [x]         | `GetBySlug`  | `tagSlug string`         | `*Tag,error`    |
-| [ ]         | `UpdateById` | `tagId int, tag TagData` | `*Tag, error`   |
-| [ ]         | `DeleteById` | `tagId int`              | `error`         |
+| [x]         | `UpdateById` | `tagId int, tag TagData` | `*Tag, error`   |
+| [x]         | `DeleteById` | `tagId int`              | `error`         |
 
 ### Types
 

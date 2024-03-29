@@ -66,7 +66,7 @@ func AdminTagUpdateHandler(c *fiber.Ctx) error {
 		Slug: c.FormValue("slug"),
 	}
 
-	updatedTag, err := models.Query.Tag.UpdateById(id, tag)
+	updatedTag, err := models.Query.Tag.UpdateById(id, &tag)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).Render("fragments/admin/shared/admin_table_errors", &fiber.Map{
 			"Errors": []string{err.Error()},
@@ -86,7 +86,7 @@ func AdminTagDeleteHandler(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
 
-	if err := models.Query.Tag.Delete(id); err != nil {
+	if err := models.Query.Tag.DeleteById(id); err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
@@ -102,7 +102,7 @@ func AdminTagPostHandler(c *fiber.Ctx) error {
 		Slug: slug,
 	}
 
-	createdTag, err := models.Query.Tag.Create(newTag)
+	createdTag, err := models.Query.Tag.Create(&newTag)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).Render("fragments/admin/shared/error_list", &fiber.Map{
 			"Errors": []string{err.Error()},
