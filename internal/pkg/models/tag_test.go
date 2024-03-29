@@ -10,6 +10,32 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestUpdateTag(t *testing.T) {
+	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface){
+		"successfully update tag":                testUpdateTag,
+		"sanitise name and slug of updated tag":  testSanitiseUpdatedTag,
+		"fail to update tag with duplicate name": testFailUpdateTagDuplicateName,
+		"fail to update tag with duplicate slug": testFailUpdateTagDuplicateSlug,
+		"fail to update tag with invalid name":   testFailUpdateTagInvalidName,
+		"fail to update tag with invalid slug":   testFailUpdateTagInvalidSlug,
+	}
+
+	for scenario, fn := range scenarios {
+		t.Run(scenario, func(t *testing.T) {
+			mock, err := pgxmock.NewPool()
+			if err != nil {
+				t.Fatal("failed to create mock pool")
+			}
+
+			defer mock.Close()
+
+			models.BuildQueries(mock)
+
+			fn(t, mock)
+		})
+	}
+}
+
 func TestGetTagBySlug(t *testing.T) {
 	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface){
 		"get tag when slug exists":         testGetExistingTagBySlug,
@@ -357,4 +383,60 @@ func testGetNonexistentTagBySlug(t *testing.T, mock pgxmock.PgxPoolIface) {
 
 	require.Nil(t, tag, "should not return tag")
 	require.NotNil(t, err, "should return error")
+}
+
+func testUpdateTag(t *testing.T, mock pgxmock.PgxPoolIface) {
+	tagUpdate := models.TagData{
+		Name: "updatetag",
+		Slug: "update-tag",
+	}
+
+	duplicateQuery := `select count(*) from tags_ where (name_ = $2 or slug_ = $3) and id_ <> $1`
+	updateQuery := `update tags_ set name_ = $2, slug_ = $3 where id_ = $1 returning id_, name_, slug_`
+
+	zeroCount := mock.NewRows([]string{"count"}).AddRow(0)
+
+	updatedRow := mock.
+		NewRows([]string{"id_", "name_", "slug_"}).
+		AddRow(23, "updatetag", "update-tag")
+
+	mock.
+		ExpectQuery(regexp.QuoteMeta(duplicateQuery)).
+		WithArgs(23, &tagUpdate.Name, &tagUpdate.Slug).
+		WillReturnRows(zeroCount)
+
+	mock.
+		ExpectQuery(regexp.QuoteMeta(updateQuery)).
+		WithArgs(23, &tagUpdate.Name, &tagUpdate.Slug).
+		WillReturnRows(updatedRow)
+
+	tag, err := models.Query.Tag.UpdateById(23, tagUpdate)
+	require.Nil(t, err, "should not return error")
+	require.Equal(t, &models.Tag{
+		Id: 23,
+		TagData: models.TagData{
+			Name: "updatetag",
+			Slug: "update-tag",
+		},
+	}, tag, "should return updated tag")
+}
+
+func testSanitiseUpdatedTag(t *testing.T, mock pgxmock.PgxPoolIface) {
+
+}
+
+func testFailUpdateTagDuplicateName(t *testing.T, mock pgxmock.PgxPoolIface) {
+
+}
+
+func testFailUpdateTagDuplicateSlug(t *testing.T, mock pgxmock.PgxPoolIface) {
+
+}
+
+func testFailUpdateTagInvalidName(t *testing.T, mock pgxmock.PgxPoolIface) {
+
+}
+
+func testFailUpdateTagInvalidSlug(t *testing.T, mock pgxmock.PgxPoolIface) {
+
 }

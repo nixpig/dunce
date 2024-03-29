@@ -88,6 +88,8 @@ func (t *TagModel) Delete(id int) error {
 }
 
 func (t *TagModel) UpdateById(id int, tag TagData) (*Tag, error) {
+	log.Infof("updating tag: %d %v", id, tag)
+
 	validate := validator.New(validator.WithRequiredStructEnabled())
 
 	validate.RegisterValidation("slug", ValidateSlug)
@@ -98,6 +100,7 @@ func (t *TagModel) UpdateById(id int, tag TagData) (*Tag, error) {
 	}
 
 	if err := validate.Struct(sanitisedTagData); err != nil {
+		log.Errorf("validation of tag update failed: %v", err)
 		return nil, err.(validator.ValidationErrors)
 	}
 
@@ -106,9 +109,14 @@ func (t *TagModel) UpdateById(id int, tag TagData) (*Tag, error) {
 	duplicateQuery := `select count(*) from tags_ where (name_ = $2 or slug_ = $3) and id_ <> $1`
 
 	duplicateRows := t.Db.QueryRow(context.Background(), duplicateQuery, id, &sanitisedTagData.Name, &sanitisedTagData.Slug)
-	duplicateRows.Scan(&duplicateCount)
+	if err := duplicateRows.Scan(&duplicateCount); err != nil {
+		log.Errorf("failed scanning duplicate count: %v", err)
+		return nil, err
+	}
 
 	if duplicateCount > 0 {
+		log.Warnf("duplicate tag count: %d", duplicateCount)
+		log.Errorf("duplicate tag count: %d", duplicateCount)
 		return nil, fmt.Errorf("a tag with these attributes already exists")
 	}
 
@@ -119,6 +127,7 @@ func (t *TagModel) UpdateById(id int, tag TagData) (*Tag, error) {
 	var updatedTag Tag
 
 	if err := row.Scan(&updatedTag.Id, &updatedTag.Name, &updatedTag.Slug); err != nil {
+		log.Errorf("unable to scan row(s): %v", err)
 		return nil, err
 	}
 

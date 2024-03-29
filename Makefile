@@ -22,7 +22,7 @@ audit:
 .PHONY: test
 test: export APP_ENV=test
 test: 
-	go test -v -race -buildvcs ./...
+	go test -v -race -buildvcs ./... 
 
 .PHONY: test_coverage
 test_coverage:

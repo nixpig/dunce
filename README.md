@@ -72,17 +72,17 @@ Frankly, pretty fed up with REST APIs and had a crazy idea for a _headless_ HTML
 
 ### Articles
 
-| Implemented | Model Method  | Params                               | Returns               |
-| ----------- | ------------- | ------------------------------------ | --------------------- |
-| [ ]         | `Create`      | `article ArticleData`                | `( *Article, error )` |
-| [ ]         | `GetAll`      |                                      | `[]Article`           |
-| [ ]         | `GetByType`   | `typeId int`                         | `[]Article`           |
-| [ ]         | `GetByAuthor` | `authorId int`                       | `[]Article`           |
-| [ ]         | `GetById`     | `articleId int`                      | `Article`             |
-| [ ]         | `GetBySlug`   | `articleSlug string`                 | `Article`             |
-| [ ]         | `GetByTag`    | `tagId int`                          | `[]Article`           |
-| [ ]         | `UpdateById`  | `articleId int, article ArticleData` | `Article`             |
-| [ ]         | `DeleteById`  | `articleId int`                      | `bool`                |
+| Implemented | Model Method  | Params                               | Returns             |
+| ----------- | ------------- | ------------------------------------ | ------------------- |
+| [ ]         | `Create`      | `article ArticleData`                | `*Article, error`   |
+| [ ]         | `GetAll`      |                                      | `*[]Article, error` |
+| [ ]         | `GetByType`   | `typeId int`                         | `*[]Article, error` |
+| [ ]         | `GetByAuthor` | `authorId int`                       | `*[]Article, error` |
+| [ ]         | `GetById`     | `articleId int`                      | `*Article, error`   |
+| [ ]         | `GetBySlug`   | `articleSlug string`                 | `*Article, error`   |
+| [ ]         | `GetByTag`    | `tagId int`                          | `*[]Article, error` |
+| [ ]         | `UpdateById`  | `articleId int, article ArticleData` | `*Article, error`   |
+| [ ]         | `DeleteById`  | `articleId int`                      | `error`             |
 
 ### `UserModel`
 
@@ -99,25 +99,25 @@ Frankly, pretty fed up with REST APIs and had a crazy idea for a _headless_ HTML
 
 ### Tags
 
-| Implemented | Model Method | Params                   | Returns |
-| ----------- | ------------ | ------------------------ | ------- |
-| [x]         | `Create`     | `tag TagData`            | `Tag`   |
-| [x]         | `GetAll`     |                          | `[]Tag` |
-| [x]         | `GetById`    | `tagId int`              | `Tag`   |
-| [x]         | `GetBySlug`  | `tagSlug string`         | `Tag`   |
-| [ ]         | `UpdateById` | `tagId int, tag TagData` | `Tag`   |
-| [ ]         | `DeleteById` | `tagId int`              | `bool`  |
+| Implemented | Model Method | Params                   | Returns         |
+| ----------- | ------------ | ------------------------ | --------------- |
+| [x]         | `Create`     | `tag TagData`            | `*Tag, error`   |
+| [x]         | `GetAll`     |                          | `*[]Tag, error` |
+| [x]         | `GetById`    | `tagId int`              | `*Tag, error`   |
+| [x]         | `GetBySlug`  | `tagSlug string`         | `*Tag,error`    |
+| [ ]         | `UpdateById` | `tagId int, tag TagData` | `*Tag, error`   |
+| [ ]         | `DeleteById` | `tagId int`              | `error`         |
 
 ### Types
 
-| Implemented | Model Method | Params                      | Returns  |
-| ----------- | ------------ | --------------------------- | -------- |
-| [ ]         | `Create`     | `type TypeData`             | `Type`   |
-| [ ]         | `GetAll`     |                             | `[]Type` |
-| [ ]         | `GetById`    | `typeId int`                | `Type`   |
-| [ ]         | `GetBySlug`  | `typeSlug string`           | `Type`   |
-| [ ]         | `UpdateById` | `typeId int, type TypeData` | `Type`   |
-| [ ]         | `DeleteById` | `typeId int`                | `bool`   |
+| Implemented | Model Method | Params                      | Returns          |
+| ----------- | ------------ | --------------------------- | ---------------- |
+| [ ]         | `Create`     | `type TypeData`             | `*Type, error`   |
+| [ ]         | `GetAll`     |                             | `*[]Type, error` |
+| [ ]         | `GetById`    | `typeId int`                | `*Type, error`   |
+| [ ]         | `GetBySlug`  | `typeSlug string`           | `*Type, error`   |
+| [ ]         | `UpdateById` | `typeId int, type TypeData` | `*Type, error`   |
+| [ ]         | `DeleteById` | `typeId int`                | `error`          |
 
 ### Site
 
