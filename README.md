@@ -123,4 +123,5 @@ Frankly, pretty fed up with REST APIs and had a crazy idea for a _headless_ HTML
 
 | Implemented | Model Method | Params      | Returns |
 | ----------- | ------------ | ----------- | ------- |
-| [ ]         | `Update`     | `site Site` | `Site`  |
+| [x]         | `Get`        |             | `*Site` |
+| [x]         | `Update`     | `site Site` | `*Site` |
