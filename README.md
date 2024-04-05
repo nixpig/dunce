@@ -72,17 +72,17 @@ Frankly, pretty fed up with REST APIs and had a crazy idea for a _headless_ HTML
 
 ### Articles
 
-| Implemented | Model Method  | Params                               | Returns             |
-| ----------- | ------------- | ------------------------------------ | ------------------- |
-| [ ]         | `Create`      | `article ArticleData`                | `*Article, error`   |
-| [ ]         | `GetAll`      |                                      | `*[]Article, error` |
-| [ ]         | `GetByType`   | `typeId int`                         | `*[]Article, error` |
-| [ ]         | `GetByAuthor` | `authorId int`                       | `*[]Article, error` |
-| [ ]         | `GetById`     | `articleId int`                      | `*Article, error`   |
-| [ ]         | `GetBySlug`   | `articleSlug string`                 | `*Article, error`   |
-| [ ]         | `GetByTag`    | `tagId int`                          | `*[]Article, error` |
-| [ ]         | `UpdateById`  | `articleId int, article ArticleData` | `*Article, error`   |
-| [ ]         | `DeleteById`  | `articleId int`                      | `error`             |
+| Implemented | Model Method      | Params                                | Returns             |
+| ----------- | ----------------- | ------------------------------------- | ------------------- |
+| [ ]         | `Create`          | `article ArticleData`                 | `*Article, error`   |
+| [ ]         | `GetAll`          |                                       | `*[]Article, error` |
+| [ ]         | `GetByTypeName`   | `typeName string`                     | `*[]Article, error` |
+| [ ]         | `GetByAuthorName` | `authorName string`                   | `*[]Article, error` |
+| [ ]         | `GetById`         | `articleId int`                       | `*Article, error`   |
+| [ ]         | `GetBySlug`       | `articleSlug string`                  | `*Article, error`   |
+| [ ]         | `GetByTagName`    | `tagName string`                      | `*[]Article, error` |
+| [ ]         | `UpdateById`      | `articleId int, article *ArticleData` | `*Article, error`   |
+| [ ]         | `DeleteById`      | `articleId int`                       | `error`             |
 
 ### `UserModel`
 
