@@ -14,6 +14,8 @@ import (
 	"github.com/nixpig/dunce/internal/app/handlers"
 	"github.com/nixpig/dunce/internal/app/middleware"
 	"github.com/nixpig/dunce/internal/pkg/config"
+	"github.com/nixpig/dunce/internal/pkg/models"
+	"github.com/nixpig/dunce/internal/pkg/user"
 )
 
 func Start(port string) {
@@ -66,9 +68,13 @@ func Start(port string) {
 	web.Post("/login", handlers.AdminLoginPostHandler)
 	web.Get("/logout", handlers.AdminLogoutHandler)
 
+	userData := user.NewUserData(models.DB.Conn)
+	userService := user.NewUserService(&userData)
+	userController := user.NewUserController(&userService)
+
 	// admin -> users
 	admin.Get("/users", handlers.AdminUserGetHandler)
-	admin.Post("/users", handlers.AdminUserPostHandler)
+	admin.Post("/users", userController.HandleCreate)
 	admin.Get("/users/:id", handlers.AdminUserGetHandler)
 	admin.Put("/users/:id", handlers.AdminUserPutHandler)
 	admin.Delete("/users/:id", handlers.AdminUserDeleteHander)

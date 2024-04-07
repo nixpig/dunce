@@ -6,7 +6,7 @@ type User struct {
 	Email    string `validate:"required,email,max=100"`
 	Link     string `validate:"omitempty,url,max=255"`
 	Role     string `validate:"required,max=16"`
-	Password string `validate:"required"`
+	Password string `validate:"required,min=8,max=255"`
 }
 
 type UserRequest struct {

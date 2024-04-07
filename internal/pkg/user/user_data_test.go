@@ -59,5 +59,4 @@ func testUserCreate(t *testing.T, mock pgxmock.PgxPoolIface, data user.UserData)
 		Link:     "https://t.com/jane",
 		Role:     "author",
 	}, createdUser, "should return created user response")
-
 }
