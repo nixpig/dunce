@@ -73,8 +73,8 @@ func Start(port string) {
 	userController := user.NewUserController(&userService)
 
 	// admin -> users
-	admin.Get("/users", handlers.AdminUserGetHandler)
-	admin.Post("/users", userController.HandleCreate)
+	admin.Get("/users", userController.HandleGetAll)
+	admin.Post("/users", userController.HandleSave)
 	admin.Get("/users/:id", handlers.AdminUserGetHandler)
 	admin.Put("/users/:id", handlers.AdminUserPutHandler)
 	admin.Delete("/users/:id", handlers.AdminUserDeleteHander)

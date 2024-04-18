@@ -42,7 +42,7 @@ func testUserCreate(t *testing.T, mock pgxmock.PgxPoolIface, data user.UserData)
 		WithArgs("janedoe", "jane@example.org", "https://t.com/jane", "author", "p4ssw0rd").
 		WillReturnRows(row)
 
-	createdUser, err := data.Create(user.UserRequest{
+	createdUser, err := data.Save(user.UserNew{
 		Username: "janedoe",
 		Email:    "jane@example.org",
 		Link:     "https://t.com/jane",
@@ -52,7 +52,7 @@ func testUserCreate(t *testing.T, mock pgxmock.PgxPoolIface, data user.UserData)
 
 	require.Nil(t, err, "should not return error")
 
-	require.Equal(t, &user.UserResponse{
+	require.Equal(t, &user.User{
 		Id:       23,
 		Username: "janedoe",
 		Email:    "jane@example.org",

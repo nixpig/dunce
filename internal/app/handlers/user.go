@@ -7,7 +7,6 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/nixpig/dunce/internal/pkg/models"
-	"github.com/nixpig/dunce/internal/pkg/user"
 	"github.com/nixpig/dunce/pkg/api"
 )
 
@@ -72,53 +71,6 @@ func AdminUserGetHandler(c *fiber.Ctx) error {
 		"Roles":    models.RoleNames,
 	})
 
-}
-
-func AdminUserPostHandler(c *fiber.Ctx) error {
-	username := c.FormValue("username")
-	email := c.FormValue("email")
-	link := c.FormValue("link")
-	password := c.FormValue("password")
-
-	role, err := models.ParseRoleName(c.FormValue("role"))
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(" # >>> Got the things!")
-
-	newUser := user.UserRequest{
-		Username: username,
-		Email:    email,
-		Link:     link,
-		Role:     role.String(),
-		Password: password,
-	}
-
-	fmt.Println(" # >>> created user request!", newUser)
-
-	userData := user.NewUserData(models.DB.Conn)
-
-	fmt.Println(" # >>> created user data!", userData)
-
-	createdUser, err := userData.Create(newUser)
-	if err != nil {
-		fmt.Println(" # >>> error creating user!")
-		fmt.Println(err)
-		return c.Status(fiber.StatusInternalServerError).Render("fragments/admin/shared/error_list", fiber.Map{
-			"Errors": err,
-		})
-	}
-
-	fmt.Println(" # >>> success creating user!")
-
-	return c.Render("fragments/admin/users/user_table_row_view", fiber.Map{
-		"Id":       createdUser.Id,
-		"Role":     createdUser.Role,
-		"Username": createdUser.Username,
-		"Email":    createdUser.Email,
-		"Link":     createdUser.Link,
-	})
 }
 
 func AdminUserPutHandler(c *fiber.Ctx) error {

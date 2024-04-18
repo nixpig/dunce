@@ -12,15 +12,15 @@ type UserData struct {
 }
 
 func NewUserData(db models.Dbconn) UserData {
-	return UserData{db: db}
+	return UserData{db}
 }
 
-func (u *UserData) Create(newUser UserRequest) (*UserResponse, error) {
+func (u *UserData) Save(newUser UserNew) (*User, error) {
 	query := `insert into users_ (username_, email_, link_, role_, password_) values($1, $2, $3, $4, $5) returning id_, username_, email_, link_, role_`
 
 	row := u.db.QueryRow(context.Background(), query, newUser.Username, newUser.Email, newUser.Link, newUser.Role, newUser.Password)
 
-	var user UserResponse
+	var user User
 
 	if err := row.Scan(&user.Id, &user.Username, &user.Email, &user.Link, &user.Role); err != nil {
 		log.Printf("error creating user: { %s, %s, %s, %s }, %v", newUser.Username, newUser.Email, newUser.Link, newUser.Role, err)
@@ -32,7 +32,7 @@ func (u *UserData) Create(newUser UserRequest) (*UserResponse, error) {
 	return &user, nil
 }
 
-func (u *UserData) GetAll() (*[]UserResponse, error) {
+func (u *UserData) GetAll() (*[]User, error) {
 	query := `select id_, username_, email_, link_, role_ from users_`
 
 	rows, err := u.db.Query(context.Background(), query)
@@ -40,10 +40,10 @@ func (u *UserData) GetAll() (*[]UserResponse, error) {
 		return nil, err
 	}
 
-	var users []UserResponse
+	var users []User
 
 	for rows.Next() {
-		var user UserResponse
+		var user User
 
 		if err := rows.Scan(&user.Id, &user.Username, &user.Email, &user.Link, &user.Role); err != nil {
 			return nil, err

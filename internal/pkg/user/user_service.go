@@ -7,14 +7,14 @@ import (
 )
 
 type UserService struct {
-	data dunce.Data[UserRequest, UserResponse]
+	data dunce.Data[UserNew, User]
 }
 
-func NewUserService(data dunce.Data[UserRequest, UserResponse]) UserService {
+func NewUserService(data dunce.Data[UserNew, User]) UserService {
 	return UserService{data}
 }
 
-func (u *UserService) Create(newUser UserRequest) (*UserResponse, error) {
+func (u *UserService) Save(newUser UserNew) (*User, error) {
 	validate := validator.New()
 
 	if err := validate.Struct(newUser); err != nil {
@@ -27,7 +27,7 @@ func (u *UserService) Create(newUser UserRequest) (*UserResponse, error) {
 	}
 
 	// TODO: check for duplicates??
-	createdUser, err := u.data.Create(UserRequest{
+	createdUser, err := u.data.Save(UserNew{
 		Username: newUser.Username,
 		Email:    newUser.Email,
 		Link:     newUser.Link,
@@ -38,6 +38,6 @@ func (u *UserService) Create(newUser UserRequest) (*UserResponse, error) {
 	return createdUser, err
 }
 
-func (u *UserService) GetAll() (*[]UserResponse, error) {
+func (u *UserService) GetAll() (*[]User, error) {
 	return u.data.GetAll()
 }

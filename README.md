@@ -72,52 +72,52 @@ Frankly, pretty fed up with REST APIs and had a crazy idea for a _headless_ HTML
 
 ### Articles
 
-| Implemented | Model Method      | Params                                | Returns             |
-| ----------- | ----------------- | ------------------------------------- | ------------------- |
-| [ ]         | `Create`          | `article ArticleData`                 | `*Article, error`   |
-| [ ]         | `GetAll`          |                                       | `*[]Article, error` |
-| [ ]         | `GetByTypeName`   | `typeName string`                     | `*[]Article, error` |
-| [ ]         | `GetByAuthorName` | `authorName string`                   | `*[]Article, error` |
-| [ ]         | `GetById`         | `articleId int`                       | `*Article, error`   |
-| [ ]         | `GetBySlug`       | `articleSlug string`                  | `*Article, error`   |
-| [ ]         | `GetByTagName`    | `tagName string`                      | `*[]Article, error` |
-| [ ]         | `UpdateById`      | `articleId int, article *ArticleData` | `*Article, error`   |
-| [ ]         | `DeleteById`      | `articleId int`                       | `error`             |
+| Implemented | Model Method      | Params                 | Returns             |
+| ----------- | ----------------- | ---------------------- | ------------------- |
+| [ ]         | `Create`          | `article ArticleData`  | `*Article, error`   |
+| [ ]         | `GetAll`          |                        | `*[]Article, error` |
+| [ ]         | `GetByTypeName`   | `typeName string`      | `*[]Article, error` |
+| [ ]         | `GetByAuthorName` | `authorName string`    | `*[]Article, error` |
+| [ ]         | `GetById`         | `articleId int`        | `*Article, error`   |
+| [ ]         | `GetBySlug`       | `articleSlug string`   | `*Article, error`   |
+| [ ]         | `GetByTagName`    | `tagName string`       | `*[]Article, error` |
+| [ ]         | `Update`          | `article *ArticleData` | `*Article, error`   |
+| [ ]         | `DeleteById`      | `articleId int`        | `error`             |
 
 ### `UserModel`
 
 | Implemented | Model Method    | Params                               | Returns          |
 | ----------- | --------------- | ------------------------------------ | ---------------- |
-| [x]         | `Create`        | `newUser *UserData, password string` | `*User, error`   |
-| [x]         | `UpdateById`    | `id int, user *UserData`             | `*User, error`   |
-| [x]         | `GetAll`        |                                      | `*[]User, error` |
-| [x]         | `GetById`       | `userId int`                         | `*User, error`   |
-| [x]         | `GetByUsername` | `username string`                    | `*User, error`   |
-| [x]         | `GetByEmail`    | `email string`                       | `*User, error`   |
-| [x]         | `GetByRole`     | `role RoleName`                      | `*[]User, error` |
-| [x]         | `DeleteById`    | `userId int`                         | `error`          |
+| [ ]         | `Create`        | `newUser *UserData, password string` | `*User, error`   |
+| [ ]         | `Update`        | `user *UserData`                     | `*User, error`   |
+| [ ]         | `GetAll`        |                                      | `*[]User, error` |
+| [ ]         | `GetById`       | `userId int`                         | `*User, error`   |
+| [ ]         | `GetByUsername` | `username string`                    | `*User, error`   |
+| [ ]         | `GetByEmail`    | `email string`                       | `*User, error`   |
+| [ ]         | `GetByRole`     | `role RoleName`                      | `*[]User, error` |
+| [ ]         | `DeleteById`    | `userId int`                         | `error`          |
 
 ### Tags
 
-| Implemented | Model Method | Params                   | Returns         |
-| ----------- | ------------ | ------------------------ | --------------- |
-| [x]         | `Create`     | `tag TagData`            | `*Tag, error`   |
-| [x]         | `GetAll`     |                          | `*[]Tag, error` |
-| [x]         | `GetById`    | `tagId int`              | `*Tag, error`   |
-| [x]         | `GetBySlug`  | `tagSlug string`         | `*Tag,error`    |
-| [x]         | `UpdateById` | `tagId int, tag TagData` | `*Tag, error`   |
-| [x]         | `DeleteById` | `tagId int`              | `error`         |
+| Implemented | Model Method | Params           | Returns         |
+| ----------- | ------------ | ---------------- | --------------- |
+| [ ]         | `Create`     | `tag TagData`    | `*Tag, error`   |
+| [ ]         | `GetAll`     |                  | `*[]Tag, error` |
+| [ ]         | `GetById`    | `tagId int`      | `*Tag, error`   |
+| [ ]         | `GetBySlug`  | `tagSlug string` | `*Tag,error`    |
+| [ ]         | `Update`     | `tag TagData`    | `*Tag, error`   |
+| [ ]         | `DeleteById` | `tagId int`      | `error`         |
 
 ### Types
 
-| Implemented | Model Method | Params                      | Returns          |
-| ----------- | ------------ | --------------------------- | ---------------- |
-| [ ]         | `Create`     | `type TypeData`             | `*Type, error`   |
-| [ ]         | `GetAll`     |                             | `*[]Type, error` |
-| [ ]         | `GetById`    | `typeId int`                | `*Type, error`   |
-| [ ]         | `GetBySlug`  | `typeSlug string`           | `*Type, error`   |
-| [ ]         | `UpdateById` | `typeId int, type TypeData` | `*Type, error`   |
-| [ ]         | `DeleteById` | `typeId int`                | `error`          |
+| Implemented | Model Method | Params            | Returns          |
+| ----------- | ------------ | ----------------- | ---------------- |
+| [ ]         | `Create`     | `type TypeData`   | `*Type, error`   |
+| [ ]         | `GetAll`     |                   | `*[]Type, error` |
+| [ ]         | `GetById`    | `typeId int`      | `*Type, error`   |
+| [ ]         | `GetBySlug`  | `typeSlug string` | `*Type, error`   |
+| [ ]         | `Update`     | `type TypeData`   | `*Type, error`   |
+| [ ]         | `DeleteById` | `typeId int`      | `error`          |
 
 ### Site
 

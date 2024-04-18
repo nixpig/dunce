@@ -9,21 +9,21 @@ import (
 )
 
 type UserController struct {
-	service dunce.Service[UserRequest, UserResponse]
+	service dunce.Service[UserNew, User]
 }
 
-func NewUserController(service dunce.Service[UserRequest, UserResponse]) UserController {
+func NewUserController(service dunce.Service[UserNew, User]) UserController {
 	return UserController{service}
 }
 
-func (u *UserController) HandleCreate(c *fiber.Ctx) error {
+func (u *UserController) HandleSave(c *fiber.Ctx) error {
 	username := c.FormValue("username")
 	email := c.FormValue("email")
 	link := c.FormValue("link")
 	password := c.FormValue("password")
 	role := c.FormValue("role")
 
-	createdUser, err := u.service.Create(UserRequest{
+	createdUser, err := u.service.Save(UserNew{
 		Username: username,
 		Email:    email,
 		Link:     link,
