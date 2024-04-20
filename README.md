@@ -17,33 +17,6 @@ Don't try to use this yet. It probably doesn't even run.
 
 **Basically everything!**
 
-## Motivation
-
-Frankly, pretty fed up with REST APIs and had a crazy idea for a _headless_ HTML API. Want to see where it goes...
-
-## Structure
-
-```
-
-├── cmd/
-│   └── app/
-│       └── main.go  # entrypoint
-├── db/
-│   └── migrations/  # database migrations
-├── deploy/  # deployment config
-├── internal/  # internals of app
-│   ├── app/  # the fiber server and associated stuffs
-│   └── pkg
-│       ├── config/  # configuration
-│       └── models/  # data models and db connection
-├── pkg
-│   └── api/  # the functions api to expose to templates
-├── web
-│   ├── static/  # static web assets
-│   └── templates/  # customisable templates
-
-```
-
 ## Template functions
 
 | Function               | Description |
@@ -70,58 +43,58 @@ Frankly, pretty fed up with REST APIs and had a crazy idea for a _headless_ HTML
 
 ## Models API
 
+### Tags
+
+| DB  | Service | REST | Proto | Model Method | Params           | Returns         |
+| --- | ------- | ---- | ----- | ------------ | ---------------- | --------------- |
+| [ ] | [ ]     | [ ]  | [ ]   | `Create`     | `tag TagData`    | `*Tag, error`   |
+| [ ] | [ ]     | [ ]  | [ ]   | `GetAll`     |                  | `*[]Tag, error` |
+| [ ] | [ ]     | [ ]  | [ ]   | `GetById`    | `tagId int`      | `*Tag, error`   |
+| [ ] | [ ]     | [ ]  | [ ]   | `GetBySlug`  | `tagSlug string` | `*Tag,error`    |
+| [ ] | [ ]     | [ ]  | [ ]   | `Update`     | `tag TagData`    | `*Tag, error`   |
+| [ ] | [ ]     | [ ]  | [ ]   | `DeleteById` | `tagId int`      | `error`         |
+
 ### Articles
 
-| Implemented | Model Method      | Params                 | Returns             |
-| ----------- | ----------------- | ---------------------- | ------------------- |
-| [ ]         | `Create`          | `article ArticleData`  | `*Article, error`   |
-| [ ]         | `GetAll`          |                        | `*[]Article, error` |
-| [ ]         | `GetByTypeName`   | `typeName string`      | `*[]Article, error` |
-| [ ]         | `GetByAuthorName` | `authorName string`    | `*[]Article, error` |
-| [ ]         | `GetById`         | `articleId int`        | `*Article, error`   |
-| [ ]         | `GetBySlug`       | `articleSlug string`   | `*Article, error`   |
-| [ ]         | `GetByTagName`    | `tagName string`       | `*[]Article, error` |
-| [ ]         | `Update`          | `article *ArticleData` | `*Article, error`   |
-| [ ]         | `DeleteById`      | `articleId int`        | `error`             |
+| DB  | Service | REST | Proto | Model Method      | Params                 | Returns             |
+| --- | ------- | ---- | ----- | ----------------- | ---------------------- | ------------------- |
+| [ ] | [ ]     | [ ]  | [ ]   | `Create`          | `article ArticleData`  | `*Article, error`   |
+| [ ] | [ ]     | [ ]  | [ ]   | `GetAll`          |                        | `*[]Article, error` |
+| [ ] | [ ]     | [ ]  | [ ]   | `GetByTypeName`   | `typeName string`      | `*[]Article, error` |
+| [ ] | [ ]     | [ ]  | [ ]   | `GetByAuthorName` | `authorName string`    | `*[]Article, error` |
+| [ ] | [ ]     | [ ]  | [ ]   | `GetById`         | `articleId int`        | `*Article, error`   |
+| [ ] | [ ]     | [ ]  | [ ]   | `GetBySlug`       | `articleSlug string`   | `*Article, error`   |
+| [ ] | [ ]     | [ ]  | [ ]   | `GetByTagName`    | `tagName string`       | `*[]Article, error` |
+| [ ] | [ ]     | [ ]  | [ ]   | `Update`          | `article *ArticleData` | `*Article, error`   |
+| [ ] | [ ]     | [ ]  | [ ]   | `DeleteById`      | `articleId int`        | `error`             |
 
 ### `UserModel`
 
-| Implemented | Model Method    | Params                               | Returns          |
-| ----------- | --------------- | ------------------------------------ | ---------------- |
-| [ ]         | `Create`        | `newUser *UserData, password string` | `*User, error`   |
-| [ ]         | `Update`        | `user *UserData`                     | `*User, error`   |
-| [ ]         | `GetAll`        |                                      | `*[]User, error` |
-| [ ]         | `GetById`       | `userId int`                         | `*User, error`   |
-| [ ]         | `GetByUsername` | `username string`                    | `*User, error`   |
-| [ ]         | `GetByEmail`    | `email string`                       | `*User, error`   |
-| [ ]         | `GetByRole`     | `role RoleName`                      | `*[]User, error` |
-| [ ]         | `DeleteById`    | `userId int`                         | `error`          |
-
-### Tags
-
-| Implemented | Model Method | Params           | Returns         |
-| ----------- | ------------ | ---------------- | --------------- |
-| [ ]         | `Create`     | `tag TagData`    | `*Tag, error`   |
-| [ ]         | `GetAll`     |                  | `*[]Tag, error` |
-| [ ]         | `GetById`    | `tagId int`      | `*Tag, error`   |
-| [ ]         | `GetBySlug`  | `tagSlug string` | `*Tag,error`    |
-| [ ]         | `Update`     | `tag TagData`    | `*Tag, error`   |
-| [ ]         | `DeleteById` | `tagId int`      | `error`         |
+| DB  | Service | REST | Proto | Model Method    | Params                               | Returns          |
+| --- | ------- | ---- | ----- | --------------- | ------------------------------------ | ---------------- |
+| [ ] | [ ]     | [ ]  | [ ]   | `Create`        | `newUser *UserData, password string` | `*User, error`   |
+| [ ] | [ ]     | [ ]  | [ ]   | `Update`        | `user *UserData`                     | `*User, error`   |
+| [ ] | [ ]     | [ ]  | [ ]   | `GetAll`        |                                      | `*[]User, error` |
+| [ ] | [ ]     | [ ]  | [ ]   | `GetById`       | `userId int`                         | `*User, error`   |
+| [ ] | [ ]     | [ ]  | [ ]   | `GetByUsername` | `username string`                    | `*User, error`   |
+| [ ] | [ ]     | [ ]  | [ ]   | `GetByEmail`    | `email string`                       | `*User, error`   |
+| [ ] | [ ]     | [ ]  | [ ]   | `GetByRole`     | `role RoleName`                      | `*[]User, error` |
+| [ ] | [ ]     | [ ]  | [ ]   | `DeleteById`    | `userId int`                         | `error`          |
 
 ### Types
 
-| Implemented | Model Method | Params            | Returns          |
-| ----------- | ------------ | ----------------- | ---------------- |
-| [ ]         | `Create`     | `type TypeData`   | `*Type, error`   |
-| [ ]         | `GetAll`     |                   | `*[]Type, error` |
-| [ ]         | `GetById`    | `typeId int`      | `*Type, error`   |
-| [ ]         | `GetBySlug`  | `typeSlug string` | `*Type, error`   |
-| [ ]         | `Update`     | `type TypeData`   | `*Type, error`   |
-| [ ]         | `DeleteById` | `typeId int`      | `error`          |
+| DB  | Service | REST | Proto | Model Method | Params            | Returns          |
+| --- | ------- | ---- | ----- | ------------ | ----------------- | ---------------- |
+| [ ] | [ ]     | [ ]  | [ ]   | `Create`     | `type TypeData`   | `*Type, error`   |
+| [ ] | [ ]     | [ ]  | [ ]   | `GetAll`     |                   | `*[]Type, error` |
+| [ ] | [ ]     | [ ]  | [ ]   | `GetById`    | `typeId int`      | `*Type, error`   |
+| [ ] | [ ]     | [ ]  | [ ]   | `GetBySlug`  | `typeSlug string` | `*Type, error`   |
+| [ ] | [ ]     | [ ]  | [ ]   | `Update`     | `type TypeData`   | `*Type, error`   |
+| [ ] | [ ]     | [ ]  | [ ]   | `DeleteById` | `typeId int`      | `error`          |
 
 ### Site
 
-| Implemented | Model Method | Params      | Returns |
-| ----------- | ------------ | ----------- | ------- |
-| [x]         | `Get`        |             | `*Site` |
-| [x]         | `Update`     | `site Site` | `*Site` |
+| DB  | Service | REST | Proto | Model Method | Params      | Returns |
+| --- | ------- | ---- | ----- | ------------ | ----------- | ------- |
+| [ ] | [ ]     | [ ]  | [ ]   | `Get`        |             | `*Site` |
+| [ ] | [ ]     | [ ]  | [ ]   | `Update`     | `site Site` | `*Site` |

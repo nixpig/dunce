@@ -11,8 +11,8 @@ CREATE TYPE role_ AS ENUM ('admin', 'author', 'reader');
 
 CREATE TABLE IF NOT EXISTS tags_ (
     id_ integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    name_ character varying(100) UNIQUE NOT NULL,
-    slug_ character varying(100) UNIQUE NOT NULL
+    name_ character varying(50) UNIQUE NOT NULL,
+    slug_ character varying(50) UNIQUE NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS users_ (

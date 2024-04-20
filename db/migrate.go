@@ -1,4 +1,4 @@
-package models
+package db
 
 import (
 	"context"
@@ -7,40 +7,42 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/nixpig/dunce/internal/pkg/config"
+	"github.com/nixpig/dunce/internal/config"
 )
+
+func MigrateUp() error {
+	env, err := loadDatabaseEnvironment()
+	if err != nil {
+		return err
+	}
+
+	connectionString := buildConnectionString(env)
+
+	log.Print("creating database migration")
+	m, err := migrate.New("file://db/migrations", connectionString)
+	if err != nil {
+		return err
+	}
+
+	log.Print("running database migration")
+	if err := m.Up(); err != nil {
+		return err
+	}
+
+	return nil
+}
 
 type DbInstance struct {
 	Conn Dbconn
 }
 
 var DB DbInstance
-
-type Queries struct {
-	User    *UserModel
-	Tag     *TagModel
-	Type    *TypeModel
-	Article *ArticleModel
-	Site    *SiteModel
-	Login   *Login
-}
-
-var Query Queries
-
-func BuildQueries(db Dbconn) {
-	Query =
-		Queries{
-			User:    &UserModel{Db: db},
-			Tag:     &TagModel{Db: db},
-			Type:    &TypeModel{Db: db},
-			Article: &ArticleModel{Db: db},
-			Site:    &SiteModel{Db: db},
-			Login:   &Login{Db: db},
-		}
-}
 
 type Dbconn interface {
 	Begin(ctx context.Context) (pgx.Tx, error)
@@ -58,7 +60,7 @@ type databaseEnvironment struct {
 }
 
 func Connect() error {
-	env, err := loadEnv()
+	env, err := loadDatabaseEnvironment()
 	if err != nil {
 		return err
 	}
@@ -75,12 +77,10 @@ func Connect() error {
 		Conn: db,
 	}
 
-	BuildQueries(DB.Conn)
-
 	return nil
 }
 
-func loadEnv() (*databaseEnvironment, error) {
+func loadDatabaseEnvironment() (*databaseEnvironment, error) {
 	host := config.Get("DATABASE_HOST")
 	port := config.Get("DATABASE_PORT")
 	name := config.Get("POSTGRES_DB")

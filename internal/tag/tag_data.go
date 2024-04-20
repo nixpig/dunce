@@ -3,18 +3,18 @@ package tag
 import (
 	"context"
 
-	"github.com/nixpig/dunce/internal/pkg/models"
+	"github.com/nixpig/dunce/db"
 )
 
 type TagData struct {
-	db models.Dbconn
+	db db.Dbconn
 }
 
-func NewTagData(db models.Dbconn) TagData {
+func NewTagData(db db.Dbconn) TagData {
 	return TagData{db}
 }
 
-func (u *TagData) Create(tag *TagNew) (*Tag, error) {
+func (u *TagData) Create(tag *Tag) (*Tag, error) {
 	query := `insert into tags_ (name_, slug_) values ($1, $2) returning id_, name_, slug_`
 
 	var createdTag Tag

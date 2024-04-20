@@ -4,9 +4,9 @@ import (
 	"log"
 	"os"
 
+	"github.com/nixpig/dunce/db"
 	app "github.com/nixpig/dunce/internal/app/server"
-	"github.com/nixpig/dunce/internal/pkg/config"
-	"github.com/nixpig/dunce/internal/pkg/models"
+	"github.com/nixpig/dunce/internal/config"
 )
 
 func main() {
@@ -15,11 +15,11 @@ func main() {
 		log.Printf("unable to load config from env '%v' which may be fatal; continuing...", err)
 	}
 
-	if err := models.MigrateUp(); err != nil {
+	if err := db.MigrateUp(); err != nil {
 		log.Printf("did not run database migration due to '%v' which may be fatal; continuing...", err)
 	}
 
-	if err := models.Connect(); err != nil {
+	if err := db.Connect(); err != nil {
 		log.Fatalf("unable to connect to database: %v", err)
 		os.Exit(1)
 	}
