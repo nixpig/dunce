@@ -13,6 +13,10 @@ type TagService struct {
 
 type TagServiceInterface interface {
 	create(tag *Tag) (*Tag, error)
+	deleteById(id int) error
+	getAll() (*[]Tag, error)
+	getBySlug(slug string) (*Tag, error)
+	update(tag *Tag) (*Tag, error)
 }
 
 func NewTagService(data TagDataInterface) TagService {
@@ -63,6 +67,44 @@ func (ts TagService) getAll() (*[]Tag, error) {
 	}
 
 	return tags, nil
+}
+
+func (ts TagService) getBySlug(slug string) (*Tag, error) {
+	tag, err := ts.data.getBySlug(slug)
+	if err != nil {
+		return nil, err
+	}
+
+	return tag, nil
+}
+
+func (ts TagService) update(tag *Tag) (*Tag, error) {
+	// TODO: maybe inject validator at point of struct initialisation?
+	validate := validator.New(validator.WithRequiredStructEnabled())
+
+	if err := validate.RegisterValidation("slug", ValidateSlug); err != nil {
+		return nil, err
+	}
+
+	if err := validate.Struct(tag); err != nil {
+		return nil, err
+	}
+
+	exists, err := ts.data.exists(tag)
+	if err != nil {
+		return nil, err
+	}
+
+	if exists {
+		return nil, errors.New("tag name and/or slug already exists")
+	}
+
+	updatedTag, err := ts.data.update(tag)
+	if err != nil {
+		return nil, err
+	}
+
+	return updatedTag, nil
 }
 
 func ValidateSlug(slug validator.FieldLevel) bool {

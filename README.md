@@ -13,14 +13,14 @@ Don't try to use this. Not only does it probably not run yet, it's specific to _
 
 ### Tags
 
-| DB  | Service | REST | Proto     | Model Method | Params           | Returns         |
-| --- | ------- | ---- | --------- | ------------ | ---------------- | --------------- |
-| [x] | [x]     | [ ]  | [ ]       | `Create`     | `tag TagData`    | `*Tag, error`   |
-| [x] | [x]     | [ ]  | [ ]       | `GetAll`     |                  | `*[]Tag, error` |
-| [ ] | [ ]     | [ ]  | `GetById` | `tagId int`  | `*Tag, error`    |
-| [ ] | [ ]     | [ ]  | [ ]       | `GetBySlug`  | `tagSlug string` | `*Tag,error`    |
-| [ ] | [ ]     | [ ]  | [ ]       | `Update`     | `tag TagData`    | `*Tag, error`   |
-| [x] | [x]     | [ ]  | [ ]       | `DeleteById` | `tagId int`      | `error`         |
+| DB  | Service | Controller | Server | Model Method | Params           | Returns         |
+| --- | ------- | ---------- | ------ | ------------ | ---------------- | --------------- |
+| [x] | [x]     | [ ]        | [ ]    | `Create`     | `tag TagData`    | `*Tag, error`   |
+| [x] | [x]     | [ ]        | [ ]    | `GetAll`     |                  | `*[]Tag, error` |
+| [x] | [x]     | [ ]        | [ ]    | `DeleteById` | `tagId int`      | `error`         |
+| [x] | [x]     | [ ]        | [ ]    | `GetBySlug`  | `tagSlug string` | `*Tag,error`    |
+| [x] | [x]     | [ ]        | [ ]    | `Update`     | `tag TagData`    | `*Tag, error`   |
+| [ ] | [x]     | [ ]        | [ ]    | `GetById`    | `tagId int`      | `*Tag, error`   |
 
 ### Articles
 

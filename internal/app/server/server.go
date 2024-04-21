@@ -15,8 +15,11 @@ func Start(port string) {
 	tagService := tags.NewTagService(tagsData)
 	tagsController := tags.NewTagController(tagService)
 
-	mux.HandleFunc("GET /api/tags", tagsController.GetAllHandler)
-	mux.HandleFunc("GET /api/tags/{id}", tagsController.GetByIdHandler)
+	mux.HandleFunc("POST /tags", tagsController.CreateHandler)
+	mux.HandleFunc("GET /tags", tagsController.GetAllHandler)
+	mux.HandleFunc("GET /tags/{slug}", tagsController.GetBySlugHandler)
+	mux.HandleFunc("PUT /tags", tagsController.UpdateHandler)
+	mux.HandleFunc("DELETE /tags", tagsController.DeleteHandler)
 
 	http.ListenAndServe(fmt.Sprintf(":%v", port), mux)
 }

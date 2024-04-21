@@ -25,6 +25,8 @@ type TagDataInterface interface {
 	deleteById(id int) error
 	exists(tag *Tag) (bool, error)
 	getAll() (*[]Tag, error)
+	getBySlug(slug string) (*Tag, error)
+	update(tag *Tag) (*Tag, error)
 }
 
 type TagData struct {
@@ -100,4 +102,32 @@ func (t TagData) getAll() (*[]Tag, error) {
 	}
 
 	return &tags, nil
+}
+
+func (t TagData) getBySlug(slug string) (*Tag, error) {
+	query := `select id_, name_, slug_ from tags_ where slug_ = $1`
+
+	row := t.db.QueryRow(context.Background(), query, slug)
+
+	var tag Tag
+
+	if err := row.Scan(&tag.Id, &tag.Name, &tag.Slug); err != nil {
+		return nil, err
+	}
+
+	return &tag, nil
+}
+
+func (t TagData) update(tag *Tag) (*Tag, error) {
+	query := `update tags_ set name_ = $2, slug_ = $3 where id_ = $1 returning id_, name_, slug_`
+
+	row := t.db.QueryRow(context.Background(), query, tag.Id, tag.Name, tag.Slug)
+
+	var updatedTag Tag
+
+	if err := row.Scan(&updatedTag.Id, &updatedTag.Name, &updatedTag.Slug); err != nil {
+		return nil, err
+	}
+
+	return &updatedTag, nil
 }
