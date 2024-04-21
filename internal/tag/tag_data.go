@@ -23,6 +23,7 @@ func NewTagWithId(id int, name, slug string) Tag {
 type TagDataInterface interface {
 	create(tag *Tag) (*Tag, error)
 	deleteById(id int) error
+	exists(tag *Tag) (bool, error)
 }
 
 type TagData struct {
@@ -56,4 +57,21 @@ func (u *TagData) deleteById(id int) error {
 	}
 
 	return nil
+}
+
+func (u *TagData) exists(tag *Tag) (bool, error) {
+	checkDuplicatesQuery := `select count(*) from tags_ where name_ = $1 or slug_ = $2`
+
+	var duplicateCount int
+
+	duplicateRow := u.db.QueryRow(context.Background(), checkDuplicatesQuery, tag.Name, tag.Slug)
+	if err := duplicateRow.Scan(&duplicateCount); err != nil {
+		return false, err
+	}
+
+	if duplicateCount > 0 {
+		return true, nil
+	}
+
+	return false, nil
 }
