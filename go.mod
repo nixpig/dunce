@@ -1,6 +1,6 @@
 module github.com/nixpig/dunce
 
-go 1.21.3
+go 1.22.1
 
 require (
 	github.com/go-playground/validator/v10 v10.17.0

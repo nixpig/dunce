@@ -11,11 +11,15 @@ type TagService struct {
 	data TagDataInterface
 }
 
+type TagServiceInterface interface {
+	create(tag *Tag) (*Tag, error)
+}
+
 func NewTagService(data TagDataInterface) TagService {
 	return TagService{data}
 }
 
-func (ts *TagService) create(tag *Tag) (*Tag, error) {
+func (ts TagService) create(tag *Tag) (*Tag, error) {
 	// TODO: maybe inject validator at point of struct initialisation?
 	validate := validator.New(validator.WithRequiredStructEnabled())
 
@@ -44,7 +48,7 @@ func (ts *TagService) create(tag *Tag) (*Tag, error) {
 	return createdTag, nil
 }
 
-func (ts *TagService) deleteById(id int) error {
+func (ts TagService) deleteById(id int) error {
 	if err := ts.data.deleteById(id); err != nil {
 		return err
 	}
@@ -52,7 +56,7 @@ func (ts *TagService) deleteById(id int) error {
 	return nil
 }
 
-func (ts *TagService) getAll() (*[]Tag, error) {
+func (ts TagService) getAll() (*[]Tag, error) {
 	tags, err := ts.data.getAll()
 	if err != nil {
 		return nil, err

@@ -35,7 +35,7 @@ func NewTagData(db db.Dbconn) TagData {
 	return TagData{db}
 }
 
-func (t *TagData) create(tag *Tag) (*Tag, error) {
+func (t TagData) create(tag *Tag) (*Tag, error) {
 	query := `insert into tags_ (name_, slug_) values ($1, $2) returning id_, name_, slug_`
 
 	var createdTag Tag
@@ -49,7 +49,7 @@ func (t *TagData) create(tag *Tag) (*Tag, error) {
 	return &createdTag, nil
 }
 
-func (t *TagData) deleteById(id int) error {
+func (t TagData) deleteById(id int) error {
 	query := `delete from tags_ where id_ = $1`
 
 	_, err := t.db.Exec(context.Background(), query, id)
@@ -60,7 +60,7 @@ func (t *TagData) deleteById(id int) error {
 	return nil
 }
 
-func (t *TagData) exists(tag *Tag) (bool, error) {
+func (t TagData) exists(tag *Tag) (bool, error) {
 	checkDuplicatesQuery := `select count(*) from tags_ where name_ = $1 or slug_ = $2`
 
 	var duplicateCount int
@@ -77,7 +77,7 @@ func (t *TagData) exists(tag *Tag) (bool, error) {
 	return false, nil
 }
 
-func (t *TagData) getAll() (*[]Tag, error) {
+func (t TagData) getAll() (*[]Tag, error) {
 	query := `select id_, name_, slug_ from tags_`
 
 	rows, err := t.db.Query(context.Background(), query)
