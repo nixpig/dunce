@@ -1,8 +1,7 @@
-package tag
+package tags
 
 import (
 	"errors"
-	"fmt"
 	"regexp"
 
 	"github.com/go-playground/validator/v10"
@@ -16,7 +15,7 @@ func NewTagService(data TagDataInterface) TagService {
 	return TagService{data}
 }
 
-func (ts *TagService) Create(tag *Tag) (*Tag, error) {
+func (ts *TagService) create(tag *Tag) (*Tag, error) {
 	// TODO: maybe inject validator at point of struct initialisation?
 	validate := validator.New(validator.WithRequiredStructEnabled())
 
@@ -33,8 +32,6 @@ func (ts *TagService) Create(tag *Tag) (*Tag, error) {
 		return nil, err
 	}
 
-	fmt.Println(" >>> does tag exist?", exists)
-
 	if exists {
 		return nil, errors.New("tag name and/or slug already exists")
 	}
@@ -47,12 +44,21 @@ func (ts *TagService) Create(tag *Tag) (*Tag, error) {
 	return createdTag, nil
 }
 
-func (ts *TagService) DeleteById(id int) error {
+func (ts *TagService) deleteById(id int) error {
 	if err := ts.data.deleteById(id); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (ts *TagService) getAll() (*[]Tag, error) {
+	tags, err := ts.data.getAll()
+	if err != nil {
+		return nil, err
+	}
+
+	return tags, nil
 }
 
 func ValidateSlug(slug validator.FieldLevel) bool {

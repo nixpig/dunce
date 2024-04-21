@@ -1,4 +1,4 @@
-package tag
+package tags
 
 import (
 	"errors"
@@ -9,9 +9,55 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestTagDataGetAll(t *testing.T) {
+	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface, data TagData){
+		"get all (multiple results)": testGetAllTagsMultipleResults,
+		"get all (no results)":       testGetAllTagsNoResults,
+		"get all (single result)":    testGetAllTagsSingleResult,
+	}
+
+	for scenario, fn := range scenarios {
+		db, err := pgxmock.NewPool()
+		if err != nil {
+			t.Fatalf("failed to create mock db pool")
+		}
+
+		defer db.Close()
+
+		t.Run(scenario, func(t *testing.T) {
+			data := NewTagData(db)
+
+			fn(t, db, data)
+		})
+	}
+
+}
+
 func TestTagDataCreate(t *testing.T) {
 	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface, data TagData){
 		"create new tag": testCreateValidTag,
+	}
+
+	for scenario, fn := range scenarios {
+		db, err := pgxmock.NewPool()
+		if err != nil {
+			t.Fatalf("failed to create mock db pool")
+		}
+
+		defer db.Close()
+
+		t.Run(scenario, func(t *testing.T) {
+			data := NewTagData(db)
+
+			fn(t, db, data)
+		})
+	}
+}
+
+func TestTagDataDeleteById(t *testing.T) {
+	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface, data TagData){
+		"delete existing tag":     testDeleteExistingTag,
+		"delete non-existing tag": testDeleteNonExistingTag,
 	}
 
 	for scenario, fn := range scenarios {
@@ -51,7 +97,6 @@ func TestTagDataExists(t *testing.T) {
 			fn(t, db, data)
 		})
 	}
-
 }
 
 func testCreateValidTag(t *testing.T, mock pgxmock.PgxPoolIface, data TagData) {
@@ -86,28 +131,6 @@ func testCreateInvalidTag(t *testing.T, mock pgxmock.PgxPoolIface, data TagData)
 	createdTag, err := data.create(&newTag)
 	require.Nil(t, createdTag, "should not create invalid tag")
 	require.EqualError(t, err, "database_error", "should return the error from database")
-}
-
-func TestTagDataDeleteById(t *testing.T) {
-	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface, data TagData){
-		"delete existing tag":     testDeleteExistingTag,
-		"delete non-existing tag": testDeleteNonExistingTag,
-	}
-
-	for scenario, fn := range scenarios {
-		db, err := pgxmock.NewPool()
-		if err != nil {
-			t.Fatalf("failed to create mock db pool")
-		}
-
-		defer db.Close()
-
-		t.Run(scenario, func(t *testing.T) {
-			data := NewTagData(db)
-
-			fn(t, db, data)
-		})
-	}
 }
 
 func testDeleteExistingTag(t *testing.T, mock pgxmock.PgxPoolIface, data TagData) {
@@ -174,4 +197,71 @@ func testTagExistsError(t *testing.T, mock pgxmock.PgxPoolIface, data TagData) {
 	_, err := data.exists(&mockDuplicateTag)
 
 	require.EqualError(t, err, "database_error")
+}
+
+func testGetAllTagsNoResults(t *testing.T, mock pgxmock.PgxPoolIface, data TagData) {
+	query := `select id_, name_, slug_ from tags_`
+
+	mockEmptyRows := mock.NewRows([]string{"id_", "name_", "slug_"}).AddRows()
+
+	mock.ExpectQuery(regexp.QuoteMeta(query)).WillReturnRows(mockEmptyRows)
+
+	tags, err := data.getAll()
+
+	require.Nil(t, err, "should not return error")
+
+	require.Empty(t, tags, "should return zero results")
+}
+
+func testGetAllTagsMultipleResults(t *testing.T, mock pgxmock.PgxPoolIface, data TagData) {
+	query := `select id_, name_, slug_ from tags_`
+
+	singleResult := mock.
+		NewRows([]string{"id_", "name_", "slug_"}).
+		AddRow(23, "tagname1", "tag-slug-1").
+		AddRow(42, "tagname2", "tag-slug-2").
+		AddRow(69, "tagname3", "tag-slug-3")
+
+	mock.ExpectQuery(regexp.QuoteMeta(query)).WillReturnRows(singleResult)
+
+	tags, err := data.getAll()
+	require.Equal(t, &[]Tag{
+		{
+			Id:   23,
+			Name: "tagname1",
+			Slug: "tag-slug-1",
+		},
+		{
+			Id:   42,
+			Name: "tagname2",
+			Slug: "tag-slug-2",
+		},
+		{
+			Id:   69,
+			Name: "tagname3",
+			Slug: "tag-slug-3",
+		},
+	}, tags, "should return all tag results")
+	require.Nil(t, err, "should not return an error")
+}
+
+func testGetAllTagsSingleResult(t *testing.T, mock pgxmock.PgxPoolIface, data TagData) {
+	query := `select id_, name_, slug_ from tags_`
+
+	singleResult := mock.
+		NewRows([]string{"id_", "name_", "slug_"}).
+		AddRow(23, "tagname", "tag-slug")
+
+	mock.ExpectQuery(regexp.QuoteMeta(query)).WillReturnRows(singleResult)
+
+	tags, err := data.getAll()
+	require.Equal(t, &[]Tag{
+		{
+
+			Id:   23,
+			Name: "tagname",
+			Slug: "tag-slug",
+		},
+	}, tags, "should return tag result")
+	require.Nil(t, err, "should not return an error")
 }

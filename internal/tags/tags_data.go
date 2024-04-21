@@ -1,4 +1,4 @@
-package tag
+package tags
 
 import (
 	"context"
@@ -24,6 +24,7 @@ type TagDataInterface interface {
 	create(tag *Tag) (*Tag, error)
 	deleteById(id int) error
 	exists(tag *Tag) (bool, error)
+	getAll() (*[]Tag, error)
 }
 
 type TagData struct {
@@ -34,12 +35,12 @@ func NewTagData(db db.Dbconn) TagData {
 	return TagData{db}
 }
 
-func (u *TagData) create(tag *Tag) (*Tag, error) {
+func (t *TagData) create(tag *Tag) (*Tag, error) {
 	query := `insert into tags_ (name_, slug_) values ($1, $2) returning id_, name_, slug_`
 
 	var createdTag Tag
 
-	row := u.db.QueryRow(context.Background(), query, tag.Name, tag.Slug)
+	row := t.db.QueryRow(context.Background(), query, tag.Name, tag.Slug)
 
 	if err := row.Scan(&createdTag.Id, &createdTag.Name, &createdTag.Slug); err != nil {
 		return nil, err
@@ -48,10 +49,10 @@ func (u *TagData) create(tag *Tag) (*Tag, error) {
 	return &createdTag, nil
 }
 
-func (u *TagData) deleteById(id int) error {
+func (t *TagData) deleteById(id int) error {
 	query := `delete from tags_ where id_ = $1`
 
-	_, err := u.db.Exec(context.Background(), query, id)
+	_, err := t.db.Exec(context.Background(), query, id)
 	if err != nil {
 		return err
 	}
@@ -59,12 +60,12 @@ func (u *TagData) deleteById(id int) error {
 	return nil
 }
 
-func (u *TagData) exists(tag *Tag) (bool, error) {
+func (t *TagData) exists(tag *Tag) (bool, error) {
 	checkDuplicatesQuery := `select count(*) from tags_ where name_ = $1 or slug_ = $2`
 
 	var duplicateCount int
 
-	duplicateRow := u.db.QueryRow(context.Background(), checkDuplicatesQuery, tag.Name, tag.Slug)
+	duplicateRow := t.db.QueryRow(context.Background(), checkDuplicatesQuery, tag.Name, tag.Slug)
 	if err := duplicateRow.Scan(&duplicateCount); err != nil {
 		return false, err
 	}
@@ -74,4 +75,29 @@ func (u *TagData) exists(tag *Tag) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func (t *TagData) getAll() (*[]Tag, error) {
+	query := `select id_, name_, slug_ from tags_`
+
+	rows, err := t.db.Query(context.Background(), query)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var tags []Tag
+
+	for rows.Next() {
+		var tag Tag
+
+		if err := rows.Scan(&tag.Id, &tag.Name, &tag.Slug); err != nil {
+			return nil, err
+		}
+
+		tags = append(tags, tag)
+	}
+
+	return &tags, nil
 }
