@@ -1,0 +1,17 @@
+{{ define "title" }}
+  Edit tag '{{ .Name }}'
+{{ end }}
+
+{{ define "main" }}
+  <form name="edit-tag" method="POST">
+    <input type="hidden" name="id" value="{{ .Id }}">
+
+    <label for="name">Name</label>
+    <input type="text" id="name" name="name" value="{{ .Name }}">
+
+    <label for="slug">Slug</label>
+    <input type="text" id="slug" name="slug" value="{{ .Slug }}">
+
+    <button type="submit">Update tag</button>
+  </form>
+{{ end }}

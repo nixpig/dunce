@@ -36,6 +36,18 @@ func (m *MockTagData) getAll() (*[]Tag, error) {
 	return args.Get(0).(*[]Tag), args.Error(1)
 }
 
+func (m *MockTagData) getBySlug(slug string) (*Tag, error) {
+	args := m.Called()
+
+	return args.Get(0).(*Tag), args.Error(1)
+}
+
+func (m *MockTagData) update(tag *Tag) (*Tag, error) {
+	args := m.Called()
+
+	return args.Get(0).(*Tag), args.Error(1)
+}
+
 var mockData = new(MockTagData)
 
 func TestTagServiceGetAll(t *testing.T) {
@@ -143,7 +155,7 @@ func testTagServiceCreateInvalidTag(t *testing.T, service TagService) {
 
 	shortTagName := NewTagWithId(
 		69,
-		"sn",
+		"s",
 		"tag-slug",
 	)
 
@@ -164,7 +176,7 @@ func testTagServiceCreateInvalidTag(t *testing.T, service TagService) {
 	shortTagSlug := NewTagWithId(
 		69,
 		"tag name",
-		"st",
+		"s",
 	)
 
 	createdShortTagSlug, err := service.create(&shortTagSlug)

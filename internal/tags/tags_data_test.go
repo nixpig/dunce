@@ -9,6 +9,49 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestTagDataUpdate(t *testing.T) {
+	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface, data TagData){
+		"update tag": testTagDataUpdateTag,
+	}
+
+	for scenario, fn := range scenarios {
+		t.Run(scenario, func(t *testing.T) {
+			db, err := pgxmock.NewPool()
+			if err != nil {
+				t.Fatal("failed to create mock db pool")
+			}
+
+			defer db.Close()
+
+			data := NewTagData(db)
+
+			fn(t, db, data)
+		})
+	}
+}
+
+func TestTagDataGetBySlug(t *testing.T) {
+	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface, data TagData){
+		"get existing tag by slug":     testGetExistingTagBySlug,
+		"get non-existent tag by slug": testGetNonExistentTagBySlug,
+	}
+
+	for scenario, fn := range scenarios {
+		t.Run(scenario, func(t *testing.T) {
+			db, err := pgxmock.NewPool()
+			if err != nil {
+				t.Fatal("failed to create mock db")
+			}
+
+			defer db.Close()
+
+			data := NewTagData(db)
+
+			fn(t, db, data)
+		})
+	}
+}
+
 func TestTagDataGetAll(t *testing.T) {
 	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface, data TagData){
 		"get all (multiple results)": testGetAllTagsMultipleResults,
@@ -30,7 +73,6 @@ func TestTagDataGetAll(t *testing.T) {
 			fn(t, db, data)
 		})
 	}
-
 }
 
 func TestTagDataCreate(t *testing.T) {
@@ -110,12 +152,16 @@ func testCreateValidTag(t *testing.T, mock pgxmock.PgxPoolIface, data TagData) {
 
 	createdTag, err := data.create(&newTag)
 
-	require.Nil(t, err, "should not error")
+	require.NoError(t, err, "should not error")
 	require.Equal(t, &Tag{
 		Id:   23,
 		Name: "tag_name",
 		Slug: "tag_slug",
 	}, createdTag, "tag should be saved and match")
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal("expectations were not met")
+	}
 }
 
 func testCreateInvalidTag(t *testing.T, mock pgxmock.PgxPoolIface, data TagData) {
@@ -131,6 +177,10 @@ func testCreateInvalidTag(t *testing.T, mock pgxmock.PgxPoolIface, data TagData)
 	createdTag, err := data.create(&newTag)
 	require.Nil(t, createdTag, "should not create invalid tag")
 	require.EqualError(t, err, "database_error", "should return the error from database")
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal("expectations were not met")
+	}
 }
 
 func testDeleteExistingTag(t *testing.T, mock pgxmock.PgxPoolIface, data TagData) {
@@ -141,7 +191,11 @@ func testDeleteExistingTag(t *testing.T, mock pgxmock.PgxPoolIface, data TagData
 	mock.ExpectExec(regexp.QuoteMeta(query)).WithArgs(23).WillReturnResult(mockDeleted)
 
 	err := data.deleteById(23)
-	require.Nil(t, err, "should not error")
+	require.NoError(t, err, "should not error")
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal("expectations were not met")
+	}
 }
 
 func testDeleteNonExistingTag(t *testing.T, mock pgxmock.PgxPoolIface, data TagData) {
@@ -151,6 +205,10 @@ func testDeleteNonExistingTag(t *testing.T, mock pgxmock.PgxPoolIface, data TagD
 
 	err := data.deleteById(23)
 	require.EqualError(t, err, "database_error", "should return error from database")
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal("expectations were not met")
+	}
 }
 
 func testTagExists(t *testing.T, mock pgxmock.PgxPoolIface, data TagData) {
@@ -166,8 +224,12 @@ func testTagExists(t *testing.T, mock pgxmock.PgxPoolIface, data TagData) {
 
 	exists, err := data.exists(&mockDuplicateTag)
 
-	require.Nil(t, err, "should not return error")
+	require.NoError(t, err, "should not return error")
 	require.True(t, exists, "should return true")
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal("expectations were not met")
+	}
 }
 
 func testTagNotExists(t *testing.T, mock pgxmock.PgxPoolIface, data TagData) {
@@ -183,8 +245,12 @@ func testTagNotExists(t *testing.T, mock pgxmock.PgxPoolIface, data TagData) {
 
 	exists, err := data.exists(&mockDuplicateTag)
 
-	require.Nil(t, err, "should not return error")
+	require.NoError(t, err, "should not return error")
 	require.False(t, exists, "should return false")
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal("expectations were not met")
+	}
 }
 
 func testTagExistsError(t *testing.T, mock pgxmock.PgxPoolIface, data TagData) {
@@ -197,6 +263,10 @@ func testTagExistsError(t *testing.T, mock pgxmock.PgxPoolIface, data TagData) {
 	_, err := data.exists(&mockDuplicateTag)
 
 	require.EqualError(t, err, "database_error")
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal("expectations were not met")
+	}
 }
 
 func testGetAllTagsNoResults(t *testing.T, mock pgxmock.PgxPoolIface, data TagData) {
@@ -208,9 +278,12 @@ func testGetAllTagsNoResults(t *testing.T, mock pgxmock.PgxPoolIface, data TagDa
 
 	tags, err := data.getAll()
 
-	require.Nil(t, err, "should not return error")
-
+	require.NoError(t, err, "should not return error")
 	require.Empty(t, tags, "should return zero results")
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal("expectations were not met")
+	}
 }
 
 func testGetAllTagsMultipleResults(t *testing.T, mock pgxmock.PgxPoolIface, data TagData) {
@@ -242,7 +315,11 @@ func testGetAllTagsMultipleResults(t *testing.T, mock pgxmock.PgxPoolIface, data
 			Slug: "tag-slug-3",
 		},
 	}, tags, "should return all tag results")
-	require.Nil(t, err, "should not return an error")
+	require.NoError(t, err, "should not return an error")
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal("expectations were not met")
+	}
 }
 
 func testGetAllTagsSingleResult(t *testing.T, mock pgxmock.PgxPoolIface, data TagData) {
@@ -263,5 +340,76 @@ func testGetAllTagsSingleResult(t *testing.T, mock pgxmock.PgxPoolIface, data Ta
 			Slug: "tag-slug",
 		},
 	}, tags, "should return tag result")
-	require.Nil(t, err, "should not return an error")
+	require.NoError(t, err, "should not return an error")
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal("expectations were not met")
+	}
+}
+
+func testGetExistingTagBySlug(t *testing.T, mock pgxmock.PgxPoolIface, data TagData) {
+	query := `select id_, name_, slug_ from tags_ where slug_ = $1`
+
+	mockRow := mock.NewRows([]string{"id_", "name_", "slug_"}).AddRow(23, "tagname", "tag-slug")
+
+	mock.
+		ExpectQuery(regexp.QuoteMeta(query)).
+		WithArgs("tag-slug").
+		WillReturnRows(mockRow)
+
+	tag, err := data.getBySlug("tag-slug")
+
+	require.NoError(t, err, "should not return error")
+	require.Equal(t, &Tag{
+		Id:   23,
+		Name: "tagname",
+		Slug: "tag-slug",
+	}, tag, "should return tag")
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal("expectations were not met")
+	}
+}
+
+func testGetNonExistentTagBySlug(t *testing.T, mock pgxmock.PgxPoolIface, data TagData) {
+	query := `select id_, name_, slug_ from tags_ where slug_ = $1`
+
+	mockRow := mock.NewRows([]string{"id_", "name_", "slug_"})
+
+	mock.
+		ExpectQuery(regexp.QuoteMeta(query)).
+		WithArgs("tag-slug").
+		WillReturnRows(mockRow)
+
+	tag, err := data.getBySlug("tag-slug")
+
+	require.Error(t, err, "should return error")
+	require.Nil(t, tag, "should not return any tag")
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal("expectations were not met")
+	}
+}
+
+func testTagDataUpdateTag(t *testing.T, mock pgxmock.PgxPoolIface, data TagData) {
+	query := `update tags_ set name_ = $2, slug_ = $3 where id_ = $1 returning id_, name_, slug_`
+
+	mockRes := mock.NewRows([]string{"id_", "name_", "id_"}).AddRow(23, "tagname", "tag-slug")
+
+	mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs(23, "tagname", "tag-slug").WillReturnRows(mockRes)
+
+	tagUpdate := NewTagWithId(23, "tagname", "tag-slug")
+
+	tag, err := data.update(&tagUpdate)
+
+	require.NoError(t, err, "should not error")
+	require.Equal(t, &Tag{
+		Id:   23,
+		Name: "tagname",
+		Slug: "tag-slug",
+	}, tag, "should return updated tag")
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal("mock expectations were not met")
+	}
 }

@@ -1,7 +1,7 @@
 package tags
 
 import (
-	"fmt"
+	"html/template"
 	"net/http"
 	"strconv"
 )
@@ -17,10 +17,11 @@ func NewTagController(service TagServiceInterface) TagsController {
 func (tc *TagsController) CreateHandler(w http.ResponseWriter, r *http.Request) {
 	tag := NewTag(r.FormValue("name"), r.FormValue("slug"))
 
-	createdTag, err := tc.service.create(&tag)
-	if err != nil {
-		w.Write([]byte(fmt.Sprintf("%d: %s (%s)", createdTag.Id, createdTag.Name, createdTag.Slug)))
+	if _, err := tc.service.create(&tag); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+
+	http.Redirect(w, r, "/tags", http.StatusSeeOther)
 }
 
 func (tc *TagsController) DeleteHandler(w http.ResponseWriter, r *http.Request) {
@@ -35,12 +36,26 @@ func (tc *TagsController) DeleteHandler(w http.ResponseWriter, r *http.Request) 
 }
 
 func (tc *TagsController) GetAllHandler(w http.ResponseWriter, r *http.Request) {
-	allTags, err := tc.service.getAll()
+	tags, err := tc.service.getAll()
 	if err != nil {
-		w.Write([]byte(err.Error()))
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
 	}
 
-	w.Write([]byte(fmt.Sprintf("%v", allTags)))
+	templates := []string{
+		"./web/templates/base.tmpl",
+		"./web/templates/tags.tmpl",
+	}
+
+	ts, err := template.ParseFiles(templates...)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+
+	err = ts.ExecuteTemplate(w, "base", tags)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
 }
 
 func (tc *TagsController) GetBySlugHandler(w http.ResponseWriter, r *http.Request) {
@@ -51,13 +66,27 @@ func (tc *TagsController) GetBySlugHandler(w http.ResponseWriter, r *http.Reques
 		w.Write([]byte(err.Error()))
 	}
 
-	w.Write([]byte(fmt.Sprintf("%v", tag)))
+	templates := []string{
+		"./web/templates/tag.tmpl",
+		"./web/templates/base.tmpl",
+	}
+
+	ts, err := template.ParseFiles(templates...)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	if err := ts.ExecuteTemplate(w, "base", tag); err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (tc *TagsController) UpdateHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.FormValue("id"))
 	if err != nil {
-		w.Write([]byte(err.Error()))
+		http.Error(w, "Invalid tag ID", http.StatusBadRequest)
 	}
 
 	tag := NewTagWithId(
@@ -65,10 +94,9 @@ func (tc *TagsController) UpdateHandler(w http.ResponseWriter, r *http.Request) 
 		r.FormValue("name"),
 		r.FormValue("slug"),
 	)
-	updatedTag, err := tc.service.update(&tag)
-	if err != nil {
-		w.Write([]byte(err.Error()))
+	if _, err := tc.service.update(&tag); err != nil {
+		http.Error(w, "Unable to save changes", http.StatusInternalServerError)
 	}
 
-	w.Write([]byte(fmt.Sprintf("%v", updatedTag)))
+	http.Redirect(w, r, "/tags", http.StatusSeeOther)
 }
