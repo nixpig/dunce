@@ -37,18 +37,68 @@ func (m *MockTagData) getAll() (*[]Tag, error) {
 }
 
 func (m *MockTagData) getBySlug(slug string) (*Tag, error) {
-	args := m.Called()
+	args := m.Called(slug)
+
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
 
 	return args.Get(0).(*Tag), args.Error(1)
 }
 
 func (m *MockTagData) update(tag *Tag) (*Tag, error) {
-	args := m.Called()
+	args := m.Called(tag)
 
 	return args.Get(0).(*Tag), args.Error(1)
 }
 
 var mockData = new(MockTagData)
+
+func TestTagServiceUpdate(t *testing.T) {
+	scenarios := map[string]func(t *testing.T, service TagService){
+		"update tag": testServiceUpdateTag,
+	}
+
+	for scenario, fn := range scenarios {
+		t.Run(scenario, func(t *testing.T) {
+			service := NewTagService(mockData)
+			fn(t, service)
+		})
+	}
+}
+
+func testServiceUpdateTag(t *testing.T, service TagService) {
+	tag := NewTagWithId(42, "tag name", "tag-slug")
+
+	mockCallUpdate := mockData.On("update", &tag).Return(&tag, nil)
+	mockCallExists := mockData.On("exists", &tag).Return(false, nil)
+
+	updatedTag, err := service.update(&tag)
+
+	mockCallUpdate.Unset()
+	mockCallExists.Unset()
+
+	mockData.AssertExpectations(t)
+
+	require.Nil(t, err, "should not error out")
+	require.Equal(t, &tag, updatedTag, "should return updated tag")
+}
+
+func TestTagServiceGetBySlug(t *testing.T) {
+	scenarios := map[string]func(t *testing.T, service TagService){
+		"get by slug (tag exists)":         testServiceGetBySlugTagExists,
+		"get by slug (tag does not exist)": testServiceGetBySlugTagDoesNotExist,
+	}
+	for scenario, fn := range scenarios {
+		t.Run(scenario, func(t *testing.T) {
+			service := NewTagService(mockData)
+
+			fn(t, service)
+		})
+	}
+}
+
+// update
 
 func TestTagServiceGetAll(t *testing.T) {
 	scenarios := map[string]func(t *testing.T, service TagService){
@@ -275,4 +325,36 @@ func testServiceGetAllTagsSingleResult(t *testing.T, service TagService) {
 			Slug: "tag-slug-3",
 		},
 	}, tags, "should return all tags")
+}
+
+func testServiceGetBySlugTagExists(t *testing.T, service TagService) {
+	mockCall := mockData.On("getBySlug", "tag-slug").Return(&Tag{
+		Id:   69,
+		Name: "tag name",
+		Slug: "tag-slug",
+	}, nil)
+
+	tag, err := service.getBySlug("tag-slug")
+
+	mockCall.Unset()
+	mockData.AssertExpectations(t)
+
+	require.Nil(t, err, "should not return error")
+	require.Equal(t, &Tag{
+		Id:   69,
+		Name: "tag name",
+		Slug: "tag-slug",
+	}, tag, "should return tag")
+}
+
+func testServiceGetBySlugTagDoesNotExist(t *testing.T, service TagService) {
+	mockCall := mockData.On("getBySlug", "tag-slug").Return(nil, errors.New("data_error"))
+
+	tag, err := service.getBySlug("tag-slug")
+
+	mockCall.Unset()
+	mockData.AssertExpectations(t)
+
+	require.EqualError(t, err, "data_error", "should return error from data layer")
+	require.Nil(t, tag, "should not return tag")
 }

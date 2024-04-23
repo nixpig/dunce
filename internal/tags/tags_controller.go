@@ -21,7 +21,7 @@ func (tc *TagsController) CreateHandler(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
-	http.Redirect(w, r, "/tags", http.StatusSeeOther)
+	http.Redirect(w, r, "/admin/tags", http.StatusSeeOther)
 }
 
 func (tc *TagsController) DeleteHandler(w http.ResponseWriter, r *http.Request) {
@@ -96,7 +96,8 @@ func (tc *TagsController) UpdateHandler(w http.ResponseWriter, r *http.Request) 
 	)
 	if _, err := tc.service.update(&tag); err != nil {
 		http.Error(w, "Unable to save changes", http.StatusInternalServerError)
+		return
 	}
 
-	http.Redirect(w, r, "/tags", http.StatusSeeOther)
+	http.Redirect(w, r, "/admin/tags", http.StatusSeeOther)
 }
