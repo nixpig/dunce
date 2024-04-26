@@ -47,6 +47,7 @@ func testCreateNewArticle(t *testing.T, mock pgxmock.PgxPoolIface, data ArticleD
 		"Lorem ipsum dolar sit amet...",
 		createdAt,
 		updatedAt,
+		[]int{},
 	)
 
 	createdArticle, err := data.create(&newArticle)

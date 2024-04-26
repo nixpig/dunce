@@ -18,6 +18,12 @@ func (m *MockArticleData) create(article *Article) (*Article, error) {
 	return args.Get(0).(*Article), args.Error(1)
 }
 
+func (m *MockArticleData) getAll() (*[]Article, error) {
+	args := m.Called()
+
+	return args.Get(0).(*[]Article), args.Error(1)
+}
+
 var mockData = new(MockArticleData)
 
 func TestArticleServiceCreate(t *testing.T) {
@@ -34,7 +40,7 @@ func TestArticleServiceCreate(t *testing.T) {
 }
 
 func testServiceCreateArticle(t *testing.T, service ArticleService) {
-	newArticle := NewArticle("article title", "article subtitle", "article-slug", "article body content", time.Now(), time.Now().Add(23))
+	newArticle := NewArticle("article title", "article subtitle", "article-slug", "article body content", time.Now(), time.Now().Add(23), []int{})
 
 	mockCreatedArticle := NewArticleWithId(
 		42,
@@ -44,6 +50,7 @@ func testServiceCreateArticle(t *testing.T, service ArticleService) {
 		newArticle.Body,
 		newArticle.CreatedAt,
 		newArticle.UpdatedAt,
+		[]int{},
 	)
 
 	mockCallCreate := mockData.On("create", &newArticle).Return(&mockCreatedArticle, nil)
