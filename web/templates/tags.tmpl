@@ -1,0 +1,36 @@
+{{ define "title" }}Tags{{ end }}
+
+{{ define "main" }}
+  <form name="new-tag" method="POST">
+    <label for="name">Name</label>
+    <input type="text" id="name" name="name">
+
+    <label for="slug">Slug</label>
+    <input type="text" id="slug" name="slug">
+
+    <button type="submit">Create tag</button>
+  </form>
+
+  <table>
+    <thead>
+      <tr>
+	<th>ID</th>
+	<th>Name</th>
+	<th>Slug</th>
+	<th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{ range $tag := . }}
+	<tr>
+	  <td>{{ $tag.Id }}</td>
+	  <td>{{ $tag.Name}}</td>
+	  <td>{{ $tag.Slug }}</td>
+	  <td>
+	    <a href="/admin/tags/{{ $tag.Slug }}">Edit</a>
+	  </td>
+	</tr>
+      {{ end }}
+    </tbody>
+  </table>
+{{ end }}
