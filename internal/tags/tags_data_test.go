@@ -276,7 +276,7 @@ func testGetAllTagsNoResults(t *testing.T, mock pgxmock.PgxPoolIface, data TagDa
 
 	mock.ExpectQuery(regexp.QuoteMeta(query)).WillReturnRows(mockEmptyRows)
 
-	tags, err := data.getAll()
+	tags, err := data.GetAll()
 
 	require.NoError(t, err, "should not return error")
 	require.Empty(t, tags, "should return zero results")
@@ -297,7 +297,7 @@ func testGetAllTagsMultipleResults(t *testing.T, mock pgxmock.PgxPoolIface, data
 
 	mock.ExpectQuery(regexp.QuoteMeta(query)).WillReturnRows(singleResult)
 
-	tags, err := data.getAll()
+	tags, err := data.GetAll()
 	require.Equal(t, &[]Tag{
 		{
 			Id:   23,
@@ -331,7 +331,7 @@ func testGetAllTagsSingleResult(t *testing.T, mock pgxmock.PgxPoolIface, data Ta
 
 	mock.ExpectQuery(regexp.QuoteMeta(query)).WillReturnRows(singleResult)
 
-	tags, err := data.getAll()
+	tags, err := data.GetAll()
 	require.Equal(t, &[]Tag{
 		{
 
