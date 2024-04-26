@@ -24,7 +24,7 @@ type TagDataInterface interface {
 	create(tag *Tag) (*Tag, error)
 	deleteById(id int) error
 	exists(tag *Tag) (bool, error)
-	getAll() (*[]Tag, error)
+	GetAll() (*[]Tag, error)
 	getBySlug(slug string) (*Tag, error)
 	update(tag *Tag) (*Tag, error)
 }
@@ -79,7 +79,7 @@ func (t TagData) exists(tag *Tag) (bool, error) {
 	return false, nil
 }
 
-func (t TagData) getAll() (*[]Tag, error) {
+func (t TagData) GetAll() (*[]Tag, error) {
 	query := `select id_, name_, slug_ from tags_`
 
 	rows, err := t.db.Query(context.Background(), query)

@@ -29,16 +29,16 @@ func TestArticleDataCreate(t *testing.T) {
 }
 
 func testCreateNewArticle(t *testing.T, mock pgxmock.PgxPoolIface, data ArticleData) {
-	query := `insert into articles_ (title_, subtitle_, slug_, body_, created_at_, updated_at_, user_id_) values ($1, $2, $3, $4, $5, $6, $7) returning id_, title_, subtitle_, slug_, body_, created_at_, updated_at_, user_id_`
+	query := `insert into articles_ (title_, subtitle_, slug_, body_, created_at_, updated_at_) values ($1, $2, $3, $4, $5, $6) returning id_, title_, subtitle_, slug_, body_, created_at_, updated_at_`
 
 	createdAt := time.Now()
 	updatedAt := time.Now()
 
 	mockRow := mock.
-		NewRows([]string{"id_", "title_", "subtitle_", "slug_", "body_", "created_at_", "updated_at_", "user_id_"}).
-		AddRow(13, "article title", "article subtitle", "article-slug", "Lorem ipsum dolar sit amet...", createdAt, updatedAt, 23)
+		NewRows([]string{"id_", "title_", "subtitle_", "slug_", "body_", "created_at_", "updated_at_"}).
+		AddRow(13, "article title", "article subtitle", "article-slug", "Lorem ipsum dolar sit amet...", createdAt, updatedAt)
 
-	mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs("article title", "article subtitle", "article-slug", "Lorem ipsum dolar sit amet...", createdAt, updatedAt, 23).WillReturnRows(mockRow)
+	mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs("article title", "article subtitle", "article-slug", "Lorem ipsum dolar sit amet...", createdAt, updatedAt).WillReturnRows(mockRow)
 
 	newArticle := NewArticle(
 		"article title",
@@ -47,7 +47,6 @@ func testCreateNewArticle(t *testing.T, mock pgxmock.PgxPoolIface, data ArticleD
 		"Lorem ipsum dolar sit amet...",
 		createdAt,
 		updatedAt,
-		23,
 	)
 
 	createdArticle, err := data.create(&newArticle)
@@ -65,6 +64,5 @@ func testCreateNewArticle(t *testing.T, mock pgxmock.PgxPoolIface, data ArticleD
 		Body:      "Lorem ipsum dolar sit amet...",
 		CreatedAt: createdAt,
 		UpdatedAt: updatedAt,
-		UserId:    23,
 	}, createdArticle, "should return created article data with id")
 }

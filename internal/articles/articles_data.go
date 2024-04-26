@@ -15,7 +15,7 @@ type Article struct {
 	Body      string    `validate:"required"`
 	CreatedAt time.Time `validate:"required"`
 	UpdatedAt time.Time `validate:"required"`
-	UserId    int       `validate:"required"`
+	Tags      []int     `validate:"required"`
 }
 
 type ArticleTag struct {
@@ -31,7 +31,7 @@ func NewArticle(
 	body string,
 	createdAt time.Time,
 	updatedAt time.Time,
-	userId int,
+	tags []int,
 ) Article {
 	return Article{
 		Title:     title,
@@ -40,7 +40,7 @@ func NewArticle(
 		Body:      body,
 		CreatedAt: createdAt,
 		UpdatedAt: updatedAt,
-		UserId:    userId,
+		Tags:      tags,
 	}
 }
 
@@ -52,7 +52,7 @@ func NewArticleWithId(
 	body string,
 	createdAt time.Time,
 	updatedAt time.Time,
-	userId int,
+	tags []int,
 ) Article {
 	return Article{
 		Id:        id,
@@ -62,12 +62,13 @@ func NewArticleWithId(
 		Body:      body,
 		CreatedAt: createdAt,
 		UpdatedAt: updatedAt,
-		UserId:    userId,
+		Tags:      tags,
 	}
 }
 
 type ArticleDataInterface interface {
 	create(article *Article) (*Article, error)
+	getAll() (*[]Article, error)
 }
 
 type ArticleData struct {
@@ -79,15 +80,21 @@ func NewArticleData(db db.Dbconn) ArticleData {
 }
 
 func (a ArticleData) create(article *Article) (*Article, error) {
-	query := `insert into articles_ (title_, subtitle_, slug_, body_, created_at_, updated_at_, user_id_) values ($1, $2, $3, $4, $5, $6, $7) returning id_, title_, subtitle_, slug_, body_, created_at_, updated_at_, user_id_`
+	query := `insert into articles_ (title_, subtitle_, slug_, body_, created_at_, updated_at_) values ($1, $2, $3, $4, $5, $6) returning id_, title_, subtitle_, slug_, body_, created_at_, updated_at_`
 
-	row := a.db.QueryRow(context.Background(), query, article.Title, article.Subtitle, article.Slug, article.Body, article.CreatedAt, article.UpdatedAt, article.UserId)
+	row := a.db.QueryRow(context.Background(), query, article.Title, article.Subtitle, article.Slug, article.Body, article.CreatedAt, article.UpdatedAt)
 
 	var createdArticle Article
 
-	if err := row.Scan(&createdArticle.Id, &createdArticle.Title, &createdArticle.Subtitle, &createdArticle.Slug, &createdArticle.Body, &createdArticle.CreatedAt, &createdArticle.UpdatedAt, &createdArticle.UserId); err != nil {
+	if err := row.Scan(&createdArticle.Id, &createdArticle.Title, &createdArticle.Subtitle, &createdArticle.Slug, &createdArticle.Body, &createdArticle.CreatedAt, &createdArticle.UpdatedAt); err != nil {
 		return nil, err
 	}
 
 	return &createdArticle, nil
+}
+
+func (a ArticleData) getAll() (*[]Article, error) {
+	// query := `select a.id_, a.title_, a.subtitle_, a.slug_, a.body_, a.created_at_, a.updated_at_, t.id_, t.name_, t.slug_ from articles_ a inner join types_ t on a.type_id_ = t.id_`
+
+	return nil, nil
 }

@@ -36,7 +36,7 @@ func (tc *TagsController) DeleteHandler(w http.ResponseWriter, r *http.Request) 
 }
 
 func (tc *TagsController) GetAllHandler(w http.ResponseWriter, r *http.Request) {
-	tags, err := tc.service.getAll()
+	tags, err := tc.service.GetAll()
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return

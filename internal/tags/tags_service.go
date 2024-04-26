@@ -14,7 +14,7 @@ type TagService struct {
 type TagServiceInterface interface {
 	create(tag *Tag) (*Tag, error)
 	deleteById(id int) error
-	getAll() (*[]Tag, error)
+	GetAll() (*[]Tag, error)
 	getBySlug(slug string) (*Tag, error)
 	update(tag *Tag) (*Tag, error)
 }
@@ -60,8 +60,8 @@ func (ts TagService) deleteById(id int) error {
 	return nil
 }
 
-func (ts TagService) getAll() (*[]Tag, error) {
-	tags, err := ts.data.getAll()
+func (ts TagService) GetAll() (*[]Tag, error) {
+	tags, err := ts.data.GetAll()
 	if err != nil {
 		return nil, err
 	}

@@ -30,7 +30,7 @@ func (m *MockTagData) exists(tag *Tag) (bool, error) {
 	return args.Get(0).(bool), args.Error(1)
 }
 
-func (m *MockTagData) getAll() (*[]Tag, error) {
+func (m *MockTagData) GetAll() (*[]Tag, error) {
 	args := m.Called()
 
 	return args.Get(0).(*[]Tag), args.Error(1)
@@ -248,9 +248,9 @@ func testTagServiceCreateExistingTag(t *testing.T, service TagService) {
 }
 
 func testServiceGetAllTagsNoResults(t *testing.T, service TagService) {
-	mockCall := mockData.On("getAll").Return(&[]Tag{}, nil)
+	mockCall := mockData.On("GetAll").Return(&[]Tag{}, nil)
 
-	tags, err := service.getAll()
+	tags, err := service.GetAll()
 
 	mockCall.Unset()
 	mockData.AssertExpectations(t)
@@ -260,7 +260,7 @@ func testServiceGetAllTagsNoResults(t *testing.T, service TagService) {
 }
 
 func testServiceGetAllTagsMultipleResults(t *testing.T, service TagService) {
-	mockCall := mockData.On("getAll").Return(&[]Tag{
+	mockCall := mockData.On("GetAll").Return(&[]Tag{
 		{
 			Id:   23,
 			Name: "tagname1",
@@ -278,7 +278,7 @@ func testServiceGetAllTagsMultipleResults(t *testing.T, service TagService) {
 		},
 	}, nil)
 
-	tags, err := service.getAll()
+	tags, err := service.GetAll()
 
 	mockCall.Unset()
 	mockData.AssertExpectations(t)
@@ -304,7 +304,7 @@ func testServiceGetAllTagsMultipleResults(t *testing.T, service TagService) {
 }
 
 func testServiceGetAllTagsSingleResult(t *testing.T, service TagService) {
-	mockCall := mockData.On("getAll").Return(&[]Tag{
+	mockCall := mockData.On("GetAll").Return(&[]Tag{
 		{
 			Id:   69,
 			Name: "tagname3",
@@ -312,7 +312,7 @@ func testServiceGetAllTagsSingleResult(t *testing.T, service TagService) {
 		},
 	}, nil)
 
-	tags, err := service.getAll()
+	tags, err := service.GetAll()
 
 	mockCall.Unset()
 	mockData.AssertExpectations(t)

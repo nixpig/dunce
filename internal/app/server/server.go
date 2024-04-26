@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/nixpig/dunce/db"
+	"github.com/nixpig/dunce/internal/articles"
 	"github.com/nixpig/dunce/internal/tags"
 )
 
@@ -21,6 +22,13 @@ func Start(port string) {
 	mux.HandleFunc("GET /admin/tags/{slug}", tagsController.GetBySlugHandler)
 	mux.HandleFunc("POST /admin/tags/{slug}", tagsController.UpdateHandler)
 	mux.HandleFunc("DELETE /admin/tags", tagsController.DeleteHandler)
+
+	articlesData := articles.NewArticleData(db.DB.Conn)
+	articlesService := articles.NewArticleService(articlesData)
+	articlesController := articles.NewArticleController(articlesService, tagService)
+
+	mux.HandleFunc("GET /admin/articles", articlesController.GetAllHandler)
+	mux.HandleFunc("POST /admin/articles", articlesController.CreateHandler)
 
 	http.ListenAndServe(fmt.Sprintf(":%v", port), mux)
 }
