@@ -63,11 +63,11 @@ func (t TagData) deleteById(id int) error {
 }
 
 func (t TagData) exists(tag *Tag) (bool, error) {
-	checkDuplicatesQuery := `select count(*) from tags_ where name_ = $1 or slug_ = $2`
+	checkDuplicatesQuery := `select count(*) from tags_ where slug_ = $1`
 
 	var duplicateCount int
 
-	duplicateRow := t.db.QueryRow(context.Background(), checkDuplicatesQuery, tag.Name, tag.Slug)
+	duplicateRow := t.db.QueryRow(context.Background(), checkDuplicatesQuery, tag.Slug)
 	if err := duplicateRow.Scan(&duplicateCount); err != nil {
 		return false, err
 	}

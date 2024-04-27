@@ -6,6 +6,7 @@ type ArticleService struct {
 
 type ArticleServiceInterface interface {
 	create(article *Article) (*Article, error)
+	GetAll() (*[]Article, error)
 }
 
 func NewArticleService(data ArticleDataInterface) ArticleService {
@@ -21,4 +22,13 @@ func (as ArticleService) create(article *Article) (*Article, error) {
 	}
 
 	return createdArticle, nil
+}
+
+func (as ArticleService) GetAll() (*[]Article, error) {
+	articles, err := as.data.getAll()
+	if err != nil {
+		return nil, err
+	}
+
+	return articles, nil
 }

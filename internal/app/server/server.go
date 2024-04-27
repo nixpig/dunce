@@ -19,6 +19,7 @@ func Start(port string) {
 	mux.HandleFunc("GET /admin", func(w http.ResponseWriter, r *http.Request) {})
 	mux.HandleFunc("POST /admin/tags", tagsController.CreateHandler)
 	mux.HandleFunc("GET /admin/tags", tagsController.GetAllHandler)
+	mux.HandleFunc("GET /admin/tags/new", tagsController.NewHandler)
 	mux.HandleFunc("GET /admin/tags/{slug}", tagsController.GetBySlugHandler)
 	mux.HandleFunc("POST /admin/tags/{slug}", tagsController.UpdateHandler)
 	mux.HandleFunc("DELETE /admin/tags", tagsController.DeleteHandler)
@@ -28,6 +29,7 @@ func Start(port string) {
 	articlesController := articles.NewArticleController(articlesService, tagService)
 
 	mux.HandleFunc("GET /admin/articles", articlesController.GetAllHandler)
+	mux.HandleFunc("GET /admin/articles/new", articlesController.NewHandler)
 	mux.HandleFunc("POST /admin/articles", articlesController.CreateHandler)
 
 	http.ListenAndServe(fmt.Sprintf(":%v", port), mux)

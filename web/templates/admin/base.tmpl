@@ -7,19 +7,21 @@
 
     <link rel="stylesheet" href="https://unpkg.com/sakura.css/css/sakura-vader.css" type="text/css">
 
-    <title>Dunce Public</title>
+    <title>{{ template "title" . }} - Dunce Admin</title>
     <style>
       body {}
     </style>
   </head>
 
   <body>
-      <header>
-	<h1>{{ template "title" . }} - Dunce Public</h1>
-	<nav>
+      <header style="display: flex;">
+	<h1 style="text-align: right; justify-content: center; align-items: center;">{{ template "title" . }}</h1>
+	<nav style="flex-grow: 1; text-align: right; justify-content: center; align-items: center; align-content: center;">
 	  <ul>
 	    <li style="display: inline;"><a href="/admin">Admin</a></li>
+	    |
 	    <li style="display: inline;"><a href="/admin/articles">Articles</a></li>
+	    |
 	    <li style="display: inline;"><a href="/admin/tags">Tags</a></li>
 	  </ul>
 	</nav>
@@ -30,8 +32,9 @@
 	      {{ template "main" . }}
       </main>
 
-      <footer>
+      <footer style="margin-top: 20px; padding: 10px 0; border-top: 1px solid; display: flex;">
 	      <div>&copy; 2024 Copyright <a href="https://nixpig.dev" target="_blank">@nixpig</a>. All rights reserved.</div>
+	      <div style="flex-grow: 1; text-align: right;">🐽</div>
       </footer>
   </body>
 </html>

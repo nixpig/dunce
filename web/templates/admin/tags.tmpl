@@ -1,0 +1,26 @@
+{{ define "title" }}Tags{{ end }}
+
+{{ define "main" }}
+  <a class="button" href="/admin/tags/new">+ New tag</a>
+
+  <hr>
+
+  <table>
+    <thead>
+      <tr>
+	<th>ID</th>
+	<th>Name</th>
+	<th>Slug</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{ range $tag := . }}
+	<tr>
+	  <td>{{ $tag.Id }}</td>
+	  <td><a href="/admin/tags/{{ $tag.Slug }}">{{ $tag.Name}}</a></td>
+	  <td>{{ $tag.Slug }}</td>
+	</tr>
+      {{ end }}
+    </tbody>
+  </table>
+{{ end }}

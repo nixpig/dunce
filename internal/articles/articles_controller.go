@@ -11,19 +11,19 @@ import (
 )
 
 type ArticlesScreen struct {
-	Tags     []tags.Tag
+	Tags     map[int]string
 	Articles []Article
 }
 
 type ArticlesController struct {
-	service ArticleServiceInterface
-	tags    tags.TagServiceInterface
+	service    ArticleServiceInterface
+	tagService tags.TagServiceInterface
 }
 
 func NewArticleController(service ArticleServiceInterface, tagsService tags.TagServiceInterface) ArticlesController {
 	return ArticlesController{
-		service: service,
-		tags:    tagsService,
+		service:    service,
+		tagService: tagsService,
 	}
 }
 
@@ -66,30 +66,78 @@ func (ac *ArticlesController) CreateHandler(w http.ResponseWriter, r *http.Reque
 }
 
 func (ac *ArticlesController) GetAllHandler(w http.ResponseWriter, r *http.Request) {
-	articles := []Article{}
-
-	tags, err := ac.tags.GetAll()
+	articles, err := ac.service.GetAll()
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
+	tags, err := ac.tagService.GetAll()
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	var viewableTags = map[int]string{}
+
+	for _, tag := range *tags {
+		viewableTags[tag.Id] = tag.Name
+	}
+
 	articlesScreen := ArticlesScreen{
-		Tags:     *tags,
-		Articles: articles,
+		Tags:     viewableTags,
+		Articles: *articles,
 	}
 
 	templates := []string{
-		"./web/templates/base.tmpl",
-		"./web/templates/articles.tmpl",
+		"./web/templates/admin/base.tmpl",
+		"./web/templates/admin/articles.tmpl",
 	}
 
 	ts, err := template.ParseFiles(templates...)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	if err := ts.ExecuteTemplate(w, "base", articlesScreen); err != nil {
+		fmt.Println("qux >>>", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+}
+
+func (ac *ArticlesController) NewHandler(w http.ResponseWriter, r *http.Request) {
+	tags, err := ac.tagService.GetAll()
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	var viewableTags = map[int]string{}
+
+	for _, tag := range *tags {
+		viewableTags[tag.Id] = tag.Name
+	}
+
+	articlesScreen := ArticlesScreen{
+		Tags:     viewableTags,
+		Articles: nil,
+	}
+
+	templates := []string{
+		"./web/templates/admin/base.tmpl",
+		"./web/templates/admin/new-article.tmpl",
+	}
+
+	ts, err := template.ParseFiles(templates...)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
 	}
 
 	if err := ts.ExecuteTemplate(w, "base", articlesScreen); err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
 	}
 }

@@ -2,8 +2,11 @@ package articles
 
 import (
 	"context"
+	"strconv"
+	"strings"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/nixpig/dunce/db"
 )
 
@@ -15,7 +18,7 @@ type Article struct {
 	Body      string    `validate:"required"`
 	CreatedAt time.Time `validate:"required"`
 	UpdatedAt time.Time `validate:"required"`
-	Tags      []int     `validate:"required"`
+	TagIds    []int     `validate:"required"`
 }
 
 type ArticleTag struct {
@@ -31,7 +34,7 @@ func NewArticle(
 	body string,
 	createdAt time.Time,
 	updatedAt time.Time,
-	tags []int,
+	tagIds []int,
 ) Article {
 	return Article{
 		Title:     title,
@@ -40,7 +43,7 @@ func NewArticle(
 		Body:      body,
 		CreatedAt: createdAt,
 		UpdatedAt: updatedAt,
-		Tags:      tags,
+		TagIds:    tagIds,
 	}
 }
 
@@ -52,7 +55,7 @@ func NewArticleWithId(
 	body string,
 	createdAt time.Time,
 	updatedAt time.Time,
-	tags []int,
+	tagIds []int,
 ) Article {
 	return Article{
 		Id:        id,
@@ -62,7 +65,7 @@ func NewArticleWithId(
 		Body:      body,
 		CreatedAt: createdAt,
 		UpdatedAt: updatedAt,
-		Tags:      tags,
+		TagIds:    tagIds,
 	}
 }
 
@@ -80,9 +83,9 @@ func NewArticleData(db db.Dbconn) ArticleData {
 }
 
 func (a ArticleData) create(article *Article) (*Article, error) {
-	query := `insert into articles_ (title_, subtitle_, slug_, body_, created_at_, updated_at_) values ($1, $2, $3, $4, $5, $6) returning id_, title_, subtitle_, slug_, body_, created_at_, updated_at_`
+	articleInsertQuery := `insert into articles_ (title_, subtitle_, slug_, body_, created_at_, updated_at_) values ($1, $2, $3, $4, $5, $6) returning id_, title_, subtitle_, slug_, body_, created_at_, updated_at_`
 
-	row := a.db.QueryRow(context.Background(), query, article.Title, article.Subtitle, article.Slug, article.Body, article.CreatedAt, article.UpdatedAt)
+	row := a.db.QueryRow(context.Background(), articleInsertQuery, article.Title, article.Subtitle, article.Slug, article.Body, article.CreatedAt, article.UpdatedAt)
 
 	var createdArticle Article
 
@@ -90,11 +93,67 @@ func (a ArticleData) create(article *Article) (*Article, error) {
 		return nil, err
 	}
 
+	batch := &pgx.Batch{}
+	tagInsertQuery := `insert into article_tags_ (article_id_, tag_id_) values ($1, $2) returning (tag_id_)`
+
+	for _, t := range article.TagIds {
+		batch.Queue(tagInsertQuery, createdArticle.Id, t)
+	}
+
+	br := a.db.SendBatch(context.Background(), batch)
+
+	// TODO: unwrap this once pgxmock supports batching
+	if br != nil {
+		defer br.Close()
+
+		for range article.TagIds {
+			var addedTagId int
+
+			row := br.QueryRow()
+
+			if err := row.Scan(&addedTagId); err != nil {
+				return nil, err
+			}
+
+			createdArticle.TagIds = append(createdArticle.TagIds, addedTagId)
+		}
+	}
+
 	return &createdArticle, nil
 }
 
 func (a ArticleData) getAll() (*[]Article, error) {
-	// query := `select a.id_, a.title_, a.subtitle_, a.slug_, a.body_, a.created_at_, a.updated_at_, t.id_, t.name_, t.slug_ from articles_ a inner join types_ t on a.type_id_ = t.id_`
+	// query := `select a.id_, a.title_, a.subtitle_, a.slug_, a.body_, a.created_at_, a.updated_at_, array_to_string(array_agg(distince t.tag_id_), ',', '*') from articles_ a join article_tags_ t on a.id_ = t.article_id_ group by a.id_`
+	query := `select a.id_, a.title_, a.subtitle_, a.slug_, a.body_, a.created_at_, a.updated_at_, array_to_string(array_agg(distinct t.tag_id_), ',', '*') from articles_ a join article_tags_ t on a.id_ = t.article_id_ group by a.id_`
 
-	return nil, nil
+	rows, err := a.db.Query(context.Background(), query)
+	if err != nil {
+		return nil, err
+	}
+
+	var articles []Article
+
+	for rows.Next() {
+		var article Article
+		var articleTagIdsConcat string
+
+		if err := rows.Scan(&article.Id, &article.Title, &article.Subtitle, &article.Slug, &article.Body, &article.CreatedAt, &article.UpdatedAt, &articleTagIdsConcat); err != nil {
+			return nil, err
+		}
+
+		articleTagIds := strings.Split(articleTagIdsConcat, ",")
+
+		for _, i := range articleTagIds {
+			id, err := strconv.Atoi(i)
+			if err != nil {
+				return nil, err
+			}
+
+			article.TagIds = append(article.TagIds, id)
+		}
+
+		articles = append(articles, article)
+	}
+
+	return &articles, nil
 }

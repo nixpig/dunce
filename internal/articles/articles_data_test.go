@@ -29,16 +29,20 @@ func TestArticleDataCreate(t *testing.T) {
 }
 
 func testCreateNewArticle(t *testing.T, mock pgxmock.PgxPoolIface, data ArticleData) {
-	query := `insert into articles_ (title_, subtitle_, slug_, body_, created_at_, updated_at_) values ($1, $2, $3, $4, $5, $6) returning id_, title_, subtitle_, slug_, body_, created_at_, updated_at_`
+	articleInsertQuery := `insert into articles_ (title_, subtitle_, slug_, body_, created_at_, updated_at_) values ($1, $2, $3, $4, $5, $6) returning id_, title_, subtitle_, slug_, body_, created_at_, updated_at_`
+	// tagInsertQuery := `insert into article_tags_ (article_id_, tag_id_) values ($1, $2) returning (tag_id_)`
 
 	createdAt := time.Now()
 	updatedAt := time.Now()
 
-	mockRow := mock.
+	articleMockRow := mock.
 		NewRows([]string{"id_", "title_", "subtitle_", "slug_", "body_", "created_at_", "updated_at_"}).
 		AddRow(13, "article title", "article subtitle", "article-slug", "Lorem ipsum dolar sit amet...", createdAt, updatedAt)
 
-	mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs("article title", "article subtitle", "article-slug", "Lorem ipsum dolar sit amet...", createdAt, updatedAt).WillReturnRows(mockRow)
+	// tagMockRow := mock.NewRows([]string{"id_"}).AddRow(69)
+
+	mock.ExpectQuery(regexp.QuoteMeta(articleInsertQuery)).WithArgs("article title", "article subtitle", "article-slug", "Lorem ipsum dolar sit amet...", createdAt, updatedAt).WillReturnRows(articleMockRow)
+	// mock.ExpectQuery(regexp.QuoteMeta(tagInsertQuery)).WithArgs(13, 4).WillReturnRows(tagMockRow)
 
 	newArticle := NewArticle(
 		"article title",
@@ -47,7 +51,7 @@ func testCreateNewArticle(t *testing.T, mock pgxmock.PgxPoolIface, data ArticleD
 		"Lorem ipsum dolar sit amet...",
 		createdAt,
 		updatedAt,
-		[]int{},
+		[]int{4},
 	)
 
 	createdArticle, err := data.create(&newArticle)
@@ -65,5 +69,7 @@ func testCreateNewArticle(t *testing.T, mock pgxmock.PgxPoolIface, data ArticleD
 		Body:      "Lorem ipsum dolar sit amet...",
 		CreatedAt: createdAt,
 		UpdatedAt: updatedAt,
+		// TODO: add back once pgxmock supports batch
+		// TagIds: []int{4},
 	}, createdArticle, "should return created article data with id")
 }

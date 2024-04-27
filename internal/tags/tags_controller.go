@@ -43,8 +43,8 @@ func (tc *TagsController) GetAllHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	templates := []string{
-		"./web/templates/base.tmpl",
-		"./web/templates/tags.tmpl",
+		"./web/templates/admin/base.tmpl",
+		"./web/templates/admin/tags.tmpl",
 	}
 
 	ts, err := template.ParseFiles(templates...)
@@ -67,8 +67,8 @@ func (tc *TagsController) GetBySlugHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	templates := []string{
-		"./web/templates/tag.tmpl",
-		"./web/templates/base.tmpl",
+		"./web/templates/admin/tag.tmpl",
+		"./web/templates/admin/base.tmpl",
 	}
 
 	ts, err := template.ParseFiles(templates...)
@@ -100,4 +100,22 @@ func (tc *TagsController) UpdateHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	http.Redirect(w, r, "/admin/tags", http.StatusSeeOther)
+}
+
+func (tc *TagsController) NewHandler(w http.ResponseWriter, r *http.Request) {
+	templates := []string{
+		"./web/templates/admin/new-tag.tmpl",
+		"./web/templates/admin/base.tmpl",
+	}
+
+	ts, err := template.ParseFiles(templates...)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	if err := ts.ExecuteTemplate(w, "base", nil); err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
 }
