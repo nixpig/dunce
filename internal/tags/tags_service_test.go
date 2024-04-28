@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/nixpig/dunce/pkg/logging"
 	"github.com/nixpig/dunce/pkg/validation"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -70,7 +71,7 @@ func TestTagServiceUpdate(t *testing.T) {
 
 	for scenario, fn := range scenarios {
 		t.Run(scenario, func(t *testing.T) {
-			service := NewTagService(mockData, validate)
+			service := NewTagService(mockData, validate, logging.NewLogger())
 
 			fn(t, service)
 		})
@@ -99,7 +100,7 @@ func TestTagServiceGetBySlug(t *testing.T) {
 	}
 	for scenario, fn := range scenarios {
 		t.Run(scenario, func(t *testing.T) {
-			service := NewTagService(mockData, validate)
+			service := NewTagService(mockData, validate, logging.NewLogger())
 
 			fn(t, service)
 		})
@@ -117,7 +118,7 @@ func TestTagServiceGetAll(t *testing.T) {
 
 	for scenario, fn := range scenarios {
 		t.Run(scenario, func(t *testing.T) {
-			service := NewTagService(mockData, validate)
+			service := NewTagService(mockData, validate, logging.NewLogger())
 
 			fn(t, service)
 		})
@@ -133,7 +134,7 @@ func TestTagServiceCreate(t *testing.T) {
 
 	for scenario, fn := range scenarios {
 		t.Run(scenario, func(t *testing.T) {
-			service := NewTagService(mockData, validate)
+			service := NewTagService(mockData, validate, logging.NewLogger())
 
 			fn(t, service)
 		})
@@ -148,7 +149,7 @@ func TestTagServiceDeleteById(t *testing.T) {
 
 	for scenario, fn := range scenarios {
 		t.Run(scenario, func(t *testing.T) {
-			service := NewTagService(mockData, validate)
+			service := NewTagService(mockData, validate, logging.NewLogger())
 
 			fn(t, service)
 		})

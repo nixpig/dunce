@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/nixpig/dunce/pkg/logging"
 	"github.com/nixpig/dunce/pkg/validation"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -48,7 +49,7 @@ func TestArticleServiceCreate(t *testing.T) {
 
 	for scenario, fn := range scenarios {
 		t.Run(scenario, func(t *testing.T) {
-			service := NewArticleService(mockData, validate)
+			service := NewArticleService(mockData, validate, logging.NewLogger())
 			fn(t, service)
 		})
 	}

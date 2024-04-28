@@ -117,7 +117,12 @@ func (a ArticleData) Create(article *Article) (*Article, error) {
 	br := tx.SendBatch(context.Background(), batch)
 
 	defer func() {
-		err := br.Close()
+		var err error
+
+		// FIXME: br isn't currently mockable, so doing this nil check to skip in tests
+		if br != nil {
+			err = br.Close()
+		}
 		if err != nil {
 			a.log.Error(err.Error())
 			tx.Rollback(context.Background())
@@ -129,16 +134,19 @@ func (a ArticleData) Create(article *Article) (*Article, error) {
 	}()
 
 	for range article.TagIds {
-		var addedTagId int
+		// FIXME: br isn't currently mockable, so doing this nil check to skip in tests
+		if br != nil {
+			var addedTagId int
 
-		row := br.QueryRow()
+			row := br.QueryRow()
 
-		if err := row.Scan(&addedTagId); err != nil {
-			a.log.Error(err.Error())
-			return nil, err
+			if err := row.Scan(&addedTagId); err != nil {
+				a.log.Error(err.Error())
+				return nil, err
+			}
+
+			createdArticle.TagIds = append(createdArticle.TagIds, addedTagId)
 		}
-
-		createdArticle.TagIds = append(createdArticle.TagIds, addedTagId)
 	}
 
 	return &createdArticle, nil

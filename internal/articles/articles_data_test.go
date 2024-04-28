@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/nixpig/dunce/pkg/logging"
 	"github.com/pashagolub/pgxmock/v3"
 	"github.com/stretchr/testify/require"
 )
@@ -21,7 +22,7 @@ func TestArticleDataCreate(t *testing.T) {
 				t.Fatal("unable to create database mock")
 			}
 
-			data := NewArticleData(mock)
+			data := NewArticleData(mock, logging.NewLogger())
 
 			fn(t, mock, data)
 		})
