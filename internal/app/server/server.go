@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"html/template"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
@@ -12,9 +13,10 @@ import (
 )
 
 type AppConfig struct {
-	Port      string
-	Validator *validator.Validate
-	Db        db.Dbconn
+	Port          string
+	Validator     *validator.Validate
+	Db            db.Dbconn
+	TemplateCache map[string]*template.Template
 }
 
 func Start(appConfig AppConfig) error {
@@ -26,7 +28,7 @@ func Start(appConfig AppConfig) error {
 
 	tagsData := tags.NewTagData(appConfig.Db, loggers)
 	tagService := tags.NewTagService(tagsData, appConfig.Validator, loggers)
-	tagsController := tags.NewTagController(tagService, loggers)
+	tagsController := tags.NewTagController(tagService, loggers, appConfig.TemplateCache)
 
 	mux.HandleFunc("POST /admin/tags", tagsController.CreateHandler)
 	mux.HandleFunc("GET /admin/tags", tagsController.GetAllHandler)

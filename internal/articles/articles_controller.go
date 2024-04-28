@@ -108,8 +108,8 @@ func (ac *ArticlesController) GetAllHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 	templates := []string{
-		"./web/templates/admin/base.tmpl",
-		"./web/templates/admin/articles.tmpl",
+		"./web/templates/base.tmpl",
+		"./web/templates/pages/admin/articles.tmpl",
 	}
 
 	ts, err := template.ParseFiles(templates...)
@@ -146,8 +146,8 @@ func (ac *ArticlesController) NewHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	templates := []string{
-		"./web/templates/admin/base.tmpl",
-		"./web/templates/admin/new-article.tmpl",
+		"./web/templates/base.tmpl",
+		"./web/templates/pages/admin/new-article.tmpl",
 	}
 
 	ts, err := template.ParseFiles(templates...)
@@ -193,8 +193,8 @@ func (ac *ArticlesController) GetBySlugHander(w http.ResponseWriter, r *http.Req
 	}
 
 	templates := []string{
-		"./web/templates/admin/base.tmpl",
-		"./web/templates/admin/article.tmpl",
+		"./web/templates/base.tmpl",
+		"./web/templates/pages/admin/article.tmpl",
 	}
 
 	ts, err := template.ParseFiles(templates...)

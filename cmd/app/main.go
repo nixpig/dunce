@@ -7,6 +7,7 @@ import (
 	"github.com/nixpig/dunce/db"
 	app "github.com/nixpig/dunce/internal/app/server"
 	"github.com/nixpig/dunce/internal/config"
+	"github.com/nixpig/dunce/pkg/templates"
 	"github.com/nixpig/dunce/pkg/validation"
 )
 
@@ -35,6 +36,14 @@ func main() {
 	}
 
 	appConfig.Validator = validate
+
+	templateCache, err := templates.NewTemplateCache()
+	if err != nil {
+		log.Fatalf("unable to build template cache: %v", err)
+		os.Exit(1)
+	}
+
+	appConfig.TemplateCache = templateCache
 
 	appConfig.Port = config.Get("WEB_PORT")
 
