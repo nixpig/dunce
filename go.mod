@@ -8,10 +8,10 @@ require (
 	github.com/gofiber/template/html/v2 v2.1.0
 	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/golang-migrate/migrate/v4 v4.17.0
-	github.com/jackc/pgx/v5 v5.5.2
+	github.com/jackc/pgx/v5 v5.5.5
 	github.com/joho/godotenv v1.5.1
 	github.com/mrz1836/go-sanitize v1.3.1
-	github.com/pashagolub/pgxmock/v3 v3.3.0
+	github.com/pashagolub/pgxmock/v3 v3.4.0
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/crypto v0.17.0
 )

@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS tags_ (
     id_ integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    name_ character varying(50) UNIQUE NOT NULL,
+    name_ character varying(50),
     slug_ character varying(50) UNIQUE NOT NULL
 );
 

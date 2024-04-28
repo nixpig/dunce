@@ -1,0 +1,33 @@
+{{ define "title" }}Articles{{ end }}
+
+{{ define "main" }}
+  <a class="button" href="/admin/articles/new">+ New article</a>
+
+  <hr>
+
+  <table>
+    <thead>
+      <tr>
+	<th>ID</th>
+	<th>Title</th>
+	<th>Tags</th>
+	<th>Last updated</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{ range $article := .Articles }}
+	<tr>
+	  <td>{{ $article.Id }}</td>
+	  <td><a href="/admin/articles/{{ $article.Slug }}">{{ $article.Title }}</a></td>
+	  <td>
+	    {{ range $id := $article.TagIds }}
+	      <a href="/admin/tags/{{ index $.Tags $id }}">{{ index $.Tags $id}}</a>
+	      <br>
+	    {{ end }}
+	  </td>
+	  <td>{{ $article.UpdatedAt.Format "2006-01-02" }}</td>
+	</tr>
+      {{ end }}
+    </tbody>
+  </table>
+{{ end }}

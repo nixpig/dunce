@@ -1,0 +1,17 @@
+{{ define "title" }}New tag{{ end }}
+
+{{ define "main" }}
+  <hr>
+
+  <form name="new-tag" method="POST" action="/admin/tags">
+    <label for="name">Name</label>
+    <input type="text" id="name" name="name">
+
+    <label for="slug">Slug</label>
+    <input type="text" id="slug" name="slug">
+
+    <br>
+    <button type="submit">Create tag</button>
+  </form>
+
+{{ end }}

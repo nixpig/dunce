@@ -3,6 +3,8 @@
 {{ end }}
 
 {{ define "main" }}
+  <hr>
+
   <form name="edit-tag" method="POST">
     <input type="hidden" name="id" value="{{ .Id }}">
 
@@ -12,6 +14,7 @@
     <label for="slug">Slug</label>
     <input type="text" id="slug" name="slug" value="{{ .Slug }}">
 
+    <br>
     <button type="submit">Update tag</button>
   </form>
 {{ end }}
