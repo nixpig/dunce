@@ -41,8 +41,11 @@ func testCreateNewArticle(t *testing.T, mock pgxmock.PgxPoolIface, data ArticleD
 
 	// tagMockRow := mock.NewRows([]string{"id_"}).AddRow(69)
 
+	mock.ExpectBegin()
+
 	mock.ExpectQuery(regexp.QuoteMeta(articleInsertQuery)).WithArgs("article title", "article subtitle", "article-slug", "Lorem ipsum dolar sit amet...", createdAt, updatedAt).WillReturnRows(articleMockRow)
 	// mock.ExpectQuery(regexp.QuoteMeta(tagInsertQuery)).WithArgs(13, 4).WillReturnRows(tagMockRow)
+	mock.ExpectCommit()
 
 	newArticle := NewArticle(
 		"article title",
@@ -54,7 +57,7 @@ func testCreateNewArticle(t *testing.T, mock pgxmock.PgxPoolIface, data ArticleD
 		[]int{4},
 	)
 
-	createdArticle, err := data.create(&newArticle)
+	createdArticle, err := data.Create(&newArticle)
 
 	mock.Reset()
 	mock.ExpectationsWereMet()

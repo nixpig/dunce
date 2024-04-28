@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"strconv"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -42,8 +41,6 @@ type DbInstance struct {
 	Conn Dbconn
 }
 
-var DB DbInstance
-
 type Dbconn interface {
 	Begin(ctx context.Context) (pgx.Tx, error)
 	Exec(ctx context.Context, sql string, arguments ...interface{}) (pgconn.CommandTag, error)
@@ -60,6 +57,8 @@ type databaseEnvironment struct {
 	password string
 }
 
+var DB DbInstance
+
 func Connect() error {
 	env, err := loadDatabaseEnvironment()
 	if err != nil {
@@ -71,7 +70,6 @@ func Connect() error {
 	db, err := pgxpool.New(context.Background(), connectionString)
 	if err != nil {
 		log.Fatalf("unable to connect to database: %v", err)
-		os.Exit(1)
 	}
 
 	DB = DbInstance{

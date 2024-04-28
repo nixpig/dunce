@@ -4,19 +4,30 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/nixpig/dunce/db"
 	"github.com/nixpig/dunce/internal/articles"
 	"github.com/nixpig/dunce/internal/tags"
+	"github.com/nixpig/dunce/pkg/logging"
 )
 
-func Start(port string) {
+type AppConfig struct {
+	Port      string
+	Validator *validator.Validate
+	Db        db.Dbconn
+}
+
+func Start(appConfig AppConfig) error {
 	mux := http.NewServeMux()
 
-	tagsData := tags.NewTagData(db.DB.Conn)
-	tagService := tags.NewTagService(tagsData)
-	tagsController := tags.NewTagController(tagService)
-
 	mux.HandleFunc("GET /admin", func(w http.ResponseWriter, r *http.Request) {})
+
+	loggers := logging.NewLogger()
+
+	tagsData := tags.NewTagData(appConfig.Db, loggers)
+	tagService := tags.NewTagService(tagsData, appConfig.Validator, loggers)
+	tagsController := tags.NewTagController(tagService, loggers)
+
 	mux.HandleFunc("POST /admin/tags", tagsController.CreateHandler)
 	mux.HandleFunc("GET /admin/tags", tagsController.GetAllHandler)
 	mux.HandleFunc("GET /admin/tags/new", tagsController.NewHandler)
@@ -24,13 +35,27 @@ func Start(port string) {
 	mux.HandleFunc("POST /admin/tags/{slug}", tagsController.UpdateHandler)
 	mux.HandleFunc("DELETE /admin/tags", tagsController.DeleteHandler)
 
-	articlesData := articles.NewArticleData(db.DB.Conn)
-	articlesService := articles.NewArticleService(articlesData)
-	articlesController := articles.NewArticleController(articlesService, tagService)
+	articlesData := articles.NewArticleData(appConfig.Db, loggers)
+	articlesService := articles.NewArticleService(articlesData, appConfig.Validator, loggers)
+	articlesController := articles.NewArticleController(articlesService, tagService, loggers)
 
+	mux.HandleFunc("POST /admin/articles", articlesController.CreateHandler)
 	mux.HandleFunc("GET /admin/articles", articlesController.GetAllHandler)
 	mux.HandleFunc("GET /admin/articles/new", articlesController.NewHandler)
-	mux.HandleFunc("POST /admin/articles", articlesController.CreateHandler)
+	mux.HandleFunc("GET /admin/articles/{slug}", articlesController.GetBySlugHander)
+	mux.HandleFunc("POST /admin/articles/{slug}", articlesController.UpdateHandler)
 
-	http.ListenAndServe(fmt.Sprintf(":%v", port), mux)
+	server := &http.Server{
+		Addr:     fmt.Sprintf(":%v", appConfig.Port),
+		ErrorLog: loggers.ErrorLogger,
+		Handler:  mux,
+	}
+
+	loggers.Info("starting server on %s", appConfig.Port)
+
+	if err := server.ListenAndServe(); err != nil {
+		loggers.Error("failed to start server: %s", err)
+	}
+
+	return nil
 }

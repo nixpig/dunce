@@ -1,59 +1,54 @@
 package tags
 
 import (
-	"errors"
-	"regexp"
-
 	"github.com/go-playground/validator/v10"
+	"github.com/nixpig/dunce/pkg/logging"
 )
 
 type TagService struct {
-	data TagDataInterface
+	data     TagDataInterface
+	validate *validator.Validate
+	log      logging.Logger
 }
 
 type TagServiceInterface interface {
-	create(tag *Tag) (*Tag, error)
-	deleteById(id int) error
+	Create(tag *Tag) (*Tag, error)
+	DeleteById(id int) error
 	GetAll() (*[]Tag, error)
-	getBySlug(slug string) (*Tag, error)
-	update(tag *Tag) (*Tag, error)
+	GetBySlug(slug string) (*Tag, error)
+	Update(tag *Tag) (*Tag, error)
 }
 
-func NewTagService(data TagDataInterface) TagService {
-	return TagService{data}
+func NewTagService(
+	data TagDataInterface,
+	validate *validator.Validate,
+	log logging.Logger,
+) TagService {
+	return TagService{
+		data:     data,
+		validate: validate,
+		log:      log,
+	}
 }
 
-func (ts TagService) create(tag *Tag) (*Tag, error) {
-	// TODO: maybe inject validator at point of struct initialisation?
-	validate := validator.New(validator.WithRequiredStructEnabled())
-
-	if err := validate.RegisterValidation("slug", ValidateSlug); err != nil {
+func (ts TagService) Create(tag *Tag) (*Tag, error) {
+	if err := ts.validate.Struct(tag); err != nil {
+		ts.log.Error(err.Error())
 		return nil, err
 	}
 
-	if err := validate.Struct(tag); err != nil {
-		return nil, err
-	}
-
-	exists, err := ts.data.exists(tag)
+	createdTag, err := ts.data.Create(tag)
 	if err != nil {
-		return nil, err
-	}
-
-	if exists {
-		return nil, errors.New("tag name and/or slug already exists")
-	}
-
-	createdTag, err := ts.data.create(tag)
-	if err != nil {
+		ts.log.Error(err.Error())
 		return nil, err
 	}
 
 	return createdTag, nil
 }
 
-func (ts TagService) deleteById(id int) error {
-	if err := ts.data.deleteById(id); err != nil {
+func (ts TagService) DeleteById(id int) error {
+	if err := ts.data.DeleteById(id); err != nil {
+		ts.log.Error(err.Error())
 		return err
 	}
 
@@ -63,53 +58,34 @@ func (ts TagService) deleteById(id int) error {
 func (ts TagService) GetAll() (*[]Tag, error) {
 	tags, err := ts.data.GetAll()
 	if err != nil {
+		ts.log.Error(err.Error())
 		return nil, err
 	}
 
 	return tags, nil
 }
 
-func (ts TagService) getBySlug(slug string) (*Tag, error) {
-	tag, err := ts.data.getBySlug(slug)
+func (ts TagService) GetBySlug(slug string) (*Tag, error) {
+	tag, err := ts.data.GetBySlug(slug)
 	if err != nil {
+		ts.log.Error(err.Error())
 		return nil, err
 	}
 
 	return tag, nil
 }
 
-func (ts TagService) update(tag *Tag) (*Tag, error) {
-	// TODO: maybe inject validator at point of struct initialisation?
-	validate := validator.New(validator.WithRequiredStructEnabled())
-
-	if err := validate.RegisterValidation("slug", ValidateSlug); err != nil {
+func (ts TagService) Update(tag *Tag) (*Tag, error) {
+	if err := ts.validate.Struct(tag); err != nil {
+		ts.log.Error(err.Error())
 		return nil, err
 	}
 
-	if err := validate.Struct(tag); err != nil {
-		return nil, err
-	}
-
-	exists, err := ts.data.exists(tag)
+	updatedTag, err := ts.data.Update(tag)
 	if err != nil {
-		return nil, err
-	}
-
-	if exists {
-		return nil, errors.New("tag name and/or slug already exists")
-	}
-
-	updatedTag, err := ts.data.update(tag)
-	if err != nil {
+		ts.log.Error(err.Error())
 		return nil, err
 	}
 
 	return updatedTag, nil
-}
-
-func ValidateSlug(slug validator.FieldLevel) bool {
-	slugRegexString := "^[a-zA-Z0-9\\-]+$"
-	slugRegex := regexp.MustCompile(slugRegexString)
-
-	return slugRegex.MatchString(slug.Field().String())
 }

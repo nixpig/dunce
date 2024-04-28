@@ -150,7 +150,7 @@ func testCreateValidTag(t *testing.T, mock pgxmock.PgxPoolIface, data TagData) {
 
 	newTag := NewTag("tag_name", "tag_slug")
 
-	createdTag, err := data.create(&newTag)
+	createdTag, err := data.Create(&newTag)
 
 	require.NoError(t, err, "should not error")
 	require.Equal(t, &Tag{
@@ -174,7 +174,7 @@ func testCreateInvalidTag(t *testing.T, mock pgxmock.PgxPoolIface, data TagData)
 		"some-really-long-tagsome-really-long-tagsome-really-long-tagsome-really-long-tag",
 	)
 
-	createdTag, err := data.create(&newTag)
+	createdTag, err := data.Create(&newTag)
 	require.Nil(t, createdTag, "should not create invalid tag")
 	require.EqualError(t, err, "database_error", "should return the error from database")
 
@@ -190,7 +190,7 @@ func testDeleteExistingTag(t *testing.T, mock pgxmock.PgxPoolIface, data TagData
 
 	mock.ExpectExec(regexp.QuoteMeta(query)).WithArgs(23).WillReturnResult(mockDeleted)
 
-	err := data.deleteById(23)
+	err := data.DeleteById(23)
 	require.NoError(t, err, "should not error")
 
 	if err := mock.ExpectationsWereMet(); err != nil {
@@ -203,7 +203,7 @@ func testDeleteNonExistingTag(t *testing.T, mock pgxmock.PgxPoolIface, data TagD
 
 	mock.ExpectExec(regexp.QuoteMeta(query)).WithArgs(23).WillReturnError(errors.New("database_error"))
 
-	err := data.deleteById(23)
+	err := data.DeleteById(23)
 	require.EqualError(t, err, "database_error", "should return error from database")
 
 	if err := mock.ExpectationsWereMet(); err != nil {
@@ -212,7 +212,7 @@ func testDeleteNonExistingTag(t *testing.T, mock pgxmock.PgxPoolIface, data TagD
 }
 
 func testTagExists(t *testing.T, mock pgxmock.PgxPoolIface, data TagData) {
-	query := `select count(*) from tags_ where name_ = $1 or slug_ = $2`
+	query := `select count(*) from tags_ where slug_ = $1`
 
 	mockDuplicateTag := NewTagWithId(23, "existing tag name", "existing-tag-slug")
 
@@ -220,9 +220,9 @@ func testTagExists(t *testing.T, mock pgxmock.PgxPoolIface, data TagData) {
 		NewRows([]string{"count"}).
 		AddRow(1)
 
-	mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs(mockDuplicateTag.Name, mockDuplicateTag.Slug).WillReturnRows(duplicateRows)
+	mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs(mockDuplicateTag.Slug).WillReturnRows(duplicateRows)
 
-	exists, err := data.exists(&mockDuplicateTag)
+	exists, err := data.Exists(&mockDuplicateTag)
 
 	require.NoError(t, err, "should not return error")
 	require.True(t, exists, "should return true")
@@ -233,7 +233,7 @@ func testTagExists(t *testing.T, mock pgxmock.PgxPoolIface, data TagData) {
 }
 
 func testTagNotExists(t *testing.T, mock pgxmock.PgxPoolIface, data TagData) {
-	query := `select count(*) from tags_ where name_ = $1 or slug_ = $2`
+	query := `select count(*) from tags_ where slug_ = $1`
 
 	mockDuplicateTag := NewTagWithId(23, "existing tag name", "existing-tag-slug")
 
@@ -241,9 +241,9 @@ func testTagNotExists(t *testing.T, mock pgxmock.PgxPoolIface, data TagData) {
 		NewRows([]string{"count"}).
 		AddRow(0)
 
-	mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs(mockDuplicateTag.Name, mockDuplicateTag.Slug).WillReturnRows(duplicateRows)
+	mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs(mockDuplicateTag.Slug).WillReturnRows(duplicateRows)
 
-	exists, err := data.exists(&mockDuplicateTag)
+	exists, err := data.Exists(&mockDuplicateTag)
 
 	require.NoError(t, err, "should not return error")
 	require.False(t, exists, "should return false")
@@ -254,13 +254,13 @@ func testTagNotExists(t *testing.T, mock pgxmock.PgxPoolIface, data TagData) {
 }
 
 func testTagExistsError(t *testing.T, mock pgxmock.PgxPoolIface, data TagData) {
-	query := `select count(*) from tags_ where name_ = $1 or slug_ = $2`
+	query := `select count(*) from tags_ where slug_ = $1`
 
 	mockDuplicateTag := NewTagWithId(23, "existing tag name", "existing-tag-slug")
 
-	mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs(mockDuplicateTag.Name, mockDuplicateTag.Slug).WillReturnError(errors.New("database_error"))
+	mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs(mockDuplicateTag.Slug).WillReturnError(errors.New("database_error"))
 
-	_, err := data.exists(&mockDuplicateTag)
+	_, err := data.Exists(&mockDuplicateTag)
 
 	require.EqualError(t, err, "database_error")
 
@@ -357,7 +357,7 @@ func testGetExistingTagBySlug(t *testing.T, mock pgxmock.PgxPoolIface, data TagD
 		WithArgs("tag-slug").
 		WillReturnRows(mockRow)
 
-	tag, err := data.getBySlug("tag-slug")
+	tag, err := data.GetBySlug("tag-slug")
 
 	require.NoError(t, err, "should not return error")
 	require.Equal(t, &Tag{
@@ -381,7 +381,7 @@ func testGetNonExistentTagBySlug(t *testing.T, mock pgxmock.PgxPoolIface, data T
 		WithArgs("tag-slug").
 		WillReturnRows(mockRow)
 
-	tag, err := data.getBySlug("tag-slug")
+	tag, err := data.GetBySlug("tag-slug")
 
 	require.Error(t, err, "should return error")
 	require.Nil(t, tag, "should not return any tag")
@@ -400,7 +400,7 @@ func testTagDataUpdateTag(t *testing.T, mock pgxmock.PgxPoolIface, data TagData)
 
 	tagUpdate := NewTagWithId(23, "tagname", "tag-slug")
 
-	tag, err := data.update(&tagUpdate)
+	tag, err := data.Update(&tagUpdate)
 
 	require.NoError(t, err, "should not error")
 	require.Equal(t, &Tag{

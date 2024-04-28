@@ -1,0 +1,49 @@
+{{ define "title" }}Edit article '{{ .Article.Title }}'{{ end }}
+
+{{ define "main" }}
+  <hr>
+
+  <form name="new_article" method="POST" action="/admin/articles/{{ .Article.Slug }}">
+    <input type="hidden" name="id" value="{{ .Article.Id }}">
+
+    <label for="title">Title</label>
+    <input type="text" id="title" name="title" value="{{ .Article.Title }}">
+
+    <label for="subtitle">Subtitle</label>
+    <input type="text" id="subtitle" name="subtitle" value="{{ .Article.Subtitle }}">
+
+    <label for="slug">Slug</label>
+    <input type="text" id="slug" name="slug" value="{{ .Article.Slug }}">
+
+
+    <label for="created_at">Created / Updated</label>
+    <input disabled type="text" id="view_created_at" name="view_created_at" value="{{ .Article.CreatedAt }}">
+    <input type="hidden" id="created_at" name="created_at" value="{{ .Article.CreatedAt }}">
+
+    <input disabled type="text" id="updated_at" value="{{ .Article.UpdatedAt }}">
+
+    <label for="body">Article</label>
+    <textarea id="body" name="body">{{ .Article.Body }}</textarea>
+
+    <label for="tags">Tags</label>
+    <select id="tags" name="tags[]" multiple>
+      {{ range $tagId, $tagName := .Tags }}
+	<option 
+	  value="{{ $tagId }}"
+	  {{ range $articleTagId := $.Article.TagIds }}
+	    {{ if eq $tagId $articleTagId }}
+	      selected
+	    {{ end }}
+	  {{ end }}
+	>
+	  {{ $tagName }}
+	</option>
+      {{ end }}
+    </select>
+
+    <div>
+      <button type="submit">Update article</button>
+    </div>
+  </form>
+
+{{ end }}

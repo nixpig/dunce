@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/nixpig/dunce/pkg/validation"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -12,19 +13,33 @@ type MockArticleData struct {
 	mock.Mock
 }
 
-func (m *MockArticleData) create(article *Article) (*Article, error) {
+func (m *MockArticleData) Create(article *Article) (*Article, error) {
 	args := m.Called(article)
 
 	return args.Get(0).(*Article), args.Error(1)
 }
 
-func (m *MockArticleData) getAll() (*[]Article, error) {
+func (m *MockArticleData) GetAll() (*[]Article, error) {
 	args := m.Called()
 
 	return args.Get(0).(*[]Article), args.Error(1)
 }
 
+func (m *MockArticleData) GetBySlug(slug string) (*Article, error) {
+	args := m.Called(slug)
+
+	return args.Get(0).(*Article), args.Error(1)
+}
+
+func (m *MockArticleData) Update(article *Article) (*Article, error) {
+	args := m.Called(article)
+
+	return args.Get(0).(*Article), args.Error(1)
+}
+
 var mockData = new(MockArticleData)
+
+var validate, _ = validation.NewValidator()
 
 func TestArticleServiceCreate(t *testing.T) {
 	scenarios := map[string]func(t *testing.T, service ArticleService){
@@ -33,7 +48,7 @@ func TestArticleServiceCreate(t *testing.T) {
 
 	for scenario, fn := range scenarios {
 		t.Run(scenario, func(t *testing.T) {
-			service := NewArticleService(mockData)
+			service := NewArticleService(mockData, validate)
 			fn(t, service)
 		})
 	}
@@ -53,9 +68,9 @@ func testServiceCreateArticle(t *testing.T, service ArticleService) {
 		[]int{},
 	)
 
-	mockCallCreate := mockData.On("create", &newArticle).Return(&mockCreatedArticle, nil)
+	mockCallCreate := mockData.On("Create", &newArticle).Return(&mockCreatedArticle, nil)
 
-	createdArticle, err := service.create(&newArticle)
+	createdArticle, err := service.Create(&newArticle)
 
 	mockCallCreate.Unset()
 	mockData.AssertExpectations(t)
