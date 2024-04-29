@@ -32,6 +32,9 @@ func NewTagService(
 }
 
 func (ts TagService) Create(tag *Tag) (*Tag, error) {
+	// TODO: make slug lowercase
+	// TODO: custom validator for tag name
+
 	if err := ts.validate.Struct(tag); err != nil {
 		ts.log.Error(err.Error())
 		return nil, err

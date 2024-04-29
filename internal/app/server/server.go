@@ -39,7 +39,7 @@ func Start(appConfig AppConfig) error {
 
 	articlesData := articles.NewArticleData(appConfig.Db, loggers)
 	articlesService := articles.NewArticleService(articlesData, appConfig.Validator, loggers)
-	articlesController := articles.NewArticleController(articlesService, tagService, loggers)
+	articlesController := articles.NewArticleController(articlesService, tagService, loggers, appConfig.TemplateCache)
 
 	mux.HandleFunc("POST /admin/articles", articlesController.CreateHandler)
 	mux.HandleFunc("GET /admin/articles", articlesController.GetAllHandler)

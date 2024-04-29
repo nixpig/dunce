@@ -64,9 +64,20 @@ var mockData = new(MockTagData)
 
 var validate, _ = validation.NewValidator()
 
-func TestTagServiceUpdate(t *testing.T) {
+func TestTagService(t *testing.T) {
 	scenarios := map[string]func(t *testing.T, service TagService){
-		"update tag": testServiceUpdateTag,
+		"update tag":                            testServiceUpdateTag,
+		"get by slug (tag exists)":              testServiceGetBySlugTagExists,
+		"get by slug (tag does not exist)":      testServiceGetBySlugTagDoesNotExist,
+		"get all (multiple results)":            testServiceGetAllTagsMultipleResults,
+		"get all (no results)":                  testServiceGetAllTagsNoResults,
+		"get all (single result)":               testServiceGetAllTagsSingleResult,
+		"successfully create valid tag":         testTagServiceCreateValidTag,
+		"fail to create invalid tag":            testTagServiceCreateInvalidTag,
+		"fail to update invalid tag":            testTagServiceUpdateInvalidTag,
+		"fail to create existing tag":           testTagServiceCreateExistingTag,
+		"successfully delete tag by id":         testTagServiceDeleteTagWithoutError,
+		"fail to delete tag by non-existent id": testTagServiceDeleteTagWithError,
 	}
 
 	for scenario, fn := range scenarios {
@@ -91,69 +102,6 @@ func testServiceUpdateTag(t *testing.T, service TagService) {
 
 	require.Nil(t, err, "should not error out")
 	require.Equal(t, &tag, updatedTag, "should return updated tag")
-}
-
-func TestTagServiceGetBySlug(t *testing.T) {
-	scenarios := map[string]func(t *testing.T, service TagService){
-		"get by slug (tag exists)":         testServiceGetBySlugTagExists,
-		"get by slug (tag does not exist)": testServiceGetBySlugTagDoesNotExist,
-	}
-	for scenario, fn := range scenarios {
-		t.Run(scenario, func(t *testing.T) {
-			service := NewTagService(mockData, validate, logging.NewLogger())
-
-			fn(t, service)
-		})
-	}
-}
-
-// update
-
-func TestTagServiceGetAll(t *testing.T) {
-	scenarios := map[string]func(t *testing.T, service TagService){
-		"get all (multiple results)": testServiceGetAllTagsMultipleResults,
-		"get all (no results)":       testServiceGetAllTagsNoResults,
-		"get all (single result)":    testServiceGetAllTagsSingleResult,
-	}
-
-	for scenario, fn := range scenarios {
-		t.Run(scenario, func(t *testing.T) {
-			service := NewTagService(mockData, validate, logging.NewLogger())
-
-			fn(t, service)
-		})
-	}
-}
-
-func TestTagServiceCreate(t *testing.T) {
-	scenarios := map[string]func(t *testing.T, service TagService){
-		"successfully create valid tag": testTagServiceCreateValidTag,
-		"fail to create invalid tag":    testTagServiceCreateInvalidTag,
-		"fail to create existing tag":   testTagServiceCreateExistingTag,
-	}
-
-	for scenario, fn := range scenarios {
-		t.Run(scenario, func(t *testing.T) {
-			service := NewTagService(mockData, validate, logging.NewLogger())
-
-			fn(t, service)
-		})
-	}
-}
-
-func TestTagServiceDeleteById(t *testing.T) {
-	scenarios := map[string]func(t *testing.T, service TagService){
-		"successfully delete tag by id":         testTagServiceDeleteTagWithoutError,
-		"fail to delete tag by non-existent id": testTagServiceDeleteTagWithError,
-	}
-
-	for scenario, fn := range scenarios {
-		t.Run(scenario, func(t *testing.T) {
-			service := NewTagService(mockData, validate, logging.NewLogger())
-
-			fn(t, service)
-		})
-	}
 }
 
 func testTagServiceDeleteTagWithoutError(t *testing.T, service TagService) {
@@ -239,6 +187,72 @@ func testTagServiceCreateInvalidTag(t *testing.T, service TagService) {
 	createdShortTagSlug, err := service.Create(&shortTagSlug)
 	require.NotNil(t, err, "should return error")
 	require.Nil(t, createdShortTagSlug, "should not create tag")
+
+	incorrectFormatSlugUppercase := NewTagWithId(1, "tag name", "Sslug")
+
+	createdIncorrectTagSlug, err := service.Create(&incorrectFormatSlugUppercase)
+	require.NotNil(t, err, "should return error")
+	require.Nil(t, createdIncorrectTagSlug, "should not create tag")
+
+	incorrectFormatSlugNonSlug := NewTagWithId(1, "tag name", "s%l&u*g")
+
+	createdIncorrectTagSlugNonSlug, err := service.Create(&incorrectFormatSlugNonSlug)
+	require.NotNil(t, err, "should return error")
+	require.Nil(t, createdIncorrectTagSlugNonSlug, "should not create tag")
+}
+
+func testTagServiceUpdateInvalidTag(t *testing.T, service TagService) {
+	longTagName := NewTagWithId(
+		69,
+		"tag name that is longer than 50 characters so exceeds limit",
+		"tag-slug",
+	)
+
+	UpdatedLongTagName, err := service.Update(&longTagName)
+	require.NotNil(t, err, "should return error")
+	require.Nil(t, UpdatedLongTagName, "should not update tag")
+
+	shortTagName := NewTagWithId(
+		69,
+		"s",
+		"tag-slug",
+	)
+
+	updatedShortTagName, err := service.Update(&shortTagName)
+	require.NotNil(t, err, "should return error")
+	require.Nil(t, updatedShortTagName, "should not update tag")
+
+	longTagSlug := NewTagWithId(
+		69,
+		"tag name",
+		"tag-slug-that-is-longer-than-50-characters-so-is-invalid",
+	)
+
+	updatedLongTagSlug, err := service.Update(&longTagSlug)
+	require.NotNil(t, err, "should return error")
+	require.Nil(t, updatedLongTagSlug, "should not update tag")
+
+	shortTagSlug := NewTagWithId(
+		69,
+		"tag name",
+		"s",
+	)
+
+	updatedShortTagSlug, err := service.Update(&shortTagSlug)
+	require.NotNil(t, err, "should return error")
+	require.Nil(t, updatedShortTagSlug, "should not update tag")
+
+	incorrectFormatSlugUppercase := NewTagWithId(1, "tag name", "Sslug")
+
+	updatedIncorrectTagSlug, err := service.Update(&incorrectFormatSlugUppercase)
+	require.NotNil(t, err, "should return error")
+	require.Nil(t, updatedIncorrectTagSlug, "should not update tag")
+
+	incorrectFormatSlugNonSlug := NewTagWithId(1, "tag name", "s%l&u*g")
+
+	updatedIncorrecTagSlugNonSlug, err := service.Update(&incorrectFormatSlugNonSlug)
+	require.NotNil(t, err, "should return error")
+	require.Nil(t, updatedIncorrecTagSlugNonSlug, "should not update tag")
 }
 
 func testTagServiceCreateExistingTag(t *testing.T, service TagService) {

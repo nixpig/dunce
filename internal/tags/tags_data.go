@@ -9,8 +9,8 @@ import (
 
 type Tag struct {
 	Id   int
-	Name string `validate:"required,min=2,max=30"`
-	Slug string `validate:"required,slug,min=2,max=50"`
+	Name string `validate:"required,tagname,min=2,max=30"`
+	Slug string `validate:"required,slug,min=2,max=50,lowercase"`
 }
 
 func NewTag(name, slug string) Tag {

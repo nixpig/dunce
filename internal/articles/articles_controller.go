@@ -23,20 +23,23 @@ type ArticleScreen struct {
 }
 
 type ArticlesController struct {
-	service    ArticleServiceInterface
-	tagService tags.TagServiceInterface
-	log        logging.Logger
+	service       ArticleServiceInterface
+	tagService    tags.TagServiceInterface
+	log           logging.Logger
+	templateCache map[string]*template.Template
 }
 
 func NewArticleController(
 	service ArticleServiceInterface,
 	tagsService tags.TagServiceInterface,
 	log logging.Logger,
+	templateCache map[string]*template.Template,
 ) ArticlesController {
 	return ArticlesController{
-		service:    service,
-		tagService: tagsService,
-		log:        log,
+		service:       service,
+		tagService:    tagsService,
+		log:           log,
+		templateCache: templateCache,
 	}
 }
 
@@ -107,19 +110,7 @@ func (ac *ArticlesController) GetAllHandler(w http.ResponseWriter, r *http.Reque
 		Articles: *articles,
 	}
 
-	templates := []string{
-		"./web/templates/base.tmpl",
-		"./web/templates/pages/admin/articles.tmpl",
-	}
-
-	ts, err := template.ParseFiles(templates...)
-	if err != nil {
-		ac.log.Error(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
-	if err := ts.ExecuteTemplate(w, "base", articlesScreen); err != nil {
+	if err := ac.templateCache["articles.tmpl"].ExecuteTemplate(w, "base", articlesScreen); err != nil {
 		ac.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -145,19 +136,7 @@ func (ac *ArticlesController) NewHandler(w http.ResponseWriter, r *http.Request)
 		Articles: nil,
 	}
 
-	templates := []string{
-		"./web/templates/base.tmpl",
-		"./web/templates/pages/admin/new-article.tmpl",
-	}
-
-	ts, err := template.ParseFiles(templates...)
-	if err != nil {
-		ac.log.Error(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
-	if err := ts.ExecuteTemplate(w, "base", articlesScreen); err != nil {
+	if err := ac.templateCache["new-article.tmpl"].ExecuteTemplate(w, "base", articlesScreen); err != nil {
 		ac.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -192,19 +171,7 @@ func (ac *ArticlesController) GetBySlugHander(w http.ResponseWriter, r *http.Req
 		Article: *article,
 	}
 
-	templates := []string{
-		"./web/templates/base.tmpl",
-		"./web/templates/pages/admin/article.tmpl",
-	}
-
-	ts, err := template.ParseFiles(templates...)
-	if err != nil {
-		ac.log.Error(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
-	if err := ts.ExecuteTemplate(w, "base", articleScreen); err != nil {
+	if err := ac.templateCache["article.tmpl"].ExecuteTemplate(w, "base", articleScreen); err != nil {
 		ac.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
