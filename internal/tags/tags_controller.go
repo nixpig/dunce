@@ -1,6 +1,7 @@
 package tags
 
 import (
+	"fmt"
 	"html/template"
 	"net/http"
 	"strconv"
@@ -26,7 +27,7 @@ func NewTagController(
 	}
 }
 
-func (tc *TagsController) CreateHandler(w http.ResponseWriter, r *http.Request) {
+func (tc *TagsController) PostAdminTagsHandler(w http.ResponseWriter, r *http.Request) {
 	tag := NewTag(r.FormValue("name"), r.FormValue("slug"))
 
 	if _, err := tc.service.Create(&tag); err != nil {
@@ -37,7 +38,7 @@ func (tc *TagsController) CreateHandler(w http.ResponseWriter, r *http.Request) 
 	http.Redirect(w, r, "/admin/tags", http.StatusSeeOther)
 }
 
-func (tc *TagsController) DeleteHandler(w http.ResponseWriter, r *http.Request) {
+func (tc *TagsController) DeleteAdminTagsSlugHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.FormValue("id"))
 	if err != nil {
 		tc.log.Error(err.Error())
@@ -50,7 +51,7 @@ func (tc *TagsController) DeleteHandler(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-func (tc *TagsController) GetAllHandler(w http.ResponseWriter, r *http.Request) {
+func (tc *TagsController) GetAdminTagsHandler(w http.ResponseWriter, r *http.Request) {
 	tags, err := tc.service.GetAll()
 	if err != nil {
 		tc.log.Error(err.Error())
@@ -65,7 +66,7 @@ func (tc *TagsController) GetAllHandler(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-func (tc *TagsController) GetBySlugHandler(w http.ResponseWriter, r *http.Request) {
+func (tc *TagsController) GetAdminTagsSlugHandler(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("slug")
 
 	tag, err := tc.service.GetBySlug(slug)
@@ -81,7 +82,7 @@ func (tc *TagsController) GetBySlugHandler(w http.ResponseWriter, r *http.Reques
 	}
 }
 
-func (tc *TagsController) UpdateHandler(w http.ResponseWriter, r *http.Request) {
+func (tc *TagsController) PostAdminTagsSlugHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.FormValue("id"))
 	if err != nil {
 		tc.log.Error(err.Error())
@@ -102,8 +103,12 @@ func (tc *TagsController) UpdateHandler(w http.ResponseWriter, r *http.Request) 
 	http.Redirect(w, r, "/admin/tags", http.StatusSeeOther)
 }
 
-func (tc *TagsController) NewHandler(w http.ResponseWriter, r *http.Request) {
+func (tc *TagsController) GetAdminTagsNewHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("\n\n >>> getting... \n\n")
+
 	if err := tc.templateCache["new-tag.tmpl"].ExecuteTemplate(w, "base", nil); err != nil {
+		fmt.Printf("\n\n >>> %v \n\n", err)
+
 		tc.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return

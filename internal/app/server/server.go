@@ -30,12 +30,12 @@ func Start(appConfig AppConfig) error {
 	tagService := tags.NewTagService(tagsData, appConfig.Validator, loggers)
 	tagsController := tags.NewTagController(tagService, loggers, appConfig.TemplateCache)
 
-	mux.HandleFunc("POST /admin/tags", tagsController.CreateHandler)
-	mux.HandleFunc("GET /admin/tags", tagsController.GetAllHandler)
-	mux.HandleFunc("GET /admin/tags/new", tagsController.NewHandler)
-	mux.HandleFunc("GET /admin/tags/{slug}", tagsController.GetBySlugHandler)
-	mux.HandleFunc("POST /admin/tags/{slug}", tagsController.UpdateHandler)
-	mux.HandleFunc("DELETE /admin/tags", tagsController.DeleteHandler)
+	mux.HandleFunc("POST /admin/tags", tagsController.PostAdminTagsHandler)
+	mux.HandleFunc("GET /admin/tags", tagsController.GetAdminTagsHandler)
+	mux.HandleFunc("GET /admin/tags/new", tagsController.GetAdminTagsNewHandler)
+	mux.HandleFunc("GET /admin/tags/{slug}", tagsController.GetAdminTagsSlugHandler)
+	mux.HandleFunc("POST /admin/tags/{slug}", tagsController.PostAdminTagsSlugHandler)
+	mux.HandleFunc("DELETE /admin/tags/{slug}", tagsController.DeleteAdminTagsSlugHandler)
 
 	articlesData := articles.NewArticleData(appConfig.Db, loggers)
 	articlesService := articles.NewArticleService(articlesData, appConfig.Validator, loggers)
