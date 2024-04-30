@@ -1,4 +1,4 @@
-package tags
+package tag
 
 import (
 	"context"
@@ -7,42 +7,19 @@ import (
 	"github.com/nixpig/dunce/pkg/logging"
 )
 
-type Tag struct {
-	Id   int
-	Name string `validate:"required,tagname,min=2,max=30"`
-	Slug string `validate:"required,slug,min=2,max=50,lowercase"`
-}
-
-func NewTag(name, slug string) Tag {
-	return Tag{Name: name, Slug: slug}
-}
-
-func NewTagWithId(id int, name, slug string) Tag {
-	return Tag{Id: id, Name: name, Slug: slug}
-}
-
-type TagDataInterface interface {
-	Create(tag *Tag) (*Tag, error)
-	DeleteById(id int) error
-	Exists(tag *Tag) (bool, error)
-	GetAll() (*[]Tag, error)
-	GetBySlug(slug string) (*Tag, error)
-	Update(tag *Tag) (*Tag, error)
-}
-
-type TagData struct {
+type TagRepository struct {
 	db  db.Dbconn
 	log logging.Logger
 }
 
-func NewTagData(db db.Dbconn, log logging.Logger) TagData {
-	return TagData{
+func NewTagData(db db.Dbconn, log logging.Logger) TagRepository {
+	return TagRepository{
 		db:  db,
 		log: log,
 	}
 }
 
-func (t TagData) Create(tag *Tag) (*Tag, error) {
+func (t TagRepository) Create(tag *Tag) (*Tag, error) {
 	query := `insert into tags_ (name_, slug_) values ($1, $2) returning id_, name_, slug_`
 
 	var createdTag Tag
@@ -57,7 +34,7 @@ func (t TagData) Create(tag *Tag) (*Tag, error) {
 	return &createdTag, nil
 }
 
-func (t TagData) DeleteById(id int) error {
+func (t TagRepository) DeleteById(id int) error {
 	query := `delete from tags_ where id_ = $1`
 
 	_, err := t.db.Exec(context.Background(), query, id)
@@ -69,7 +46,7 @@ func (t TagData) DeleteById(id int) error {
 	return nil
 }
 
-func (t TagData) Exists(tag *Tag) (bool, error) {
+func (t TagRepository) Exists(tag *Tag) (bool, error) {
 	checkDuplicatesQuery := `select count(*) from tags_ where slug_ = $1`
 
 	var duplicateCount int
@@ -87,7 +64,7 @@ func (t TagData) Exists(tag *Tag) (bool, error) {
 	return false, nil
 }
 
-func (t TagData) GetAll() (*[]Tag, error) {
+func (t TagRepository) GetAll() (*[]Tag, error) {
 	query := `select id_, name_, slug_ from tags_`
 
 	rows, err := t.db.Query(context.Background(), query)
@@ -114,7 +91,7 @@ func (t TagData) GetAll() (*[]Tag, error) {
 	return &tags, nil
 }
 
-func (t TagData) GetBySlug(slug string) (*Tag, error) {
+func (t TagRepository) GetBySlug(slug string) (*Tag, error) {
 	query := `select id_, name_, slug_ from tags_ where slug_ = $1`
 
 	row := t.db.QueryRow(context.Background(), query, slug)
@@ -129,7 +106,7 @@ func (t TagData) GetBySlug(slug string) (*Tag, error) {
 	return &tag, nil
 }
 
-func (t TagData) Update(tag *Tag) (*Tag, error) {
+func (t TagRepository) Update(tag *Tag) (*Tag, error) {
 	query := `update tags_ set name_ = $2, slug_ = $3 where id_ = $1 returning id_, name_, slug_`
 
 	row := t.db.QueryRow(context.Background(), query, tag.Id, tag.Name, tag.Slug)

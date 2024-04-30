@@ -1,22 +1,22 @@
-package tags
+package tag
 
 import (
-	"fmt"
 	"html/template"
 	"net/http"
 	"strconv"
 
+	"github.com/nixpig/dunce/pkg"
 	"github.com/nixpig/dunce/pkg/logging"
 )
 
 type TagsController struct {
-	service       TagServiceInterface
+	service       pkg.Service[Tag]
 	log           logging.Logger
 	templateCache map[string]*template.Template
 }
 
 func NewTagController(
-	service TagServiceInterface,
+	service pkg.Service[Tag],
 	log logging.Logger,
 	templateCache map[string]*template.Template,
 ) TagsController {
@@ -104,11 +104,7 @@ func (tc *TagsController) PostAdminTagsSlugHandler(w http.ResponseWriter, r *htt
 }
 
 func (tc *TagsController) GetAdminTagsNewHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("\n\n >>> getting... \n\n")
-
 	if err := tc.templateCache["new-tag.tmpl"].ExecuteTemplate(w, "base", nil); err != nil {
-		fmt.Printf("\n\n >>> %v \n\n", err)
-
 		tc.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return

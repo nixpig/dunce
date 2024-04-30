@@ -24,14 +24,16 @@
 
     <label for="body">Article</label>
     <textarea id="body" name="body">{{ .Article.Body }}</textarea>
+    
+
 
     <label for="tags">Tags</label>
     <select id="tags" name="tags[]" multiple>
       {{ range $tagId, $tagName := .Tags }}
 	<option 
 	  value="{{ $tagId }}"
-	  {{ range $articleTagId := $.Article.TagIds }}
-	    {{ if eq $tagId $articleTagId }}
+	  {{ range $articleTag := $.Article.Tags }}
+	    {{ if eq $tagId $articleTag.Id }}
 	      selected
 	    {{ end }}
 	  {{ end }}

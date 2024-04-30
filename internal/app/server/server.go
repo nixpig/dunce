@@ -8,7 +8,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/nixpig/dunce/db"
 	"github.com/nixpig/dunce/internal/articles"
-	"github.com/nixpig/dunce/internal/tags"
+	"github.com/nixpig/dunce/internal/tag"
 	"github.com/nixpig/dunce/pkg/logging"
 )
 
@@ -26,9 +26,9 @@ func Start(appConfig AppConfig) error {
 
 	loggers := logging.NewLogger()
 
-	tagsData := tags.NewTagData(appConfig.Db, loggers)
-	tagService := tags.NewTagService(tagsData, appConfig.Validator, loggers)
-	tagsController := tags.NewTagController(tagService, loggers, appConfig.TemplateCache)
+	tagsData := tag.NewTagData(appConfig.Db, loggers)
+	tagService := tag.NewTagService(tagsData, appConfig.Validator, loggers)
+	tagsController := tag.NewTagController(tagService, loggers, appConfig.TemplateCache)
 
 	mux.HandleFunc("POST /admin/tags", tagsController.PostAdminTagsHandler)
 	mux.HandleFunc("GET /admin/tags", tagsController.GetAdminTagsHandler)
@@ -41,11 +41,11 @@ func Start(appConfig AppConfig) error {
 	articlesService := articles.NewArticleService(articlesData, appConfig.Validator, loggers)
 	articlesController := articles.NewArticleController(articlesService, tagService, loggers, appConfig.TemplateCache)
 
-	mux.HandleFunc("POST /admin/articles", articlesController.CreateHandler)
-	mux.HandleFunc("GET /admin/articles", articlesController.GetAllHandler)
+	// mux.HandleFunc("POST /admin/articles", articlesController.CreateHandler)
+	// mux.HandleFunc("GET /admin/articles", articlesController.GetAllHandler)
 	mux.HandleFunc("GET /admin/articles/new", articlesController.NewHandler)
 	mux.HandleFunc("GET /admin/articles/{slug}", articlesController.GetBySlugHander)
-	mux.HandleFunc("POST /admin/articles/{slug}", articlesController.UpdateHandler)
+	// mux.HandleFunc("POST /admin/articles/{slug}", articlesController.UpdateHandler)
 
 	server := &http.Server{
 		Addr:     fmt.Sprintf(":%v", appConfig.Port),
