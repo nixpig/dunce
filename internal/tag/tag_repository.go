@@ -4,15 +4,15 @@ import (
 	"context"
 
 	"github.com/nixpig/dunce/db"
-	"github.com/nixpig/dunce/pkg/logging"
+	"github.com/nixpig/dunce/pkg"
 )
 
 type TagRepository struct {
 	db  db.Dbconn
-	log logging.Logger
+	log pkg.Logger
 }
 
-func NewTagData(db db.Dbconn, log logging.Logger) TagRepository {
+func NewTagRepository(db db.Dbconn, log pkg.Logger) TagRepository {
 	return TagRepository{
 		db:  db,
 		log: log,

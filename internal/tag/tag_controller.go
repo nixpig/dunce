@@ -6,86 +6,85 @@ import (
 	"strconv"
 
 	"github.com/nixpig/dunce/pkg"
-	"github.com/nixpig/dunce/pkg/logging"
 )
 
-type TagsController struct {
+type TagController struct {
 	service       pkg.Service[Tag]
-	log           logging.Logger
+	log           pkg.Logger
 	templateCache map[string]*template.Template
 }
 
 func NewTagController(
 	service pkg.Service[Tag],
-	log logging.Logger,
+	log pkg.Logger,
 	templateCache map[string]*template.Template,
-) TagsController {
-	return TagsController{
+) TagController {
+	return TagController{
 		service:       service,
 		log:           log,
 		templateCache: templateCache,
 	}
 }
 
-func (tc *TagsController) PostAdminTagsHandler(w http.ResponseWriter, r *http.Request) {
+func (t *TagController) PostAdminTagsHandler(w http.ResponseWriter, r *http.Request) {
 	tag := NewTag(r.FormValue("name"), r.FormValue("slug"))
 
-	if _, err := tc.service.Create(&tag); err != nil {
-		tc.log.Error(err.Error())
+	if _, err := t.service.Create(&tag); err != nil {
+		t.log.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
 	http.Redirect(w, r, "/admin/tags", http.StatusSeeOther)
 }
 
-func (tc *TagsController) DeleteAdminTagsSlugHandler(w http.ResponseWriter, r *http.Request) {
+func (t *TagController) DeleteAdminTagsSlugHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.FormValue("id"))
 	if err != nil {
-		tc.log.Error(err.Error())
+		t.log.Error(err.Error())
 		w.Write([]byte(err.Error()))
 	}
 
-	if err := tc.service.DeleteById(id); err != nil {
-		tc.log.Error(err.Error())
+	if err := t.service.DeleteById(id); err != nil {
+		t.log.Error(err.Error())
 		w.Write([]byte(err.Error()))
 	}
 }
 
-func (tc *TagsController) GetAdminTagsHandler(w http.ResponseWriter, r *http.Request) {
-	tags, err := tc.service.GetAll()
+func (t *TagController) GetAdminTagsHandler(w http.ResponseWriter, r *http.Request) {
+	tags, err := t.service.GetAll()
 	if err != nil {
-		tc.log.Error(err.Error())
+		t.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
-	err = tc.templateCache["tags.tmpl"].ExecuteTemplate(w, "base", tags)
+	err = t.templateCache["tags.tmpl"].ExecuteTemplate(w, "base", tags)
 	if err != nil {
-		tc.log.Error(err.Error())
+		t.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
 
-func (tc *TagsController) GetAdminTagsSlugHandler(w http.ResponseWriter, r *http.Request) {
+func (t *TagController) GetAdminTagsSlugHandler(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("slug")
 
-	tag, err := tc.service.GetBySlug(slug)
+	tag, err := t.service.GetBySlug(slug)
 	if err != nil {
-		tc.log.Error(err.Error())
+		t.log.Error(err.Error())
 		w.Write([]byte(err.Error()))
 	}
 
-	if err := tc.templateCache["tag.tmpl"].ExecuteTemplate(w, "base", tag); err != nil {
-		tc.log.Error(err.Error())
+	if err := t.templateCache["tag.tmpl"].ExecuteTemplate(w, "base", tag); err != nil {
+		t.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 }
 
-func (tc *TagsController) PostAdminTagsSlugHandler(w http.ResponseWriter, r *http.Request) {
+func (t *TagController) PostAdminTagsSlugHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.FormValue("id"))
 	if err != nil {
-		tc.log.Error(err.Error())
+		t.log.Error(err.Error())
 		http.Error(w, "Invalid tag ID", http.StatusBadRequest)
 	}
 
@@ -94,8 +93,8 @@ func (tc *TagsController) PostAdminTagsSlugHandler(w http.ResponseWriter, r *htt
 		r.FormValue("name"),
 		r.FormValue("slug"),
 	)
-	if _, err := tc.service.Update(&tag); err != nil {
-		tc.log.Error(err.Error())
+	if _, err := t.service.Update(&tag); err != nil {
+		t.log.Error(err.Error())
 		http.Error(w, "Unable to save changes", http.StatusInternalServerError)
 		return
 	}
@@ -103,9 +102,9 @@ func (tc *TagsController) PostAdminTagsSlugHandler(w http.ResponseWriter, r *htt
 	http.Redirect(w, r, "/admin/tags", http.StatusSeeOther)
 }
 
-func (tc *TagsController) GetAdminTagsNewHandler(w http.ResponseWriter, r *http.Request) {
-	if err := tc.templateCache["new-tag.tmpl"].ExecuteTemplate(w, "base", nil); err != nil {
-		tc.log.Error(err.Error())
+func (t *TagController) GetAdminTagsNewHandler(w http.ResponseWriter, r *http.Request) {
+	if err := t.templateCache["new-tag.tmpl"].ExecuteTemplate(w, "base", nil); err != nil {
+		t.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}

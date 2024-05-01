@@ -15,13 +15,13 @@
       </tr>
     </thead>
     <tbody>
-      {{ range $article := .Articles }}
+      {{ range $article := . }}
 	<tr>
 	  <td>{{ $article.Id }}</td>
 	  <td><a href="/admin/articles/{{ $article.Slug }}">{{ $article.Title }}</a></td>
 	  <td>
-	    {{ range $id := $article.TagIds }}
-	      <a href="/admin/tags/{{ index $.Tags $id }}">{{ index $.Tags $id}}</a>
+	    {{ range $tag := $article.Tags }}
+	      <a href="/admin/tags/{{ $tag.Slug }}">{{ $tag.Name }}</a>
 	      <br>
 	    {{ end }}
 	  </td>

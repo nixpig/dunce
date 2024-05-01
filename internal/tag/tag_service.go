@@ -3,19 +3,18 @@ package tag
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/nixpig/dunce/pkg"
-	"github.com/nixpig/dunce/pkg/logging"
 )
 
 type TagService struct {
 	repo     pkg.Repository[Tag]
 	validate *validator.Validate
-	log      logging.Logger
+	log      pkg.Logger
 }
 
 func NewTagService(
 	repo pkg.Repository[Tag],
 	validate *validator.Validate,
-	log logging.Logger,
+	log pkg.Logger,
 ) TagService {
 	return TagService{
 		repo:     repo,

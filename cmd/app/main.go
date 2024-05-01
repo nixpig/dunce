@@ -5,10 +5,9 @@ import (
 	"os"
 
 	"github.com/nixpig/dunce/db"
-	app "github.com/nixpig/dunce/internal/app/server"
+	app "github.com/nixpig/dunce/internal/app"
 	"github.com/nixpig/dunce/internal/config"
-	"github.com/nixpig/dunce/pkg/templates"
-	"github.com/nixpig/dunce/pkg/validation"
+	"github.com/nixpig/dunce/pkg"
 )
 
 func main() {
@@ -29,7 +28,7 @@ func main() {
 
 	appConfig.Db = db.DB.Conn
 
-	validate, err := validation.NewValidator()
+	validate, err := pkg.NewValidator()
 	if err != nil {
 		log.Fatalf("unable to create validation: %v", err)
 		os.Exit(1)
@@ -37,13 +36,15 @@ func main() {
 
 	appConfig.Validator = validate
 
-	templateCache, err := templates.NewTemplateCache()
+	templateCache, err := pkg.NewTemplateCache()
 	if err != nil {
 		log.Fatalf("unable to build template cache: %v", err)
 		os.Exit(1)
 	}
 
 	appConfig.TemplateCache = templateCache
+
+	appConfig.Logger = pkg.NewLogger()
 
 	appConfig.Port = config.Get("WEB_PORT")
 
