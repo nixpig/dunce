@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS articles_ (
 
 CREATE TABLE IF NOT EXISTS article_tags_ (
     id_ integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    article_id_ integer references articles_(id_) NOT NULL,
+    article_id_ integer,
     tag_id_ integer references tags_(id_) NOT NULL
 );
 

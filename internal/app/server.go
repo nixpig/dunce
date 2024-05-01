@@ -34,7 +34,7 @@ func Start(appConfig AppConfig) error {
 	mux.HandleFunc("GET /admin/tags/new", tagController.GetAdminTagsNewHandler)
 	mux.HandleFunc("GET /admin/tags/{slug}", tagController.GetAdminTagsSlugHandler)
 	mux.HandleFunc("POST /admin/tags/{slug}", tagController.PostAdminTagsSlugHandler)
-	mux.HandleFunc("DELETE /admin/tags/{slug}", tagController.DeleteAdminTagsSlugHandler)
+	mux.HandleFunc("POST /admin/tags/{slug}/delete", tagController.DeleteAdminTagsSlugHandler)
 
 	articleRepository := article.NewArticleRepository(appConfig.Db, appConfig.Logger)
 	articleService := article.NewArticleService(articleRepository, appConfig.Validator, appConfig.Logger)
@@ -44,7 +44,8 @@ func Start(appConfig AppConfig) error {
 	mux.HandleFunc("GET /admin/articles", articleController.GetAllHandler)
 	mux.HandleFunc("GET /admin/articles/new", articleController.NewHandler)
 	mux.HandleFunc("GET /admin/articles/{slug}", articleController.GetBySlugHander)
-	// mux.HandleFunc("POST /admin/articles/{slug}", articlesController.UpdateHandler)
+	mux.HandleFunc("POST /admin/articles/{slug}", articleController.UpdateHandler)
+	mux.HandleFunc("POST /admin/articles/{slug}/delete", articleController.AdminArticlesDeleteHandler)
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%v", appConfig.Port),

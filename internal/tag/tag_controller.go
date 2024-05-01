@@ -41,13 +41,17 @@ func (t *TagController) DeleteAdminTagsSlugHandler(w http.ResponseWriter, r *htt
 	id, err := strconv.Atoi(r.FormValue("id"))
 	if err != nil {
 		t.log.Error(err.Error())
-		w.Write([]byte(err.Error()))
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
 	}
 
 	if err := t.service.DeleteById(id); err != nil {
 		t.log.Error(err.Error())
-		w.Write([]byte(err.Error()))
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
 	}
+
+	http.Redirect(w, r, "/admin/tags", http.StatusSeeOther)
 }
 
 func (t *TagController) GetAdminTagsHandler(w http.ResponseWriter, r *http.Request) {

@@ -1,44 +1,44 @@
-{{ define "title" }}Edit article '{{ .Title }}'{{ end }}
+{{ define "title" }}Edit article '{{ .Article.Title }}'{{ end }}
 
 {{ define "main" }}
   <hr>
 
-  <form name="new_article" method="POST" action="/admin/articles/{{ .Slug }}">
-    <input type="hidden" name="id" value="{{ .Id }}">
+  <form name="new-article" method="POST" action="/admin/articles/{{ .Article.Slug }}">
+    <input type="hidden" name="id" value="{{ .Article.Id }}">
 
     <label for="title">Title</label>
-    <input type="text" id="title" name="title" value="{{ .Title }}">
+    <input type="text" id="title" name="title" value="{{ .Article.Title }}">
 
     <label for="subtitle">Subtitle</label>
-    <input type="text" id="subtitle" name="subtitle" value="{{ .Subtitle }}">
+    <input type="text" id="subtitle" name="subtitle" value="{{ .Article.Subtitle }}">
 
     <label for="slug">Slug</label>
-    <input type="text" id="slug" name="slug" value="{{ .Slug }}">
+    <input type="text" id="slug" name="slug" value="{{ .Article.Slug }}">
 
 
     <label for="created_at">Created / Updated</label>
-    <input disabled type="text" id="view_created_at" name="view_created_at" value="{{ .CreatedAt }}">
-    <input type="hidden" id="created_at" name="created_at" value="{{ .CreatedAt }}">
+    <input disabled type="text" id="view_created_at" name="view_created_at" value="{{ .Article.CreatedAt }}">
+    <input type="hidden" id="created_at" name="created_at" value="{{ .Article.CreatedAt }}">
 
-    <input disabled type="text" id="updated_at" value="{{ .UpdatedAt }}">
+    <input disabled type="text" id="updated_at" value="{{ .Article.UpdatedAt }}">
 
     <label for="body">Article</label>
-    <textarea id="body" name="body">{{ .Body }}</textarea>
+    <textarea id="body" name="body">{{ .Article.Body }}</textarea>
     
 
 
     <label for="tags">Tags</label>
     <select id="tags" name="tags[]" multiple>
-      {{ range $tagId, $tagName := .Tags }}
+      {{ range $tag := .Tags }}
 	<option 
-	  value="{{ $tagId }}"
-	  {{ range $articleTag := $.Tags }}
-	    {{ if eq $tagId $articleTag.Id }}
+	  value="{{ $tag.Id }}"
+	  {{ range $articleTag := $.Article.Tags }}
+	    {{ if eq $tag.Id $articleTag.Id }}
 	      selected
 	    {{ end }}
 	  {{ end }}
 	>
-	  {{ $tagName }}
+	  {{ $tag.Name }}
 	</option>
       {{ end }}
     </select>
@@ -46,6 +46,12 @@
     <div>
       <button type="submit">Update article</button>
     </div>
+  </form>
+
+  <form name="delete-article" method="POST" action="/admin/articles/{{ .Article.Slug }}/delete">
+    <input type="hidden" name="id" value="{{ .Article.Id }}">
+
+    <button type="submit">Delete article</button>
   </form>
 
 {{ end }}

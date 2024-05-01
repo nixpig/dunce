@@ -24,6 +24,14 @@ func NewArticleRepository(db db.Dbconn, log pkg.Logger) ArticleRepository {
 }
 
 func (a ArticleRepository) DeleteById(id int) error {
+	query := `delete from articles_ a using article_tags_ t where a.id_ = t.article_id_ and a.id_ = $1`
+
+	_, err := a.db.Exec(context.Background(), query, id)
+	if err != nil {
+		a.log.Error(err.Error())
+		return err
+	}
+
 	return nil
 }
 
@@ -136,15 +144,20 @@ func (a ArticleRepository) GetAll() (*[]Article, error) {
 
 		articleTagIds := strings.Split(articleTagIdsConcat, ",")
 
-		for _, i := range articleTagIds {
-			id, err := strconv.Atoi(i)
+		articleTags := make([]tag.Tag, len(articleTagIds))
+
+		for index, articleTagId := range articleTagIds {
+			id, err := strconv.Atoi(articleTagId)
 			if err != nil {
 				a.log.Error(err.Error())
 				return nil, err
 			}
 
-			article.Tags = append(article.Tags, tagList[id])
+			articleTags[index] = tagList[id]
+
 		}
+
+		article.Tags = articleTags
 
 		articles = append(articles, article)
 	}
@@ -258,6 +271,7 @@ func (a ArticleRepository) Update(article *Article) (*Article, error) {
 		}
 	}()
 
+	// FIXME: this doesn't seem right... check out 11 lines below
 	for range updatedArticle.Tags {
 		var updatedTagId int
 

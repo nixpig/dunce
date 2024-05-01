@@ -87,7 +87,7 @@ var mockTemplateCache = map[string]*template.Template{
 }
 
 func TestTagsControllerNewHandler(t *testing.T) {
-	scenarios := map[string]func(t *testing.T, ctrl TagsController){
+	scenarios := map[string]func(t *testing.T, ctrl TagController){
 		"test handle get new tag":  testGetAdminTagsNewHandler,
 		"test handle get all tags": testGetAdminTagsHandler,
 	}
@@ -102,7 +102,7 @@ func TestTagsControllerNewHandler(t *testing.T) {
 
 }
 
-func testGetAdminTagsNewHandler(t *testing.T, ctrl TagsController) {
+func testGetAdminTagsNewHandler(t *testing.T, ctrl TagController) {
 	req, err := http.NewRequest("GET", "/admin/tags/create", nil)
 	if err != nil {
 		t.Fatal("failed to construct request", err)
@@ -120,7 +120,7 @@ func testGetAdminTagsNewHandler(t *testing.T, ctrl TagsController) {
 }
 
 // FIXME: this doesn't really test anything
-func testGetAdminTagsHandler(t *testing.T, ctrl TagsController) {
+func testGetAdminTagsHandler(t *testing.T, ctrl TagController) {
 	mockService.On("GetAll").Return(&[]Tag{
 		{
 			Id:   23,

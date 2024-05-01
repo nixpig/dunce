@@ -11,7 +11,7 @@ import (
 )
 
 func TestArticleDataCreate(t *testing.T) {
-	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface, data ArticleData){
+	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface, data ArticleRepository){
 		"test create new article": testCreateNewArticle,
 	}
 
@@ -22,14 +22,14 @@ func TestArticleDataCreate(t *testing.T) {
 				t.Fatal("unable to create database mock")
 			}
 
-			data := NewArticleData(mock, logging.NewLogger())
+			data := NewArticleRepository(mock, logging.NewLogger())
 
 			fn(t, mock, data)
 		})
 	}
 }
 
-func testCreateNewArticle(t *testing.T, mock pgxmock.PgxPoolIface, data ArticleData) {
+func testCreateNewArticle(t *testing.T, mock pgxmock.PgxPoolIface, data ArticleRepository) {
 	articleInsertQuery := `insert into articles_ (title_, subtitle_, slug_, body_, created_at_, updated_at_) values ($1, $2, $3, $4, $5, $6) returning id_, title_, subtitle_, slug_, body_, created_at_, updated_at_`
 	// tagInsertQuery := `insert into article_tags_ (article_id_, tag_id_) values ($1, $2) returning (tag_id_)`
 

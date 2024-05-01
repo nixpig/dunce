@@ -6,7 +6,7 @@ import (
 )
 
 type ArticleService struct {
-	data     pkg.Repository[Article]
+	repo     pkg.Repository[Article]
 	validate *validator.Validate
 	log      pkg.Logger
 }
@@ -17,18 +17,18 @@ func NewArticleService(
 	log pkg.Logger,
 ) ArticleService {
 	return ArticleService{
-		data:     data,
+		repo:     data,
 		validate: validator,
 		log:      log,
 	}
 }
 
 func (a ArticleService) DeleteById(id int) error {
-	return nil
+	return a.repo.DeleteById(id)
 }
 
 func (a ArticleService) Create(article *Article) (*Article, error) {
-	createdArticle, err := a.data.Create(article)
+	createdArticle, err := a.repo.Create(article)
 	if err != nil {
 		a.log.Error(err.Error())
 		return nil, err
@@ -38,7 +38,7 @@ func (a ArticleService) Create(article *Article) (*Article, error) {
 }
 
 func (a ArticleService) GetAll() (*[]Article, error) {
-	articles, err := a.data.GetAll()
+	articles, err := a.repo.GetAll()
 	if err != nil {
 		a.log.Error(err.Error())
 		return nil, err
@@ -48,7 +48,7 @@ func (a ArticleService) GetAll() (*[]Article, error) {
 }
 
 func (a ArticleService) GetBySlug(slug string) (*Article, error) {
-	article, err := a.data.GetBySlug(slug)
+	article, err := a.repo.GetBySlug(slug)
 	if err != nil {
 		a.log.Error(err.Error())
 		return nil, err
@@ -58,7 +58,7 @@ func (a ArticleService) GetBySlug(slug string) (*Article, error) {
 }
 
 func (a ArticleService) Update(article *Article) (*Article, error) {
-	updatedArticle, err := a.data.Update(article)
+	updatedArticle, err := a.repo.Update(article)
 	if err != nil {
 		a.log.Error(err.Error())
 		return nil, err

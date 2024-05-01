@@ -17,4 +17,11 @@
     <br>
     <button type="submit">Update tag</button>
   </form>
+
+  <form name="delete-tag" method="POST" action="/admin/tags/{{ .Slug }}/delete">
+    <input type="hidden" name="id" value="{{ .Id }}">
+
+    <button type="submit">Delete tag</button>
+  </form>
+
 {{ end }}

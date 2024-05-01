@@ -42,12 +42,7 @@ func (t TagService) Create(tag *Tag) (*Tag, error) {
 }
 
 func (t TagService) DeleteById(id int) error {
-	if err := t.repo.DeleteById(id); err != nil {
-		t.log.Error(err.Error())
-		return err
-	}
-
-	return nil
+	return t.repo.DeleteById(id)
 }
 
 func (t TagService) GetAll() (*[]Tag, error) {
