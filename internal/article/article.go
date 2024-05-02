@@ -17,6 +17,16 @@ type Article struct {
 	Tags      []tag.Tag `validate:"required"`
 }
 
+type ArticleNew struct {
+	Title     string    `validate:"required,max=255"`
+	Subtitle  string    `validate:"required,max=255"`
+	Slug      string    `validate:"required,min=2,max=50"`
+	Body      string    `validate:"required"`
+	CreatedAt time.Time `validate:"required"`
+	UpdatedAt time.Time `validate:"required"`
+	TagIds    []int     `validate:"required"`
+}
+
 type ArticleTag struct {
 	Id        int
 	ArticleId int

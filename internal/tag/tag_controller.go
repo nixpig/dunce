@@ -9,13 +9,13 @@ import (
 )
 
 type TagController struct {
-	service       pkg.Service[Tag]
+	service       pkg.Service[Tag, TagData]
 	log           pkg.Logger
 	templateCache map[string]*template.Template
 }
 
 func NewTagController(
-	service pkg.Service[Tag],
+	service pkg.Service[Tag, TagData],
 	log pkg.Logger,
 	templateCache map[string]*template.Template,
 ) TagController {
@@ -27,7 +27,10 @@ func NewTagController(
 }
 
 func (t *TagController) PostAdminTagsHandler(w http.ResponseWriter, r *http.Request) {
-	tag := NewTag(r.FormValue("name"), r.FormValue("slug"))
+	tag := TagData{
+		Name: r.FormValue("name"),
+		Slug: r.FormValue("slug"),
+	}
 
 	if _, err := t.service.Create(&tag); err != nil {
 		t.log.Error(err.Error())
@@ -92,11 +95,13 @@ func (t *TagController) PostAdminTagsSlugHandler(w http.ResponseWriter, r *http.
 		http.Error(w, "Invalid tag ID", http.StatusBadRequest)
 	}
 
-	tag := NewTagWithId(
-		id,
-		r.FormValue("name"),
-		r.FormValue("slug"),
-	)
+	tag := Tag{
+		Id: id,
+		TagData: TagData{
+			Name: r.FormValue("name"),
+			Slug: r.FormValue("slug"),
+		},
+	}
 	if _, err := t.service.Update(&tag); err != nil {
 		t.log.Error(err.Error())
 		http.Error(w, "Unable to save changes", http.StatusInternalServerError)

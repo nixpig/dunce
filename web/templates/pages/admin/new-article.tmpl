@@ -18,8 +18,8 @@
 
     <label for="tags">Tags</label>
     <select id="tags" name="tags[]" multiple>
-      {{ range $tagId, $tagName := .Tags }}
-	<option value="{{ $tagId }}">{{ $tagName }}</option>
+      {{ range $tag := . }}
+	<option value="{{ $tag.Id }}">{{ $tag.Name }}</option>
       {{ end }}
     </select>
 

@@ -35,9 +35,9 @@ func (a ArticleRepository) DeleteById(id int) error {
 	return nil
 }
 
-func (a ArticleRepository) Create(article *Article) (*Article, error) {
+func (a ArticleRepository) Create(article *ArticleNew) (*Article, error) {
 	articleInsertQuery := `insert into articles_ (title_, subtitle_, slug_, body_, created_at_, updated_at_) values ($1, $2, $3, $4, $5, $6) returning id_, title_, subtitle_, slug_, body_, created_at_, updated_at_`
-	tagInsertQuery := `insert into article_tags_ (article_id_, tag_id_) values ($1, $2) with tag as (select id_, name_, slug_ from tags_ where id_ = $2)`
+	tagInsertQuery := `with tags as (select id_, name_, slug_ from tags_ where id_ = $2), article_tags as (insert into article_tags_ (article_id_, tag_id_) values ($1, $2)) select id_, name_, slug_ from tags`
 
 	tx, err := a.db.Begin(context.Background())
 	if err != nil {
@@ -56,8 +56,8 @@ func (a ArticleRepository) Create(article *Article) (*Article, error) {
 
 	batch := &pgx.Batch{}
 
-	for _, t := range article.Tags {
-		batch.Queue(tagInsertQuery, createdArticle.Id, t.Id)
+	for _, t := range article.TagIds {
+		batch.Queue(tagInsertQuery, createdArticle.Id, t)
 	}
 
 	br := tx.SendBatch(context.Background(), batch)
@@ -79,7 +79,7 @@ func (a ArticleRepository) Create(article *Article) (*Article, error) {
 		}
 	}()
 
-	for range article.Tags {
+	for range article.TagIds {
 		// FIXME: br isn't currently mockable, so doing this nil check to skip in tests
 		if br != nil {
 			var addedTag tag.Tag
@@ -201,7 +201,7 @@ func (a ArticleRepository) GetBySlug(slug string) (*Article, error) {
 	return &article, nil
 }
 
-func (a ArticleRepository) Exists(article *Article) (bool, error) {
+func (a ArticleRepository) Exists(article *ArticleNew) (bool, error) {
 	return false, nil
 }
 

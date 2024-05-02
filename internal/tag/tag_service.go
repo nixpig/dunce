@@ -6,13 +6,13 @@ import (
 )
 
 type TagService struct {
-	repo     pkg.Repository[Tag]
+	repo     pkg.Repository[Tag, TagData]
 	validate *validator.Validate
 	log      pkg.Logger
 }
 
 func NewTagService(
-	repo pkg.Repository[Tag],
+	repo pkg.Repository[Tag, TagData],
 	validate *validator.Validate,
 	log pkg.Logger,
 ) TagService {
@@ -23,7 +23,7 @@ func NewTagService(
 	}
 }
 
-func (t TagService) Create(tag *Tag) (*Tag, error) {
+func (t TagService) Create(tag *TagData) (*Tag, error) {
 	// TODO: make slug lowercase
 	// TODO: custom validator for tag name
 

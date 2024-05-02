@@ -14,8 +14,7 @@
   </head>
 
   <body>
-      <header style="display: flex;">
-	<h1 style="text-align: right; justify-content: center; align-items: center;">{{ template "title" . }}</h1>
+      <header style="">
 	<nav style="flex-grow: 1; text-align: right; justify-content: center; align-items: center; align-content: center;">
 	  <ul>
 	    <li style="display: inline;"><a href="/admin">Admin</a></li>
@@ -25,8 +24,10 @@
 	    <li style="display: inline;"><a href="/admin/tags">Tags</a></li>
 	  </ul>
 	</nav>
+	<h1 style="">{{ template "title" . }}</h1>
       </header>
       
+      <hr>
 
       <main>
 	      {{ template "main" . }}

@@ -14,15 +14,15 @@ import (
 const longFormat = "2006-01-02 15:04:05.999999999 -0700 MST"
 
 type ArticleController struct {
-	service       pkg.Service[Article]
-	tagService    pkg.Service[tag.Tag]
+	service       pkg.Service[Article, ArticleNew]
+	tagService    pkg.Service[tag.Tag, tag.TagData]
 	log           pkg.Logger
 	templateCache map[string]*template.Template
 }
 
 func NewArticleController(
-	service pkg.Service[Article],
-	tagsService pkg.Service[tag.Tag],
+	service pkg.Service[Article, ArticleNew],
+	tagsService pkg.Service[tag.Tag, tag.TagData],
 	log pkg.Logger,
 	templateCache map[string]*template.Template,
 ) ArticleController {
@@ -35,44 +35,44 @@ func NewArticleController(
 }
 
 func (a *ArticleController) CreateHandler(w http.ResponseWriter, r *http.Request) {
-	// if err := r.ParseForm(); err != nil {
-	// 	ac.log.Error(err.Error())
-	// 	http.Error(w, "Bad Request", http.StatusBadRequest)
-	// 	return
-	// }
-	//
-	// tagsForm := r.Form["tags[]"]
-	//
-	// var tagIds []int
-	//
-	// for _, t := range tagsForm {
-	// 	tagId, err := strconv.Atoi(t)
-	// 	if err != nil {
-	// 		ac.log.Error(err.Error())
-	// 		http.Error(w, "Unable to parse tags to ints", http.StatusInternalServerError)
-	// 		return
-	// 	}
-	//
-	// 	tagIds = append(tagIds, tagId)
-	// }
-	//
-	// article := NewArticle(
-	// 	r.FormValue("title"),
-	// 	r.FormValue("subtitle"),
-	// 	r.FormValue("slug"),
-	// 	r.FormValue("body"),
-	// 	time.Now(),
-	// 	time.Now(),
-	// 	tagIds,
-	// )
-	//
-	// if _, err := ac.service.Create(&article); err != nil {
-	// 	ac.log.Error(err.Error())
-	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-	// 	return
-	// }
-	//
-	// http.Redirect(w, r, "/admin/articles", http.StatusSeeOther)
+	if err := r.ParseForm(); err != nil {
+		a.log.Error(err.Error())
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
+	tagsForm := r.Form["tags[]"]
+
+	tagIds := make([]int, len(tagsForm))
+
+	for i, t := range tagsForm {
+		tagId, err := strconv.Atoi(t)
+		if err != nil {
+			a.log.Error(err.Error())
+			http.Error(w, "Unable to parse tags to ints", http.StatusInternalServerError)
+			return
+		}
+
+		tagIds[i] = tagId
+	}
+
+	article := ArticleNew{
+		Title:     r.FormValue("title"),
+		Subtitle:  r.FormValue("subtitle"),
+		Slug:      r.FormValue("slug"),
+		Body:      r.FormValue("body"),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		TagIds:    tagIds,
+	}
+
+	if _, err := a.service.Create(&article); err != nil {
+		a.log.Error(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/admin/articles", http.StatusSeeOther)
 }
 
 func (a *ArticleController) GetAllHandler(w http.ResponseWriter, r *http.Request) {
@@ -91,7 +91,14 @@ func (a *ArticleController) GetAllHandler(w http.ResponseWriter, r *http.Request
 }
 
 func (a *ArticleController) NewHandler(w http.ResponseWriter, r *http.Request) {
-	if err := a.templateCache["new-article.tmpl"].ExecuteTemplate(w, "base", nil); err != nil {
+	availableTags, err := a.tagService.GetAll()
+	if err != nil {
+		a.log.Error(err.Error())
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	if err := a.templateCache["new-article.tmpl"].ExecuteTemplate(w, "base", availableTags); err != nil {
 		a.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return

@@ -40,7 +40,7 @@ func Start(appConfig AppConfig) error {
 	articleService := article.NewArticleService(articleRepository, appConfig.Validator, appConfig.Logger)
 	articleController := article.NewArticleController(articleService, tagService, appConfig.Logger, appConfig.TemplateCache)
 
-	// mux.HandleFunc("POST /admin/articles", articlesController.CreateHandler)
+	mux.HandleFunc("POST /admin/articles", articleController.CreateHandler)
 	mux.HandleFunc("GET /admin/articles", articleController.GetAllHandler)
 	mux.HandleFunc("GET /admin/articles/new", articleController.NewHandler)
 	mux.HandleFunc("GET /admin/articles/{slug}", articleController.GetBySlugHander)

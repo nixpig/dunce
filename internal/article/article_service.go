@@ -6,13 +6,13 @@ import (
 )
 
 type ArticleService struct {
-	repo     pkg.Repository[Article]
+	repo     pkg.Repository[Article, ArticleNew]
 	validate *validator.Validate
 	log      pkg.Logger
 }
 
 func NewArticleService(
-	data pkg.Repository[Article],
+	data pkg.Repository[Article, ArticleNew],
 	validator *validator.Validate,
 	log pkg.Logger,
 ) ArticleService {
@@ -27,7 +27,7 @@ func (a ArticleService) DeleteById(id int) error {
 	return a.repo.DeleteById(id)
 }
 
-func (a ArticleService) Create(article *Article) (*Article, error) {
+func (a ArticleService) Create(article *ArticleNew) (*Article, error) {
 	createdArticle, err := a.repo.Create(article)
 	if err != nil {
 		a.log.Error(err.Error())

@@ -19,7 +19,7 @@ func NewTagRepository(db db.Dbconn, log pkg.Logger) TagRepository {
 	}
 }
 
-func (t TagRepository) Create(tag *Tag) (*Tag, error) {
+func (t TagRepository) Create(tag *TagData) (*Tag, error) {
 	query := `insert into tags_ (name_, slug_) values ($1, $2) returning id_, name_, slug_`
 
 	var createdTag Tag
@@ -46,7 +46,7 @@ func (t TagRepository) DeleteById(id int) error {
 	return nil
 }
 
-func (t TagRepository) Exists(tag *Tag) (bool, error) {
+func (t TagRepository) Exists(tag *TagData) (bool, error) {
 	checkDuplicatesQuery := `select count(*) from tags_ where slug_ = $1`
 
 	var duplicateCount int

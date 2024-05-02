@@ -16,7 +16,7 @@ type MockTagService struct {
 	mock.Mock
 }
 
-func (s *MockTagService) Create(tag *Tag) (*Tag, error) {
+func (s *MockTagService) Create(tag *TagData) (*Tag, error) {
 	args := s.Called(tag)
 
 	return args.Get(0).(*Tag), args.Error(1)
@@ -123,14 +123,18 @@ func testGetAdminTagsNewHandler(t *testing.T, ctrl TagController) {
 func testGetAdminTagsHandler(t *testing.T, ctrl TagController) {
 	mockService.On("GetAll").Return(&[]Tag{
 		{
-			Id:   23,
-			Name: "Go",
-			Slug: "golang",
+			Id: 23,
+			TagData: TagData{
+				Name: "Go",
+				Slug: "golang",
+			},
 		},
 		{
-			Id:   69,
-			Name: "Rust",
-			Slug: "rust-lang",
+			Id: 69,
+			TagData: TagData{
+				Name: "Rust",
+				Slug: "rust-lang",
+			},
 		},
 	}, nil)
 
