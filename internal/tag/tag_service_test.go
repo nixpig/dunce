@@ -9,11 +9,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type MockTagData struct {
+type MockTagRepository struct {
 	mock.Mock
 }
 
-func (m *MockTagData) Create(tag *TagData) (*Tag, error) {
+func (m *MockTagRepository) Create(tag *TagData) (*Tag, error) {
 	args := m.Called(tag)
 
 	if args.Get(0) == nil {
@@ -23,25 +23,25 @@ func (m *MockTagData) Create(tag *TagData) (*Tag, error) {
 	return args.Get(0).(*Tag), args.Error(1)
 }
 
-func (m *MockTagData) DeleteById(id int) error {
+func (m *MockTagRepository) DeleteById(id int) error {
 	args := m.Called(id)
 
 	return args.Error(0)
 }
 
-func (m *MockTagData) Exists(tag *TagData) (bool, error) {
+func (m *MockTagRepository) Exists(tag *TagData) (bool, error) {
 	args := m.Called(tag)
 
 	return args.Get(0).(bool), args.Error(1)
 }
 
-func (m *MockTagData) GetAll() (*[]Tag, error) {
+func (m *MockTagRepository) GetAll() (*[]Tag, error) {
 	args := m.Called()
 
 	return args.Get(0).(*[]Tag), args.Error(1)
 }
 
-func (m *MockTagData) GetBySlug(slug string) (*Tag, error) {
+func (m *MockTagRepository) GetBySlug(slug string) (*Tag, error) {
 	args := m.Called(slug)
 
 	if args.Get(0) == nil {
@@ -51,13 +51,13 @@ func (m *MockTagData) GetBySlug(slug string) (*Tag, error) {
 	return args.Get(0).(*Tag), args.Error(1)
 }
 
-func (m *MockTagData) Update(tag *Tag) (*Tag, error) {
+func (m *MockTagRepository) Update(tag *Tag) (*Tag, error) {
 	args := m.Called(tag)
 
 	return args.Get(0).(*Tag), args.Error(1)
 }
 
-var mockData = new(MockTagData)
+var mockData = new(MockTagRepository)
 
 var validate, _ = pkg.NewValidator()
 
