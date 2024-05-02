@@ -3,6 +3,10 @@
 {{ end }}
 
 {{ define "main" }}
+  <div style="display: flex; align-items: flex-end;">
+    <h1 style="flex-grow: 1;">{{ template "title" . }}</h1>
+  </div>
+
   <hr>
 
   <form name="edit-tag" method="POST">

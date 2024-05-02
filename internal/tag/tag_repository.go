@@ -2,6 +2,7 @@ package tag
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/nixpig/dunce/db"
 	"github.com/nixpig/dunce/pkg"
@@ -114,6 +115,7 @@ func (t TagRepository) Update(tag *Tag) (*Tag, error) {
 	var updatedTag Tag
 
 	if err := row.Scan(&updatedTag.Id, &updatedTag.Name, &updatedTag.Slug); err != nil {
+		fmt.Println(" >>> what's fucked up here????", err)
 		t.log.Error(err.Error())
 		return nil, err
 	}

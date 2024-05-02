@@ -1,7 +1,12 @@
 {{ define "title" }}Tags{{ end }}
 
 {{ define "main" }}
-  <a class="button" href="/admin/tags/new">+ New tag</a>
+  <div style="display: flex; align-items: flex-end;">
+    <h1 style="flex-grow: 1;">{{ template "title" . }}</h1>
+    <div>
+      <a class="button" href="/admin/tags/new">+ New tag</a>
+    </div>
+  </div>
 
   <hr>
 

@@ -15,22 +15,24 @@
 
   <body>
       <header style="">
-	<nav style="flex-grow: 1; text-align: right; justify-content: center; align-items: center; align-content: center;">
-	  <ul>
-	    <li style="display: inline;"><a href="/admin">Admin</a></li>
-	    |
-	    <li style="display: inline;"><a href="/admin/articles">Articles</a></li>
-	    |
-	    <li style="display: inline;"><a href="/admin/tags">Tags</a></li>
-	  </ul>
-	</nav>
-	<h1 style="">{{ template "title" . }}</h1>
+	<div style="display: flex; align-items: center; ">
+	  <div>
+	    <a href="/" style="font-size: 3rem; font-weight: bold;">nixpig.dev</a>
+	  </div>
+	  <nav style="flex-grow: 1; text-align: right;">
+	    <ul style="margin: 0;">
+	      <li style="display: inline;"><a href="/admin">Admin</a></li>
+	      |
+	      <li style="display: inline;"><a href="/admin/articles">Articles</a></li>
+	      |
+	      <li style="display: inline;"><a href="/admin/tags">Tags</a></li>
+	    </ul>
+	  </nav>
+	</div>
       </header>
-      
-      <hr>
 
       <main>
-	      {{ template "main" . }}
+	    {{ template "main" . }}
       </main>
 
       <footer style="margin-top: 20px; padding: 10px 0; border-top: 1px solid; display: flex;">

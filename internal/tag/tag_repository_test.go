@@ -10,22 +10,36 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestTagRepositoryUpdate(t *testing.T) {
+func TestTagRepository(t *testing.T) {
 	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface, repo TagRepository){
+		// create
 		"successfully creates new tag":            testCreateValidTag,
 		"fails to create new tag on db row error": testFailCreateTagOnRowError,
 		"fails to create new tag on db error":     testFailCreateTagOnDbError,
-		"get existing tag by slug":                testGetExistingTagBySlug,
-		"get non-existent tag by slug":            testGetNonExistentTagBySlug,
-		"get all (multiple results)":              testGetAllTagsMultipleResults,
-		"get all (no results)":                    testGetAllTagsNoResults,
-		"get all (single result)":                 testGetAllTagsSingleResult,
-		"update tag":                              testTagDataUpdateTag,
-		"delete existing tag":                     testDeleteExistingTag,
-		"delete non-existing tag":                 testDeleteNonExistingTag,
-		"check existing tag exists":               testTagExists,
-		"check existing tag not exists":           testTagNotExists,
-		"check existing tag error":                testTagExistsError,
+
+		// getbyslug
+		"get existing tag by slug":     testGetExistingTagBySlug,
+		"get non-existent tag by slug": testGetNonExistentTagBySlug,
+
+		// getall
+		"get all (multiple results)": testGetAllTagsMultipleResults,
+		"get all (no results)":       testGetAllTagsNoResults,
+		"get all (single result)":    testGetAllTagsSingleResult,
+		"get all db query error":     testGetAllDbQueryError,
+		"get all db row error":       testGetAllDbRowError,
+
+		// update
+		"update tag":              testTagDataUpdateTag,
+		"update tag db row error": testTagUpdateRowError,
+
+		// delete
+		"delete existing tag":     testDeleteExistingTag,
+		"delete non-existing tag": testDeleteNonExistingTag,
+
+		// exists
+		"check existing tag exists":     testTagExists,
+		"check existing tag not exists": testTagNotExists,
+		"check existing tag error":      testTagExistsError,
 	}
 
 	for scenario, fn := range scenarios {
@@ -37,10 +51,7 @@ func TestTagRepositoryUpdate(t *testing.T) {
 
 			defer db.Close()
 
-			repo := TagRepository{
-				db:  db,
-				log: pkg.NewLogger(),
-			}
+			repo := NewTagRepository(db, pkg.NewLogger())
 
 			fn(t, db, repo)
 		})
@@ -380,5 +391,67 @@ func testFailCreateTagOnDbError(t *testing.T, mock pgxmock.PgxPoolIface, repo Ta
 
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Fatal("expectations were not met")
+	}
+}
+
+func testGetAllDbQueryError(t *testing.T, mock pgxmock.PgxPoolIface, repo TagRepository) {
+	query := `select id_, name_, slug_ from tags_`
+
+	mock.ExpectQuery(query).WillReturnError(errors.New("db_error"))
+
+	tags, err := repo.GetAll()
+
+	require.Nil(t, tags, "should not return tags")
+
+	require.EqualError(t, err, "db_error", "should return db error")
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal("mock expectations were not met")
+	}
+}
+
+func testGetAllDbRowError(t *testing.T, mock pgxmock.PgxPoolIface, repo TagRepository) {
+	query := `select id_, name_, slug_ from tags_`
+
+	errorRow := mock.
+		NewRows([]string{"id_", "name_", "slug_"}).
+		AddRow("foo", "bar", "baz")
+
+	mock.ExpectQuery(query).WillReturnRows(errorRow)
+
+	tags, err := repo.GetAll()
+
+	require.Empty(t, tags, "should not return tags")
+
+	require.Error(t, err, "should return row error")
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal("mock expectations were not met")
+	}
+}
+
+func testTagUpdateRowError(t *testing.T, mock pgxmock.PgxPoolIface, repo TagRepository) {
+	query := `update tags_ set name_ = $2, slug_ = $3 where id_ = $1 returning id_, name_, slug_`
+
+	mock.
+		ExpectQuery(regexp.QuoteMeta(query)).
+		WithArgs(23, "tagname", "tag-slug").
+		WillReturnError(errors.New("some_row_error"))
+
+	tagUpdate := Tag{
+		Id: 23,
+		TagData: TagData{
+			Name: "tagname",
+			Slug: "tag-slug",
+		},
+	}
+
+	tag, err := repo.Update(&tagUpdate)
+
+	require.Empty(t, tag, "should not return data")
+	require.EqualError(t, err, "some_row_error")
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal("mock expectations were not met")
 	}
 }

@@ -122,17 +122,17 @@ func (a *ArticleController) GetBySlugHander(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	type SingleArticle struct {
-		Article Article
-		Tags    []tag.Tag
-	}
-
-	data := SingleArticle{
-		Article: *article,
-		Tags:    *allTags,
-	}
-
-	if err := a.templateCache["article.tmpl"].ExecuteTemplate(w, "base", data); err != nil {
+	if err := a.templateCache["article.tmpl"].ExecuteTemplate(
+		w,
+		"base",
+		struct {
+			Article Article
+			Tags    []tag.Tag
+		}{
+			Article: *article,
+			Tags:    *allTags,
+		},
+	); err != nil {
 		a.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return

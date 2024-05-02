@@ -1,7 +1,12 @@
 {{ define "title" }}Articles{{ end }}
 
 {{ define "main" }}
-  <a class="button" href="/admin/articles/new">+ New article</a>
+  <div style="display: flex; align-items: flex-end;">
+    <h1 style="flex-grow: 1;">{{ template "title" . }}</h1>
+    <div>
+      <a class="button" href="/admin/articles/new">+ New article</a>
+    </div>
+  </div>
 
   <hr>
 
@@ -20,10 +25,10 @@
 	  <td>{{ $article.Id }}</td>
 	  <td><a href="/admin/articles/{{ $article.Slug }}">{{ $article.Title }}</a></td>
 	  <td>
-	    {{ range $tag := $article.Tags }}
+	    {{ range $index, $tag := $article.Tags -}}
+	      {{ if ne $index 0 -}},{{- end }}
 	      <a href="/admin/tags/{{ $tag.Slug }}">{{ $tag.Name }}</a>
-	      <br>
-	    {{ end }}
+	    {{- end }}
 	  </td>
 	  <td>{{ $article.UpdatedAt.Format "2006-01-02" }}</td>
 	</tr>
