@@ -13,10 +13,6 @@ func NewValidator() (*validator.Validate, error) {
 		return nil, err
 	}
 
-	if err := validate.RegisterValidation("tagname", ValidateTagName); err != nil {
-		return nil, err
-	}
-
 	return validate, nil
 }
 
@@ -25,10 +21,4 @@ func validateSlug(slug validator.FieldLevel) bool {
 	slugRegex := regexp.MustCompile(slugRegexString)
 
 	return slugRegex.MatchString(slug.Field().String())
-}
-
-func ValidateTagName(tagName validator.FieldLevel) bool {
-	tagNameRegex := regexp.MustCompile(`^[\w\s]+$`)
-
-	return tagNameRegex.MatchString(tagName.Field().String())
 }

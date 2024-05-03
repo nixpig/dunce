@@ -6,6 +6,6 @@ type Tag struct {
 }
 
 type TagData struct {
-	Name string `validate:"required,tagname,min=2,max=30"`
+	Name string `validate:"required,min=2,max=30"`
 	Slug string `validate:"required,slug,min=2,max=50,lowercase"`
 }

@@ -64,11 +64,13 @@ var validate, _ = pkg.NewValidator()
 func TestTagService(t *testing.T) {
 	scenarios := map[string]func(t *testing.T, service TagService){
 		"update tag":                            testServiceUpdateTag,
+		"update tag (error from repo)":          testServiceUpdateTagRepoError,
 		"get by slug (tag exists)":              testServiceGetBySlugTagExists,
 		"get by slug (tag does not exist)":      testServiceGetBySlugTagDoesNotExist,
 		"get all (multiple results)":            testServiceGetAllTagsMultipleResults,
 		"get all (no results)":                  testServiceGetAllTagsNoResults,
 		"get all (single result)":               testServiceGetAllTagsSingleResult,
+		"get all (error from repo)":             testServiceGetAllTagsRepoError,
 		"successfully create valid tag":         testTagServiceCreateValidTag,
 		"fail to create invalid tag":            testTagServiceCreateInvalidTag,
 		"fail to update invalid tag":            testTagServiceUpdateInvalidTag,
@@ -414,4 +416,36 @@ func testServiceGetBySlugTagDoesNotExist(t *testing.T, service TagService) {
 
 	require.EqualError(t, err, "data_error", "should return error from data layer")
 	require.Nil(t, tag, "should not return tag")
+}
+
+func testServiceGetAllTagsRepoError(t *testing.T, service TagService) {
+	mockCall := mockData.On("GetAll").Return(&[]Tag{}, errors.New("getall_repo_error"))
+
+	tags, err := service.GetAll()
+
+	mockCall.Unset()
+	mockData.AssertExpectations(t)
+
+	require.EqualError(t, err, "getall_repo_error", "should return error from repo method call")
+	require.Nil(t, tags, "should not return any tags")
+}
+
+func testServiceUpdateTagRepoError(t *testing.T, service TagService) {
+	mockTagUpdate := Tag{
+		Id: 23,
+		TagData: TagData{
+			Name: "tag name",
+			Slug: "tag-slug",
+		},
+	}
+
+	mockCall := mockData.On("Update", &mockTagUpdate).Return(&Tag{}, errors.New("update_repo_error"))
+
+	tag, err := service.Update(&mockTagUpdate)
+
+	mockCall.Unset()
+	mockData.AssertExpectations(t)
+
+	require.EqualError(t, err, "update_repo_error", "should return error")
+	require.Nil(t, tag, "should not return/update a tag")
 }

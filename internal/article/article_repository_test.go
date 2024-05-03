@@ -1,6 +1,7 @@
 package article
 
 import (
+	"errors"
 	"regexp"
 	"testing"
 	"time"
@@ -12,7 +13,8 @@ import (
 
 func TestArticleDataCreate(t *testing.T) {
 	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface, data ArticleRepository){
-		"test create new article": testCreateNewArticle,
+		"test create new article":        testCreateNewArticle,
+		"test create fails on db errors": testCreateNewArticleFailsOnDbErrors,
 	}
 
 	for scenario, fn := range scenarios {
@@ -76,4 +78,23 @@ func testCreateNewArticle(t *testing.T, mock pgxmock.PgxPoolIface, data ArticleR
 		// TODO: add back once pgxmock supports batch
 		// TagIds: []int{4},
 	}, createdArticle, "should return created article data with id")
+}
+
+func testCreateNewArticleFailsOnDbErrors(t *testing.T, mock pgxmock.PgxPoolIface, data ArticleRepository) {
+	mock.ExpectBegin().WillReturnError(errors.New("db_begin_error"))
+
+	article, err := data.Create(&ArticleNew{
+		Title:     "title",
+		Subtitle:  "subtitle",
+		Slug:      "slug",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		TagIds:    []int{42, 69},
+	})
+
+	require.Nil(t, article, "should not return article")
+	require.EqualError(t, err, "db_begin_error", "should return db error")
+
+	mock.Reset()
+	mock.ExpectationsWereMet()
 }
