@@ -24,6 +24,7 @@ func NewArticleRepository(db db.Dbconn, log pkg.Logger) ArticleRepository {
 }
 
 func (a ArticleRepository) DeleteById(id int) error {
+	// FIXME: also needs to delete any tags from article_tags_ table
 	query := `delete from articles_ a using article_tags_ t where a.id_ = t.article_id_ and a.id_ = $1`
 
 	_, err := a.db.Exec(context.Background(), query, id)

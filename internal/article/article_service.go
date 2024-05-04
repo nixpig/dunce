@@ -1,6 +1,8 @@
 package article
 
 import (
+	"errors"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/nixpig/dunce/pkg"
 )
@@ -28,6 +30,12 @@ func (a ArticleService) DeleteById(id int) error {
 }
 
 func (a ArticleService) Create(article *ArticleNew) (*Article, error) {
+	if len(article.TagIds) == 0 {
+		minTagsError := errors.New("article must have at least one tag")
+		a.log.Error(minTagsError.Error())
+		return nil, minTagsError
+	}
+
 	createdArticle, err := a.repo.Create(article)
 	if err != nil {
 		a.log.Error(err.Error())
