@@ -1,28 +1,37 @@
 package tag
 
 import (
+	"fmt"
 	"html/template"
 	"net/http"
 	"strconv"
 
+	"github.com/alexedwards/scs/v2"
 	"github.com/nixpig/dunce/pkg"
 )
 
+type ControllerConfig struct {
+	Log            pkg.Logger
+	TemplateCache  map[string]*template.Template
+	SessionManager *scs.SessionManager
+}
+
 type TagController struct {
-	service       pkg.Service[Tag, TagData]
-	log           pkg.Logger
-	templateCache map[string]*template.Template
+	service        pkg.Service[Tag, TagData]
+	log            pkg.Logger
+	templateCache  map[string]*template.Template
+	sessionManager *scs.SessionManager
 }
 
 func NewTagController(
 	service pkg.Service[Tag, TagData],
-	log pkg.Logger,
-	templateCache map[string]*template.Template,
+	config ControllerConfig,
 ) TagController {
 	return TagController{
-		service:       service,
-		log:           log,
-		templateCache: templateCache,
+		service:        service,
+		log:            config.Log,
+		templateCache:  config.TemplateCache,
+		sessionManager: config.SessionManager,
 	}
 }
 
@@ -36,6 +45,8 @@ func (t *TagController) PostAdminTagsHandler(w http.ResponseWriter, r *http.Requ
 		t.log.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+
+	t.sessionManager.Put(r.Context(), "message", fmt.Sprintf("Created tag '%s'.", tag.Name))
 
 	http.Redirect(w, r, "/admin/tags", http.StatusSeeOther)
 }
@@ -54,6 +65,8 @@ func (t *TagController) DeleteAdminTagsSlugHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
+	t.sessionManager.Put(r.Context(), "message", fmt.Sprintf("Deleted tag '%s'.", r.FormValue("name")))
+
 	http.Redirect(w, r, "/admin/tags", http.StatusSeeOther)
 }
 
@@ -65,7 +78,19 @@ func (t *TagController) GetAdminTagsHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	err = t.templateCache["tags.tmpl"].ExecuteTemplate(w, "base", tags)
+	message := t.sessionManager.PopString(r.Context(), "message")
+
+	type tagTemplateView struct {
+		Message string
+		Tags    *[]Tag
+	}
+
+	data := tagTemplateView{
+		Message: message,
+		Tags:    tags,
+	}
+
+	err = t.templateCache["tags.tmpl"].ExecuteTemplate(w, "base", data)
 	if err != nil {
 		t.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -107,6 +132,8 @@ func (t *TagController) PostAdminTagsSlugHandler(w http.ResponseWriter, r *http.
 		http.Error(w, "Unable to save changes", http.StatusInternalServerError)
 		return
 	}
+
+	t.sessionManager.Put(r.Context(), "message", fmt.Sprintf("Updated tag '%s'.", tag.Name))
 
 	http.Redirect(w, r, "/admin/tags", http.StatusSeeOther)
 }

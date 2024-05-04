@@ -10,6 +10,14 @@
 
   <hr>
 
+  {{ if .Message }}
+    <div>
+      <blockquote>
+	{{ .Message }}
+      </blockquote>
+    </div>
+    {{ end }}
+
   <table>
     <thead>
       <tr>
@@ -19,7 +27,7 @@
       </tr>
     </thead>
     <tbody>
-      {{ range $tag := . }}
+      {{ range $tag := .Tags }}
 	<tr>
 	  <td>{{ $tag.Id }}</td>
 	  <td><a href="/admin/tags/{{ $tag.Slug }}">{{ $tag.Name}}</a></td>

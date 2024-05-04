@@ -29,7 +29,11 @@ func Start(appConfig AppConfig) error {
 
 	tagRepository := tag.NewTagRepository(appConfig.Db.Pool, appConfig.Logger)
 	tagService := tag.NewTagService(tagRepository, appConfig.Validator, appConfig.Logger)
-	tagController := tag.NewTagController(tagService, appConfig.Logger, appConfig.TemplateCache)
+	tagController := tag.NewTagController(tagService, tag.ControllerConfig{
+		TemplateCache:  appConfig.TemplateCache,
+		Log:            appConfig.Logger,
+		SessionManager: appConfig.SessionManager,
+	})
 
 	mux.HandleFunc("POST /admin/tags", tagController.PostAdminTagsHandler)
 	mux.HandleFunc("GET /admin/tags", tagController.GetAdminTagsHandler)

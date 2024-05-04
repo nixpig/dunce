@@ -24,6 +24,7 @@
 
   <form name="delete-tag" method="POST" action="/admin/tags/{{ .Slug }}/delete">
     <input type="hidden" name="id" value="{{ .Id }}">
+    <input type="hidden" name="name" value="{{ .Name }}">
 
     <button type="submit">Delete tag</button>
   </form>
