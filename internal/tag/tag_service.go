@@ -55,8 +55,8 @@ func (t TagService) GetAll() (*[]Tag, error) {
 	return tags, nil
 }
 
-func (t TagService) GetBySlug(slug string) (*Tag, error) {
-	tag, err := t.repo.GetBySlug(slug)
+func (t TagService) GetByAttribute(attr, value string) (*Tag, error) {
+	tag, err := t.repo.GetByAttribute(attr, value)
 	if err != nil {
 		t.log.Error(err.Error())
 		return nil, err

@@ -4,8 +4,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/alexedwards/scs/pgxstore"
-	"github.com/alexedwards/scs/v2"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nixpig/dunce/db"
 	app "github.com/nixpig/dunce/internal/app"
@@ -14,6 +12,8 @@ import (
 )
 
 func main() {
+	var err error
+
 	appConfig := app.AppConfig{}
 
 	if err := config.Init(); err != nil {
@@ -24,32 +24,25 @@ func main() {
 		log.Printf("did not run database migration due to '%v' which may be fatal; continuing...", err)
 	}
 
-	db, err := db.Connect()
+	appConfig.Db, err = db.Connect()
 	if err != nil {
 		log.Fatalf("unable to connect to database: %v", err)
 		os.Exit(1)
 	}
 
-	appConfig.Db = db
-
-	appConfig.SessionManager = scs.New()
-	appConfig.SessionManager.Store = pgxstore.New(appConfig.Db.Pool.(*pgxpool.Pool))
-
-	validate, err := pkg.NewValidator()
+	appConfig.Validator, err = pkg.NewValidator()
 	if err != nil {
 		log.Fatalf("unable to create validation: %v", err)
 		os.Exit(1)
 	}
 
-	appConfig.Validator = validate
-
-	templateCache, err := pkg.NewTemplateCache()
+	appConfig.TemplateCache, err = pkg.NewTemplateCache()
 	if err != nil {
 		log.Fatalf("unable to build template cache: %v", err)
 		os.Exit(1)
 	}
 
-	appConfig.TemplateCache = templateCache
+	appConfig.SessionManager = pkg.NewSessionManager(appConfig.Db.Pool.(*pgxpool.Pool))
 
 	appConfig.Logger = pkg.NewLogger()
 

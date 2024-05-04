@@ -27,8 +27,8 @@ func (m *MockArticleRepository) GetAll() (*[]Article, error) {
 	return args.Get(0).(*[]Article), args.Error(1)
 }
 
-func (m *MockArticleRepository) GetBySlug(slug string) (*Article, error) {
-	args := m.Called(slug)
+func (m *MockArticleRepository) GetByAttribute(attr, value string) (*Article, error) {
+	args := m.Called(value)
 
 	return args.Get(0).(*Article), args.Error(1)
 }

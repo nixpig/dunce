@@ -91,10 +91,10 @@ func (t TagRepository) GetAll() (*[]Tag, error) {
 	return &tags, nil
 }
 
-func (t TagRepository) GetBySlug(slug string) (*Tag, error) {
+func (t TagRepository) GetByAttribute(attr, value string) (*Tag, error) {
 	query := `select id_, name_, slug_ from tags_ where slug_ = $1`
 
-	row := t.db.QueryRow(context.Background(), query, slug)
+	row := t.db.QueryRow(context.Background(), query, value)
 
 	var tag Tag
 

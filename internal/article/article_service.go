@@ -55,8 +55,8 @@ func (a ArticleService) GetAll() (*[]Article, error) {
 	return articles, nil
 }
 
-func (a ArticleService) GetBySlug(slug string) (*Article, error) {
-	article, err := a.repo.GetBySlug(slug)
+func (a ArticleService) GetByAttribute(attr, value string) (*Article, error) {
+	article, err := a.repo.GetByAttribute(attr, value)
 	if err != nil {
 		a.log.Error(err.Error())
 		return nil, err

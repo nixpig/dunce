@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"time"
 
 	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/validator/v10"
 	"github.com/nixpig/dunce/db"
 	"github.com/nixpig/dunce/internal/article"
 	"github.com/nixpig/dunce/internal/tag"
+	"github.com/nixpig/dunce/internal/user"
 	"github.com/nixpig/dunce/pkg"
 )
 
@@ -25,15 +27,25 @@ type AppConfig struct {
 func Start(appConfig AppConfig) error {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /admin", func(w http.ResponseWriter, r *http.Request) {})
-
-	tagRepository := tag.NewTagRepository(appConfig.Db.Pool, appConfig.Logger)
-	tagService := tag.NewTagService(tagRepository, appConfig.Validator, appConfig.Logger)
-	tagController := tag.NewTagController(tagService, tag.ControllerConfig{
+	controllerConfig := pkg.ControllerConfig{
 		TemplateCache:  appConfig.TemplateCache,
 		Log:            appConfig.Logger,
 		SessionManager: appConfig.SessionManager,
+	}
+
+	mux.HandleFunc("GET /admin", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/admin/login", http.StatusPermanentRedirect)
 	})
+
+	userController := user.NewUserController(controllerConfig)
+
+	mux.HandleFunc("GET /admin/login", userController.UserLoginGet)
+	mux.HandleFunc("POST /admin/login", userController.UserLoginPost)
+	mux.HandleFunc("POST /admin/logout", userController.UserLogoutPost)
+
+	tagRepository := tag.NewTagRepository(appConfig.Db.Pool, appConfig.Logger)
+	tagService := tag.NewTagService(tagRepository, appConfig.Validator, appConfig.Logger)
+	tagController := tag.NewTagController(tagService, controllerConfig)
 
 	mux.HandleFunc("POST /admin/tags", tagController.PostAdminTagsHandler)
 	mux.HandleFunc("GET /admin/tags", tagController.GetAdminTagsHandler)
@@ -44,7 +56,7 @@ func Start(appConfig AppConfig) error {
 
 	articleRepository := article.NewArticleRepository(appConfig.Db.Pool, appConfig.Logger)
 	articleService := article.NewArticleService(articleRepository, appConfig.Validator, appConfig.Logger)
-	articleController := article.NewArticleController(articleService, tagService, appConfig.Logger, appConfig.TemplateCache)
+	articleController := article.NewArticleController(articleService, tagService, controllerConfig)
 
 	mux.HandleFunc("POST /admin/articles", articleController.CreateHandler)
 	mux.HandleFunc("GET /admin/articles", articleController.GetAllHandler)
@@ -54,8 +66,11 @@ func Start(appConfig AppConfig) error {
 	mux.HandleFunc("POST /admin/articles/{slug}/delete", articleController.AdminArticlesDeleteHandler)
 
 	server := &http.Server{
-		Addr:    fmt.Sprintf(":%v", appConfig.Port),
-		Handler: appConfig.SessionManager.LoadAndSave(mux),
+		Addr:         fmt.Sprintf(":%v", appConfig.Port),
+		Handler:      appConfig.SessionManager.LoadAndSave(mux),
+		IdleTimeout:  time.Minute,
+		ReadTimeout:  time.Second * 10,
+		WriteTimeout: time.Second * 10,
 	}
 
 	appConfig.Logger.Info("starting server on %s", appConfig.Port)

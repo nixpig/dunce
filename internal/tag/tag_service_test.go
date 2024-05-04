@@ -41,7 +41,7 @@ func (m *MockTagRepository) GetAll() (*[]Tag, error) {
 	return args.Get(0).(*[]Tag), args.Error(1)
 }
 
-func (m *MockTagRepository) GetBySlug(slug string) (*Tag, error) {
+func (m *MockTagRepository) GetByAttribute(attr, slug string) (*Tag, error) {
 	args := m.Called(slug)
 
 	if args.Get(0) == nil {

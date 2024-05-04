@@ -10,11 +10,7 @@ import (
 	"github.com/nixpig/dunce/pkg"
 )
 
-type ControllerConfig struct {
-	Log            pkg.Logger
-	TemplateCache  map[string]*template.Template
-	SessionManager *scs.SessionManager
-}
+const SESSION_KEY_MESSAGE = "message"
 
 type TagController struct {
 	service        pkg.Service[Tag, TagData]
@@ -25,7 +21,7 @@ type TagController struct {
 
 func NewTagController(
 	service pkg.Service[Tag, TagData],
-	config ControllerConfig,
+	config pkg.ControllerConfig,
 ) TagController {
 	return TagController{
 		service:        service,
@@ -46,7 +42,7 @@ func (t *TagController) PostAdminTagsHandler(w http.ResponseWriter, r *http.Requ
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
-	t.sessionManager.Put(r.Context(), "message", fmt.Sprintf("Created tag '%s'.", tag.Name))
+	t.sessionManager.Put(r.Context(), SESSION_KEY_MESSAGE, fmt.Sprintf("Created tag '%s'.", tag.Name))
 
 	http.Redirect(w, r, "/admin/tags", http.StatusSeeOther)
 }
@@ -61,11 +57,11 @@ func (t *TagController) DeleteAdminTagsSlugHandler(w http.ResponseWriter, r *htt
 
 	if err := t.service.DeleteById(id); err != nil {
 		t.log.Error(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
-	t.sessionManager.Put(r.Context(), "message", fmt.Sprintf("Deleted tag '%s'.", r.FormValue("name")))
+	t.sessionManager.Put(r.Context(), SESSION_KEY_MESSAGE, fmt.Sprintf("Deleted tag '%s'.", r.FormValue("name")))
 
 	http.Redirect(w, r, "/admin/tags", http.StatusSeeOther)
 }
@@ -78,7 +74,7 @@ func (t *TagController) GetAdminTagsHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	message := t.sessionManager.PopString(r.Context(), "message")
+	message := t.sessionManager.PopString(r.Context(), SESSION_KEY_MESSAGE)
 
 	type tagTemplateView struct {
 		Message string
@@ -100,7 +96,7 @@ func (t *TagController) GetAdminTagsHandler(w http.ResponseWriter, r *http.Reque
 func (t *TagController) GetAdminTagsSlugHandler(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("slug")
 
-	tag, err := t.service.GetBySlug(slug)
+	tag, err := t.service.GetByAttribute("slug", slug)
 	if err != nil {
 		t.log.Error(err.Error())
 		w.Write([]byte(err.Error()))
@@ -133,7 +129,7 @@ func (t *TagController) PostAdminTagsSlugHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	t.sessionManager.Put(r.Context(), "message", fmt.Sprintf("Updated tag '%s'.", tag.Name))
+	t.sessionManager.Put(r.Context(), SESSION_KEY_MESSAGE, fmt.Sprintf("Updated tag '%s'.", tag.Name))
 
 	http.Redirect(w, r, "/admin/tags", http.StatusSeeOther)
 }

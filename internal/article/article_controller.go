@@ -23,14 +23,13 @@ type ArticleController struct {
 func NewArticleController(
 	service pkg.Service[Article, ArticleNew],
 	tagsService pkg.Service[tag.Tag, tag.TagData],
-	log pkg.Logger,
-	templateCache map[string]*template.Template,
+	config pkg.ControllerConfig,
 ) ArticleController {
 	return ArticleController{
 		service:       service,
 		tagService:    tagsService,
-		log:           log,
-		templateCache: templateCache,
+		log:           config.Log,
+		templateCache: config.TemplateCache,
 	}
 }
 
@@ -108,7 +107,7 @@ func (a *ArticleController) NewHandler(w http.ResponseWriter, r *http.Request) {
 func (a *ArticleController) GetBySlugHander(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("slug")
 
-	article, err := a.service.GetBySlug(slug)
+	article, err := a.service.GetByAttribute("slug", slug)
 	if err != nil {
 		a.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)

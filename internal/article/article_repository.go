@@ -166,10 +166,10 @@ func (a ArticleRepository) GetAll() (*[]Article, error) {
 	return &articles, nil
 }
 
-func (a ArticleRepository) GetBySlug(slug string) (*Article, error) {
+func (a ArticleRepository) GetByAttribute(attr, value string) (*Article, error) {
 	articleQuery := `select a.id_, a.title_, a.subtitle_, a.slug_, a.body_, a.created_at_, a.updated_at_, array_to_string(array_agg(distinct t.tag_id_), ',', '*') from articles_ a join article_tags_ t on a.id_ = t.article_id_ where a.slug_ = $1 group by a.id_`
 
-	row := a.db.QueryRow(context.Background(), articleQuery, slug)
+	row := a.db.QueryRow(context.Background(), articleQuery, value)
 
 	var article Article
 	var articleTagIdsConcat string
