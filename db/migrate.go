@@ -37,8 +37,8 @@ func MigrateUp() error {
 	return nil
 }
 
-type DbInstance struct {
-	Conn Dbconn
+type Dbpool struct {
+	Pool Dbconn
 }
 
 type Dbconn interface {
@@ -57,26 +57,20 @@ type databaseEnvironment struct {
 	password string
 }
 
-var DB DbInstance
-
-func Connect() error {
+func Connect() (*Dbpool, error) {
 	env, err := loadDatabaseEnvironment()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	connectionString := buildConnectionString(env)
 
-	db, err := pgxpool.New(context.Background(), connectionString)
+	pool, err := pgxpool.New(context.Background(), connectionString)
 	if err != nil {
 		log.Fatalf("unable to connect to database: %v", err)
 	}
 
-	DB = DbInstance{
-		Conn: db,
-	}
-
-	return nil
+	return &Dbpool{Pool: pool}, nil
 }
 
 func loadDatabaseEnvironment() (*databaseEnvironment, error) {

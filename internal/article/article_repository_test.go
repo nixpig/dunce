@@ -11,10 +11,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestArticleDataCreate(t *testing.T) {
+func TestArticleRepo(t *testing.T) {
 	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface, data ArticleRepository){
+		// create
 		"test create new article":        testCreateNewArticle,
 		"test create fails on db errors": testCreateNewArticleFailsOnDbErrors,
+
+		// delete
+		"test delete article successfully": testDeleteArticle,
+		"test delete article error":        testDeleteArticleError,
 	}
 
 	for scenario, fn := range scenarios {
@@ -80,10 +85,10 @@ func testCreateNewArticle(t *testing.T, mock pgxmock.PgxPoolIface, data ArticleR
 	}, createdArticle, "should return created article data with id")
 }
 
-func testCreateNewArticleFailsOnDbErrors(t *testing.T, mock pgxmock.PgxPoolIface, data ArticleRepository) {
+func testCreateNewArticleFailsOnDbErrors(t *testing.T, mock pgxmock.PgxPoolIface, repo ArticleRepository) {
 	mock.ExpectBegin().WillReturnError(errors.New("db_begin_error"))
 
-	article, err := data.Create(&ArticleNew{
+	article, err := repo.Create(&ArticleNew{
 		Title:     "title",
 		Subtitle:  "subtitle",
 		Slug:      "slug",
@@ -97,4 +102,36 @@ func testCreateNewArticleFailsOnDbErrors(t *testing.T, mock pgxmock.PgxPoolIface
 
 	mock.Reset()
 	mock.ExpectationsWereMet()
+}
+
+func testDeleteArticle(t *testing.T, mock pgxmock.PgxPoolIface, repo ArticleRepository) {
+	query := `delete from articles_ a using article_tags_ t where a.id_ = t.article_id_ and a.id_ = $1`
+
+	mock.
+		ExpectExec(regexp.QuoteMeta(query)).
+		WithArgs(23).
+		WillReturnResult(pgxmock.NewResult("delete", 1))
+
+	err := repo.DeleteById(23)
+
+	mock.Reset()
+	mock.ExpectationsWereMet()
+
+	require.Nil(t, err, "should not return error")
+}
+
+func testDeleteArticleError(t *testing.T, mock pgxmock.PgxPoolIface, repo ArticleRepository) {
+	query := `delete from articles_ a using article_tags_ t where a.id_ = t.article_id_ and a.id_ = $1`
+
+	mock.
+		ExpectExec(regexp.QuoteMeta(query)).
+		WithArgs(23).
+		WillReturnError(errors.New("db_delete_error"))
+
+	err := repo.DeleteById(23)
+
+	mock.Reset()
+	mock.ExpectationsWereMet()
+
+	require.EqualError(t, err, "db_delete_error", "should return db error")
 }

@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"net/http"
 
+	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/validator/v10"
 	"github.com/nixpig/dunce/db"
 	"github.com/nixpig/dunce/internal/article"
@@ -13,11 +14,12 @@ import (
 )
 
 type AppConfig struct {
-	Port          string
-	Validator     *validator.Validate
-	Db            db.Dbconn
-	TemplateCache map[string]*template.Template
-	Logger        pkg.Logger
+	Port           string
+	Validator      *validator.Validate
+	Db             *db.Dbpool
+	TemplateCache  map[string]*template.Template
+	Logger         pkg.Logger
+	SessionManager *scs.SessionManager
 }
 
 func Start(appConfig AppConfig) error {
@@ -25,7 +27,7 @@ func Start(appConfig AppConfig) error {
 
 	mux.HandleFunc("GET /admin", func(w http.ResponseWriter, r *http.Request) {})
 
-	tagRepository := tag.NewTagRepository(appConfig.Db, appConfig.Logger)
+	tagRepository := tag.NewTagRepository(appConfig.Db.Pool, appConfig.Logger)
 	tagService := tag.NewTagService(tagRepository, appConfig.Validator, appConfig.Logger)
 	tagController := tag.NewTagController(tagService, appConfig.Logger, appConfig.TemplateCache)
 
@@ -36,7 +38,7 @@ func Start(appConfig AppConfig) error {
 	mux.HandleFunc("POST /admin/tags/{slug}", tagController.PostAdminTagsSlugHandler)
 	mux.HandleFunc("POST /admin/tags/{slug}/delete", tagController.DeleteAdminTagsSlugHandler)
 
-	articleRepository := article.NewArticleRepository(appConfig.Db, appConfig.Logger)
+	articleRepository := article.NewArticleRepository(appConfig.Db.Pool, appConfig.Logger)
 	articleService := article.NewArticleService(articleRepository, appConfig.Validator, appConfig.Logger)
 	articleController := article.NewArticleController(articleService, tagService, appConfig.Logger, appConfig.TemplateCache)
 
@@ -49,7 +51,7 @@ func Start(appConfig AppConfig) error {
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%v", appConfig.Port),
-		Handler: mux,
+		Handler: appConfig.SessionManager.LoadAndSave(mux),
 	}
 
 	appConfig.Logger.Info("starting server on %s", appConfig.Port)

@@ -1,6 +1,10 @@
-DROP TYPE IF EXISTS article_tags_;
+drop table if exists tags_;
 
-DROP TABLE IF EXISTS tags_;
+drop table if exists articles_;
 
-DROP TABLE IF EXISTS articles_;
+drop type if exists article_tags_;
+
+drop table if exists sessions;
+
+drop index if exists sessions_expiry_idx;
 

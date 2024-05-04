@@ -1,33 +1,29 @@
-CREATE TABLE IF NOT EXISTS tags_ (
-    id_ integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+create table if not exists tags_ (
+    id_ integer primary key generated always as identity,
     name_ character varying(50),
-    slug_ character varying(50) UNIQUE NOT NULL
+    slug_ character varying(50) unique not null
 );
 
-CREATE TABLE IF NOT EXISTS articles_ (
-    id_ integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+create table if not exists articles_ (
+    id_ integer primary key generated always as identity,
     title_ character varying(255),
     subtitle_ character varying(255),
-    slug_ character varying(50) UNIQUE NOT NULL,
+    slug_ character varying(50) unique not null,
     body_ text,
-    created_at_ timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at_ timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+    created_at_ timestamp without time zone default current_timestamp not null,
+    updated_at_ timestamp without time zone default current_timestamp not null
 );
 
-CREATE TABLE IF NOT EXISTS article_tags_ (
-    id_ integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+create table if not exists article_tags_ (
+    id_ integer primary key generated always as identity,
     article_id_ integer,
-    tag_id_ integer references tags_(id_) NOT NULL
+    tag_id_ integer references tags_(id_) not null
 );
 
--- select a.
---
--- select i.title, i.image, i.type, i.id, r.title, r.body, r.recipe_id from
---   recipe_ingredients ri
---   inner join
---   ingredients i
---   on i.id = ri.ingredient_id
---   inner join
---   recipes r
---   on r.recipe_id = ri.recipe_id
---   where r.recipe_id = 1;
+create table if not exists sessions (
+    token text primary key,
+    data bytea not null,
+    expiry timestamptz not null
+);
+
+create index sessions_expiry_idx on sessions(expiry);
