@@ -2,6 +2,7 @@ package tag
 
 import (
 	"context"
+	"errors"
 
 	"github.com/nixpig/dunce/db"
 	"github.com/nixpig/dunce/pkg"
@@ -92,7 +93,14 @@ func (t TagRepository) GetAll() (*[]Tag, error) {
 }
 
 func (t TagRepository) GetByAttribute(attr, value string) (*Tag, error) {
-	query := `select id_, name_, slug_ from tags_ where slug_ = $1`
+	var query string
+
+	switch attr {
+	case "slug":
+		query = `select id_, name_, slug_ from tags_ where slug_ = $1`
+	default:
+		return nil, errors.New("invalid atrribute")
+	}
 
 	row := t.db.QueryRow(context.Background(), query, value)
 

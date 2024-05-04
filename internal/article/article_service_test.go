@@ -28,7 +28,7 @@ func (m *MockArticleRepository) GetAll() (*[]Article, error) {
 }
 
 func (m *MockArticleRepository) GetByAttribute(attr, value string) (*Article, error) {
-	args := m.Called(value)
+	args := m.Called(attr, value)
 
 	return args.Get(0).(*Article), args.Error(1)
 }
@@ -276,10 +276,10 @@ func testServiceGetArticleBySlug(t *testing.T, service ArticleService) {
 	}
 
 	mockCall := mockData.
-		On("GetBySlug", "article-slug").
+		On("GetByAttribute", "slug", "article-slug").
 		Return(&article, nil)
 
-	gotArticle, err := service.GetBySlug("article-slug")
+	gotArticle, err := service.GetByAttribute("slug", "article-slug")
 
 	mockCall.Unset()
 	mockData.AssertExpectations(t)
@@ -290,10 +290,10 @@ func testServiceGetArticleBySlug(t *testing.T, service ArticleService) {
 
 func testServiceGetArticleBySlugError(t *testing.T, service ArticleService) {
 	mockCall := mockData.
-		On("GetBySlug", "article-slug").
+		On("GetByAttribute", "slug", "article-slug").
 		Return(&Article{}, errors.New("repo_error"))
 
-	gotArticle, err := service.GetBySlug("article-slug")
+	gotArticle, err := service.GetByAttribute("slug", "article-slug")
 
 	mockCall.Unset()
 	mockData.AssertExpectations(t)

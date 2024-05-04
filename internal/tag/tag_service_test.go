@@ -42,7 +42,7 @@ func (m *MockTagRepository) GetAll() (*[]Tag, error) {
 }
 
 func (m *MockTagRepository) GetByAttribute(attr, slug string) (*Tag, error) {
-	args := m.Called(slug)
+	args := m.Called(attr, slug)
 
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -382,7 +382,7 @@ func testServiceGetAllTagsSingleResult(t *testing.T, service TagService) {
 }
 
 func testServiceGetBySlugTagExists(t *testing.T, service TagService) {
-	mockCall := mockData.On("GetBySlug", "tag-slug").Return(&Tag{
+	mockCall := mockData.On("GetByAttribute", "slug", "tag-slug").Return(&Tag{
 		Id: 69,
 		TagData: TagData{
 			Name: "tag name",
@@ -390,7 +390,7 @@ func testServiceGetBySlugTagExists(t *testing.T, service TagService) {
 		},
 	}, nil)
 
-	tag, err := service.GetBySlug("tag-slug")
+	tag, err := service.GetByAttribute("slug", "tag-slug")
 
 	mockCall.Unset()
 	mockData.AssertExpectations(t)
@@ -407,9 +407,9 @@ func testServiceGetBySlugTagExists(t *testing.T, service TagService) {
 }
 
 func testServiceGetBySlugTagDoesNotExist(t *testing.T, service TagService) {
-	mockCall := mockData.On("GetBySlug", "tag-slug").Return(nil, errors.New("data_error"))
+	mockCall := mockData.On("GetByAttribute", "slug", "tag-slug").Return(nil, errors.New("data_error"))
 
-	tag, err := service.GetBySlug("tag-slug")
+	tag, err := service.GetByAttribute("slug", "tag-slug")
 
 	mockCall.Unset()
 	mockData.AssertExpectations(t)

@@ -291,7 +291,7 @@ func testGetExistingTagBySlug(t *testing.T, mock pgxmock.PgxPoolIface, repo TagR
 		WithArgs("tag-slug").
 		WillReturnRows(mockRow)
 
-	tag, err := repo.GetBySlug("tag-slug")
+	tag, err := repo.GetByAttribute("slug", "tag-slug")
 
 	require.NoError(t, err, "should not return error")
 	require.Equal(t, &Tag{
@@ -317,7 +317,7 @@ func testGetNonExistentTagBySlug(t *testing.T, mock pgxmock.PgxPoolIface, repo T
 		WithArgs("tag-slug").
 		WillReturnRows(mockRow)
 
-	tag, err := repo.GetBySlug("tag-slug")
+	tag, err := repo.GetByAttribute("slug", "tag-slug")
 
 	require.Error(t, err, "should return error")
 	require.Nil(t, tag, "should not return any tag")
