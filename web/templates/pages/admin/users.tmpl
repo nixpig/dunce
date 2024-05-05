@@ -1,0 +1,39 @@
+{{ define "title" }}Users{{ end }}
+
+{{ define "main" }}
+  <div style="display: flex; align-items: flex-end;">
+    <h1 style="flex-grow: 1;">{{ template "title" . }}</h1>
+    <div>
+      <a class="button" href="/admin/users/new">+ New user</a>
+    </div>
+  </div>
+
+  <hr>
+
+  {{ if .Message }}
+    <div>
+      <blockquote>
+	{{ .Message }}
+      </blockquote>
+    </div>
+    {{ end }}
+
+  <table>
+    <thead>
+      <tr>
+	<th>ID</th>
+	<th>Username</th>
+	<th>Email</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{ range $user := .Users }}
+	<tr>
+	  <td>{{ $user.Id }}</td>
+	  <td><a href="/admin/users/{{ $user.Username }}">{{ $user.Username }}</a></td>
+	  <td>{{ $user.Email }}</td>
+	</tr>
+      {{ end }}
+    </tbody>
+  </table>
+{{ end }}

@@ -5,6 +5,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+const SESSION_KEY_MESSAGE = "message"
+
 func NewSessionManager(pool *pgxpool.Pool) *scs.SessionManager {
 	return scs.New()
 }

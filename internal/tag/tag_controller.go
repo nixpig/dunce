@@ -10,8 +10,6 @@ import (
 	"github.com/nixpig/dunce/pkg"
 )
 
-const SESSION_KEY_MESSAGE = "message"
-
 type TagController struct {
 	service        pkg.Service[Tag, TagData]
 	log            pkg.Logger
@@ -42,7 +40,7 @@ func (t *TagController) PostAdminTagsHandler(w http.ResponseWriter, r *http.Requ
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
-	t.sessionManager.Put(r.Context(), SESSION_KEY_MESSAGE, fmt.Sprintf("Created tag '%s'.", tag.Name))
+	t.sessionManager.Put(r.Context(), pkg.SESSION_KEY_MESSAGE, fmt.Sprintf("Created tag '%s'.", tag.Name))
 
 	http.Redirect(w, r, "/admin/tags", http.StatusSeeOther)
 }
@@ -61,7 +59,7 @@ func (t *TagController) DeleteAdminTagsSlugHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	t.sessionManager.Put(r.Context(), SESSION_KEY_MESSAGE, fmt.Sprintf("Deleted tag '%s'.", r.FormValue("name")))
+	t.sessionManager.Put(r.Context(), pkg.SESSION_KEY_MESSAGE, fmt.Sprintf("Deleted tag '%s'.", r.FormValue("name")))
 
 	http.Redirect(w, r, "/admin/tags", http.StatusSeeOther)
 }
@@ -74,7 +72,7 @@ func (t *TagController) GetAdminTagsHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	message := t.sessionManager.PopString(r.Context(), SESSION_KEY_MESSAGE)
+	message := t.sessionManager.PopString(r.Context(), pkg.SESSION_KEY_MESSAGE)
 
 	type tagTemplateView struct {
 		Message string
@@ -129,7 +127,7 @@ func (t *TagController) PostAdminTagsSlugHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	t.sessionManager.Put(r.Context(), SESSION_KEY_MESSAGE, fmt.Sprintf("Updated tag '%s'.", tag.Name))
+	t.sessionManager.Put(r.Context(), pkg.SESSION_KEY_MESSAGE, fmt.Sprintf("Updated tag '%s'.", tag.Name))
 
 	http.Redirect(w, r, "/admin/tags", http.StatusSeeOther)
 }

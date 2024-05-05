@@ -22,7 +22,7 @@ create table if not exists article_tags_ (
 
 create table if not exists users_ (
     id_ integer primary key generated always as identity,
-    name_ character varying(255) unique not null,
+    username_ character varying(255) unique not null,
     email_ character varying(255) unique not null,
     password_ character varying(60) not null,
     created_at_ timestamp without time zone default current_timestamp not null

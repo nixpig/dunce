@@ -37,11 +37,18 @@ func Start(appConfig AppConfig) error {
 		http.Redirect(w, r, "/admin/login", http.StatusPermanentRedirect)
 	})
 
-	userController := user.NewUserController(controllerConfig)
+	userRepo := user.NewUserRepository(appConfig.Db.Pool, appConfig.Logger)
+	userService := user.NewUserService(userRepo, appConfig.Validator, appConfig.Logger)
+	userController := user.NewUserController(userService, controllerConfig)
 
 	mux.HandleFunc("GET /admin/login", userController.UserLoginGet)
 	mux.HandleFunc("POST /admin/login", userController.UserLoginPost)
 	mux.HandleFunc("POST /admin/logout", userController.UserLogoutPost)
+	mux.HandleFunc("GET /admin/users/new", userController.CreateUserGet)
+	mux.HandleFunc("GET /admin/users/{slug}", userController.UserGet)
+	mux.HandleFunc("GET /admin/users", userController.UsersGet)
+	mux.HandleFunc("POST /admin/users", userController.CreateUserPost)
+	mux.HandleFunc("POST /admin/users/{username}/delete", userController.DeleteUserPost)
 
 	tagRepository := tag.NewTagRepository(appConfig.Db.Pool, appConfig.Logger)
 	tagService := tag.NewTagService(tagRepository, appConfig.Validator, appConfig.Logger)

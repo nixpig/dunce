@@ -1,0 +1,25 @@
+{{ define "title" }}New user{{ end }}
+
+{{ define "main" }}
+  <div style="display: flex; align-items: flex-end;">
+    <h1 style="flex-grow: 1;">{{ template "title" . }}</h1>
+  </div>
+
+  <hr>
+
+  <form name="new-user" action="/admin/users" method="POST">
+    <label for="username">Username</label>
+    <input type="text" name="username" id="username">
+
+    <label for="email">Email address</label>
+    <input type="email" name="email" id="email">
+
+    <label for="password">Password</label>
+    <input type="password" name="password" id="password">
+
+    <br>
+    <button type="submit">Create user</button>
+
+  </form>
+
+{{ end }}
