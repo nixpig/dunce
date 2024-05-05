@@ -1,5 +1,5 @@
 {{ define "title" }}
-  Edit tag '{{ .Name }}'
+  Edit tag '{{ .Tag.Name }}'
 {{ end }}
 
 {{ define "main" }}
@@ -10,21 +10,25 @@
   <hr>
 
   <form name="edit-tag" method="POST">
-    <input type="hidden" name="id" value="{{ .Id }}">
+    <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}">
+
+    <input type="hidden" name="id" value="{{ .Tag.Id }}">
 
     <label for="name">Name</label>
-    <input type="text" id="name" name="name" value="{{ .Name }}">
+    <input type="text" id="name" name="name" value="{{ .Tag.Name }}">
 
     <label for="slug">Slug</label>
-    <input type="text" id="slug" name="slug" value="{{ .Slug }}">
+    <input type="text" id="slug" name="slug" value="{{ .Tag.Slug }}">
 
     <br>
     <button type="submit">Update tag</button>
   </form>
 
-  <form name="delete-tag" method="POST" action="/admin/tags/{{ .Slug }}/delete">
-    <input type="hidden" name="id" value="{{ .Id }}">
-    <input type="hidden" name="name" value="{{ .Name }}">
+  <form name="delete-tag" method="POST" action="/admin/tags/{{ .Tag.Slug }}/delete">
+    <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}">
+
+    <input type="hidden" name="id" value="{{ .Tag.Id }}">
+    <input type="hidden" name="name" value="{{ .Tag.Name }}">
 
     <button type="submit">Delete tag</button>
   </form>

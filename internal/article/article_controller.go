@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/justinas/nosurf"
 	"github.com/nixpig/dunce/internal/tag"
 	"github.com/nixpig/dunce/pkg"
 )
@@ -82,7 +83,13 @@ func (a *ArticleController) GetAllHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if err := a.templateCache["articles.tmpl"].ExecuteTemplate(w, "base", articles); err != nil {
+	if err := a.templateCache["articles.tmpl"].ExecuteTemplate(w, "base", struct {
+		Articles  *[]Article
+		CsrfToken string
+	}{
+		Articles:  articles,
+		CsrfToken: nosurf.Token(r),
+	}); err != nil {
 		a.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -97,7 +104,13 @@ func (a *ArticleController) NewHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := a.templateCache["new-article.tmpl"].ExecuteTemplate(w, "base", availableTags); err != nil {
+	if err := a.templateCache["new-article.tmpl"].ExecuteTemplate(w, "base", struct {
+		Tags      *[]tag.Tag
+		CsrfToken string
+	}{
+		Tags:      availableTags,
+		CsrfToken: nosurf.Token(r),
+	}); err != nil {
 		a.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -125,11 +138,13 @@ func (a *ArticleController) GetBySlugHander(w http.ResponseWriter, r *http.Reque
 		w,
 		"base",
 		struct {
-			Article Article
-			Tags    []tag.Tag
+			Article   Article
+			Tags      []tag.Tag
+			CsrfToken string
 		}{
-			Article: *article,
-			Tags:    *allTags,
+			Article:   *article,
+			Tags:      *allTags,
+			CsrfToken: nosurf.Token(r),
 		},
 	); err != nil {
 		a.log.Error(err.Error())

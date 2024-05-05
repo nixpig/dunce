@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/alexedwards/scs/v2"
+	"github.com/justinas/nosurf"
 	"github.com/nixpig/dunce/pkg"
 )
 
@@ -33,9 +34,11 @@ func (u *UserController) UserLoginGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := u.templateCache["login.tmpl"].ExecuteTemplate(w, "base", struct {
-		Message string
+		Message   string
+		CsrfToken string
 	}{
-		Message: u.sessionManager.PopString(r.Context(), pkg.SESSION_KEY_MESSAGE),
+		Message:   u.sessionManager.PopString(r.Context(), pkg.SESSION_KEY_MESSAGE),
+		CsrfToken: nosurf.Token(r),
 	}); err != nil {
 		u.log.Error(err.Error())
 		http.Error(w, http.StatusText(500), http.StatusInternalServerError)
@@ -74,7 +77,11 @@ func (u *UserController) UserLogoutPost(w http.ResponseWriter, r *http.Request) 
 }
 
 func (u *UserController) CreateUserGet(w http.ResponseWriter, r *http.Request) {
-	if err := u.templateCache["new-user.tmpl"].ExecuteTemplate(w, "base", nil); err != nil {
+	if err := u.templateCache["new-user.tmpl"].ExecuteTemplate(w, "base", struct {
+		CsrfToken string
+	}{
+		CsrfToken: nosurf.Token(r),
+	}); err != nil {
 		u.log.Error(err.Error())
 		http.Error(w, http.StatusText(500), http.StatusInternalServerError)
 		return
@@ -111,11 +118,13 @@ func (u *UserController) UsersGet(w http.ResponseWriter, r *http.Request) {
 	message := u.sessionManager.PopString(r.Context(), pkg.SESSION_KEY_MESSAGE)
 
 	if err := u.templateCache["users.tmpl"].ExecuteTemplate(w, "base", struct {
-		Message string
-		Users   *[]User
+		Message   string
+		Users     *[]User
+		CsrfToken string
 	}{
-		Message: message,
-		Users:   users,
+		Message:   message,
+		Users:     users,
+		CsrfToken: nosurf.Token(r),
 	}); err != nil {
 		u.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -132,11 +141,13 @@ func (u *UserController) UserGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := u.templateCache["user.tmpl"].ExecuteTemplate(w, "base", struct {
-		Message string
-		User    *User
+		Message   string
+		User      *User
+		CsrfToken string
 	}{
-		Message: "",
-		User:    user,
+		Message:   "",
+		User:      user,
+		CsrfToken: nosurf.Token(r),
 	}); err != nil {
 		u.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)

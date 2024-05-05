@@ -20,7 +20,7 @@
       </tr>
     </thead>
     <tbody>
-      {{ range $article := . }}
+      {{ range $article := .Articles }}
 	<tr>
 	  <td>{{ $article.Id }}</td>
 	  <td><a href="/admin/articles/{{ $article.Slug }}">{{ $article.Title }}</a></td>

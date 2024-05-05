@@ -8,6 +8,8 @@
   <hr>
 
   <form name="new-tag" method="POST" action="/admin/tags">
+    <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}">
+
     <label for="name">Name</label>
     <input type="text" id="name" name="name">
 

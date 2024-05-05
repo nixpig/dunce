@@ -18,6 +18,8 @@
   {{ end }}
 
   <form name="user-login" method="POST" action="/admin/login">
+    <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}">
+
     <label for="username">Username</label>
     <input type="text" id="username" name="username">
 

@@ -10,6 +10,8 @@
   <hr>
 
   <form name="edit-user" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}">
+
     <input type="hidden" name="id" value="{{ .User.Id }}">
 
     <label for="username">Username</label>
@@ -26,6 +28,8 @@
   </form>
 
   <form name="delete-user" method="POST" action="/admin/users/{{ .User.Username }}/delete">
+    <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}">
+
     <input type="hidden" name="id" value="{{ .User.Id }}">
     <input type="hidden" name="username" value="{{ .User.Username }}">
 

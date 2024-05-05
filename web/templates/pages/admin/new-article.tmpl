@@ -8,6 +8,8 @@
   <hr>
 
   <form name="new_article" method="POST" action="/admin/articles">
+    <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}">
+
     <label for="title">Title</label>
     <input type="text" id="title" name="title">
 
@@ -22,7 +24,7 @@
 
     <label for="tags">Tags</label>
     <select id="tags" name="tags[]" multiple>
-      {{ range $tag := . }}
+      {{ range $tag := .Tags }}
 	<option value="{{ $tag.Id }}">{{ $tag.Name }}</option>
       {{ end }}
     </select>

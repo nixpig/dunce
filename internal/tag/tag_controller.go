@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/alexedwards/scs/v2"
+	"github.com/justinas/nosurf"
 	"github.com/nixpig/dunce/pkg"
 )
 
@@ -75,13 +76,15 @@ func (t *TagController) GetAdminTagsHandler(w http.ResponseWriter, r *http.Reque
 	message := t.sessionManager.PopString(r.Context(), pkg.SESSION_KEY_MESSAGE)
 
 	type tagTemplateView struct {
-		Message string
-		Tags    *[]Tag
+		Message   string
+		Tags      *[]Tag
+		CsrfToken string
 	}
 
 	data := tagTemplateView{
-		Message: message,
-		Tags:    tags,
+		Message:   message,
+		Tags:      tags,
+		CsrfToken: nosurf.Token(r),
 	}
 
 	err = t.templateCache["tags.tmpl"].ExecuteTemplate(w, "base", data)
@@ -100,7 +103,13 @@ func (t *TagController) GetAdminTagsSlugHandler(w http.ResponseWriter, r *http.R
 		w.Write([]byte(err.Error()))
 	}
 
-	if err := t.templateCache["tag.tmpl"].ExecuteTemplate(w, "base", tag); err != nil {
+	if err := t.templateCache["tag.tmpl"].ExecuteTemplate(w, "base", struct {
+		Tag       *Tag
+		CsrfToken string
+	}{
+		Tag:       tag,
+		CsrfToken: nosurf.Token(r),
+	}); err != nil {
 		t.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -133,7 +142,11 @@ func (t *TagController) PostAdminTagsSlugHandler(w http.ResponseWriter, r *http.
 }
 
 func (t *TagController) GetAdminTagsNewHandler(w http.ResponseWriter, r *http.Request) {
-	if err := t.templateCache["new-tag.tmpl"].ExecuteTemplate(w, "base", nil); err != nil {
+	if err := t.templateCache["new-tag.tmpl"].ExecuteTemplate(w, "base", struct {
+		CsrfToken string
+	}{
+		CsrfToken: nosurf.Token(r),
+	}); err != nil {
 		t.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return

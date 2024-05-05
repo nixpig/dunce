@@ -8,6 +8,8 @@
   <hr>
 
   <form name="new-article" method="POST" action="/admin/articles/{{ .Article.Slug }}">
+    <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}">
+
     <input type="hidden" name="id" value="{{ .Article.Id }}">
 
     <label for="title">Title</label>
@@ -53,6 +55,7 @@
   </form>
 
   <form name="delete-article" method="POST" action="/admin/articles/{{ .Article.Slug }}/delete">
+    <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}">
     <input type="hidden" name="id" value="{{ .Article.Id }}">
 
     <button type="submit">Delete article</button>

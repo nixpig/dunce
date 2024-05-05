@@ -31,6 +31,7 @@
 	      |
 	      <li style="display: inline;">
 		<form style="display: inline;" action="/admin/logout" method="POST">
+		  <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}">
 		  <button type="submit">Logout</button>
 		</form>
 	      </li>
