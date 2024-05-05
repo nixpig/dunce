@@ -11,13 +11,13 @@ import (
 )
 
 type UserController struct {
-	service        pkg.Service[User, UserNew]
+	service        UserService
 	log            pkg.Logger
 	templateCache  map[string]*template.Template
 	sessionManager *scs.SessionManager
 }
 
-func NewUserController(service pkg.Service[User, UserNew], config pkg.ControllerConfig) UserController {
+func NewUserController(service UserService, config pkg.ControllerConfig) UserController {
 	return UserController{
 		service:        service,
 		log:            config.Log,
@@ -27,22 +27,50 @@ func NewUserController(service pkg.Service[User, UserNew], config pkg.Controller
 }
 
 func (u *UserController) UserLoginGet(w http.ResponseWriter, r *http.Request) {
-	if err := u.templateCache["login.tmpl"].ExecuteTemplate(w, "base", nil); err != nil {
+	if u.IsAuthenticated(r) {
+		http.Redirect(w, r, "/admin/articles", http.StatusSeeOther)
+		return
+	}
+
+	if err := u.templateCache["login.tmpl"].ExecuteTemplate(w, "base", struct {
+		Message string
+	}{
+		Message: u.sessionManager.PopString(r.Context(), pkg.SESSION_KEY_MESSAGE),
+	}); err != nil {
 		u.log.Error(err.Error())
 		http.Error(w, http.StatusText(500), http.StatusInternalServerError)
 	}
 }
 
 func (u *UserController) UserLoginPost(w http.ResponseWriter, r *http.Request) {
-	user := UserLogin{
-		Username: r.FormValue("username"),
-		Password: r.FormValue("password"),
+	username := r.FormValue("username")
+	password := r.FormValue("password")
+
+	if err := u.service.LoginWithUsernamePassword(
+		username,
+		password,
+	); err != nil {
+		u.log.Error(err.Error())
+		http.Error(w, http.StatusText(401), http.StatusUnauthorized)
+		return
 	}
-	fmt.Fprintf(w, "username: '%s' | password: '%s'", user.Username, user.Password)
+
+	if err := u.sessionManager.RenewToken(r.Context()); err != nil {
+		u.log.Error(err.Error())
+		http.Error(w, http.StatusText(401), http.StatusUnauthorized)
+		return
+	}
+
+	u.sessionManager.Put(r.Context(), pkg.LOGGED_IN_USERNAME, username)
+
+	http.Redirect(w, r, "/admin/articles", http.StatusSeeOther)
 }
 
 func (u *UserController) UserLogoutPost(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "logout POST")
+	u.sessionManager.Remove(r.Context(), pkg.LOGGED_IN_USERNAME)
+	u.sessionManager.Put(r.Context(), pkg.SESSION_KEY_MESSAGE, "You've been logged out.")
+
+	http.Redirect(w, r, "/admin", http.StatusSeeOther)
 }
 
 func (u *UserController) CreateUserGet(w http.ResponseWriter, r *http.Request) {
@@ -134,4 +162,8 @@ func (u *UserController) DeleteUserPost(w http.ResponseWriter, r *http.Request) 
 	u.sessionManager.Put(r.Context(), pkg.SESSION_KEY_MESSAGE, fmt.Sprintf("Deleted user '%s'.", username))
 
 	http.Redirect(w, r, "/admin/users", http.StatusSeeOther)
+}
+
+func (u *UserController) IsAuthenticated(r *http.Request) bool {
+	return u.sessionManager.Exists(r.Context(), pkg.LOGGED_IN_USERNAME)
 }

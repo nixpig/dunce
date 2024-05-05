@@ -9,6 +9,14 @@
 
   <hr>
 
+  {{ if .Message }}
+    <div>
+      <blockquote>
+	{{ .Message }}
+      </blockquote>
+    </div>
+  {{ end }}
+
   <form name="user-login" method="POST" action="/admin/login">
     <label for="username">Username</label>
     <input type="text" id="username" name="username">

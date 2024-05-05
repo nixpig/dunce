@@ -108,6 +108,20 @@ func (u UserRepository) GetByAttribute(attr, value string) (*User, error) {
 	return &user, nil
 }
 
+func (u UserRepository) GetPasswordByUsername(username string) (string, error) {
+	query := `select password_ from users_ where username_ = $1`
+
+	row := u.db.QueryRow(context.Background(), query, username)
+
+	var password string
+
+	if err := row.Scan(&password); err != nil {
+		return "", err
+	}
+
+	return password, nil
+}
+
 func (u UserRepository) Update(user *User) (*User, error) {
 	return nil, nil
 }

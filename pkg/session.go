@@ -6,6 +6,7 @@ import (
 )
 
 const SESSION_KEY_MESSAGE = "message"
+const LOGGED_IN_USERNAME = "logged_in_username"
 
 func NewSessionManager(pool *pgxpool.Pool) *scs.SessionManager {
 	return scs.New()
