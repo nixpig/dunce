@@ -1,0 +1,27 @@
+{{ define "title" }}{{ .Article.Title }}{{ end }}
+
+{{ define "main" }}
+  <hr>
+
+  <h1>{{ template "title" . }}</h1>
+
+  <div class="article-header__meta">
+    <div class="article-header__dates">
+      <b>Published</b> {{ .Article.CreatedAt.Format "2006-01-02"  }} &bull; <b>Updated</b> {{ .Article.UpdatedAt.Format "2006-01-02" }}
+    </div>
+
+    <div class="article-header__tags">
+      <b>Tagged:</b>
+        {{ range $index, $tag := .Article.Tags -}}
+          {{ if ne $index 0 -}},{{- end}}
+            <a href="/tags/{{ $tag.Slug }}">{{ $tag.Name }}</a>
+        {{- end }}
+    </div>
+  </div>
+
+  <div>
+    {{ .Content }}
+  </div>
+
+
+{{ end }}

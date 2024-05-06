@@ -34,6 +34,10 @@ func Start(appConfig AppConfig) error {
 		SessionManager: appConfig.SessionManager,
 	}
 
+	static := http.FileServer(http.Dir("./web/static/"))
+
+	mux.Handle("GET /static/", http.StripPrefix("/static/", static))
+
 	mux.HandleFunc("GET /admin", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/admin/login", http.StatusPermanentRedirect)
 	})
@@ -77,6 +81,8 @@ func Start(appConfig AppConfig) error {
 
 	homeController := home.NewHomeController(api, controllerConfig)
 	mux.HandleFunc("GET /", homeController.HomeGet)
+
+	mux.HandleFunc("GET /articles/{slug}", articleController.PublicGetArticle)
 
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%v", appConfig.Port),

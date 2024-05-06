@@ -1,0 +1,19 @@
+.article-header__meta {
+  display: flex;
+  margin-bottom: 2rem;
+
+  @media screen and (max-width: 684px) {
+    flex-direction: column;
+  }
+}
+
+.article-header__dates,
+.article-header__tags {
+  flex-grow: 1;
+}
+
+.article-header__tags {
+  @media screen and (min-width: 685px) {
+    text-align: right;
+  }
+}

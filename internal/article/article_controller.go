@@ -245,3 +245,37 @@ func (a ArticleController) AdminArticlesDeleteHandler(w http.ResponseWriter, r *
 
 	http.Redirect(w, r, "/admin/articles", http.StatusSeeOther)
 }
+
+func (a ArticleController) PublicGetArticle(w http.ResponseWriter, r *http.Request) {
+	slug := r.PathValue("slug")
+
+	article, err := a.service.GetByAttribute("slug", slug)
+	if err != nil {
+		a.log.Error(err.Error())
+		http.Error(w, "Not Found", http.StatusNotFound)
+		return
+	}
+
+	content, err := pkg.MdToHtml([]byte(article.Body))
+	if err != nil {
+		a.log.Error(err.Error())
+		http.Error(w, "Not Found", http.StatusNotFound)
+		return
+	}
+
+	if err := a.templateCache["public-article.tmpl"].ExecuteTemplate(
+		w,
+		"base",
+		struct {
+			Article *Article
+			Content template.HTML
+		}{
+			Article: article,
+			Content: template.HTML(content),
+		},
+	); err != nil {
+		a.log.Error(err.Error())
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+}
