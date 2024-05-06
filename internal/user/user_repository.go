@@ -55,8 +55,19 @@ func (u UserRepository) DeleteById(id int) error {
 	return nil
 }
 
-func (u UserRepository) Exists(user *UserNew) (bool, error) {
-	return false, nil
+func (u UserRepository) Exists(username string) (bool, error) {
+	query := `select exists(select true from users_ where username_ = $1)`
+
+	row := u.db.QueryRow(context.Background(), query, username)
+
+	var exists bool
+
+	if err := row.Scan(&exists); err != nil {
+		u.log.Error(err.Error())
+		return false, err
+	}
+
+	return exists, nil
 }
 
 func (u UserRepository) GetAll() (*[]User, error) {

@@ -176,5 +176,10 @@ func (u *UserController) DeleteUserPost(w http.ResponseWriter, r *http.Request) 
 }
 
 func (u *UserController) IsAuthenticated(r *http.Request) bool {
-	return u.sessionManager.Exists(r.Context(), pkg.LOGGED_IN_USERNAME)
+	isAuthenticated, ok := r.Context().Value(pkg.IsLoggedInContextKey).(bool)
+	if !ok {
+		return false
+	}
+
+	return isAuthenticated
 }

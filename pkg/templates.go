@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"slices"
 )
 
 func newTemplateCache(templateDir, pageGlob string) (map[string]*template.Template, error) {
@@ -19,12 +20,20 @@ func newTemplateCache(templateDir, pageGlob string) (map[string]*template.Templa
 
 	baseTemplate := path.Join(templatePath, "base.tmpl")
 	adminPageTemplatePath := path.Join(templatePath, "pages", "admin")
+	publicPageTemplatePath := path.Join(templatePath, "pages", "public")
 	// partialTemplatePath := path.Join(templatePath, "partials")
 
-	pages, err := filepath.Glob(path.Join(adminPageTemplatePath, pageGlob))
+	adminPages, err := filepath.Glob(path.Join(adminPageTemplatePath, pageGlob))
 	if err != nil {
 		return nil, err
 	}
+
+	publicPages, err := filepath.Glob(path.Join(publicPageTemplatePath, pageGlob))
+	if err != nil {
+		return nil, err
+	}
+
+	pages := slices.Concat(adminPages, publicPages)
 
 	for _, page := range pages {
 		name := filepath.Base(page)

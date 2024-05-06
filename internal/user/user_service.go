@@ -1,6 +1,10 @@
 package user
 
 import (
+	"context"
+	"net/http"
+
+	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/validator/v10"
 	"github.com/nixpig/dunce/pkg"
 	"golang.org/x/crypto/bcrypt"
@@ -66,4 +70,42 @@ func (u UserService) LoginWithUsernamePassword(username, password string) error 
 	}
 
 	return nil
+}
+
+func (u UserService) Exists(username string) (bool, error) {
+	exists, err := u.repo.Exists(username)
+	if err != nil {
+		u.log.Error(err.Error())
+		return false, err
+	}
+
+	return exists, nil
+}
+
+func (u UserService) IsAuthenticatedMiddleware(sessionManager *scs.SessionManager, next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		username := sessionManager.GetString(r.Context(), pkg.LOGGED_IN_USERNAME)
+
+		if len(username) == 0 {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		exists, err := u.Exists(username)
+		if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+
+		if exists {
+			ctx := context.WithValue(r.Context(), pkg.IsLoggedInContextKey, true)
+
+			r = r.WithContext(ctx)
+
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		http.Redirect(w, r, "/admin/login", http.StatusSeeOther)
+	})
 }
