@@ -87,7 +87,7 @@ func (t *TagController) GetAdminTagsHandler(w http.ResponseWriter, r *http.Reque
 		CsrfToken: nosurf.Token(r),
 	}
 
-	err = t.templateCache["tags.tmpl"].ExecuteTemplate(w, "base", data)
+	err = t.templateCache["admin-tags.tmpl"].ExecuteTemplate(w, "admin", data)
 	if err != nil {
 		t.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -103,7 +103,7 @@ func (t *TagController) GetAdminTagsSlugHandler(w http.ResponseWriter, r *http.R
 		w.Write([]byte(err.Error()))
 	}
 
-	if err := t.templateCache["tag.tmpl"].ExecuteTemplate(w, "base", struct {
+	if err := t.templateCache["admin-tag.tmpl"].ExecuteTemplate(w, "admin", struct {
 		Tag       *Tag
 		CsrfToken string
 	}{
@@ -142,7 +142,7 @@ func (t *TagController) PostAdminTagsSlugHandler(w http.ResponseWriter, r *http.
 }
 
 func (t *TagController) GetAdminTagsNewHandler(w http.ResponseWriter, r *http.Request) {
-	if err := t.templateCache["new-tag.tmpl"].ExecuteTemplate(w, "base", struct {
+	if err := t.templateCache["admin-new-tag.tmpl"].ExecuteTemplate(w, "admin", struct {
 		CsrfToken string
 	}{
 		CsrfToken: nosurf.Token(r),

@@ -18,7 +18,8 @@ func newTemplateCache(templateDir, pageGlob string) (map[string]*template.Templa
 
 	templatePath := path.Join(pwd, templateDir)
 
-	baseTemplate := path.Join(templatePath, "base.tmpl")
+	adminBaseTemplate := path.Join(templatePath, "admin.tmpl")
+	publicBaseTemplate := path.Join(templatePath, "public.tmpl")
 	adminPageTemplatePath := path.Join(templatePath, "pages", "admin")
 	publicPageTemplatePath := path.Join(templatePath, "pages", "public")
 	// partialTemplatePath := path.Join(templatePath, "partials")
@@ -39,7 +40,8 @@ func newTemplateCache(templateDir, pageGlob string) (map[string]*template.Templa
 		name := filepath.Base(page)
 
 		files := []string{
-			baseTemplate,
+			publicBaseTemplate,
+			adminBaseTemplate,
 			page,
 		}
 

@@ -24,7 +24,7 @@ func NewHomeController(api Api, config pkg.ControllerConfig) HomeController {
 
 func (h *HomeController) HomeGet(w http.ResponseWriter, r *http.Request) {
 
-	if err := h.templateCache["index.tmpl"].ExecuteTemplate(w, "base", h.api); err != nil {
+	if err := h.templateCache["index.tmpl"].ExecuteTemplate(w, "public", h.api); err != nil {
 		fmt.Println(" <<< err >>> ")
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return

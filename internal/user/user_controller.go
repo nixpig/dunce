@@ -33,7 +33,7 @@ func (u *UserController) UserLoginGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := u.templateCache["login.tmpl"].ExecuteTemplate(w, "base", struct {
+	if err := u.templateCache["admin-login.tmpl"].ExecuteTemplate(w, "admin", struct {
 		Message   string
 		CsrfToken string
 	}{
@@ -77,7 +77,7 @@ func (u *UserController) UserLogoutPost(w http.ResponseWriter, r *http.Request) 
 }
 
 func (u *UserController) CreateUserGet(w http.ResponseWriter, r *http.Request) {
-	if err := u.templateCache["new-user.tmpl"].ExecuteTemplate(w, "base", struct {
+	if err := u.templateCache["admin-new-user.tmpl"].ExecuteTemplate(w, "admin", struct {
 		CsrfToken string
 	}{
 		CsrfToken: nosurf.Token(r),
@@ -117,7 +117,7 @@ func (u *UserController) UsersGet(w http.ResponseWriter, r *http.Request) {
 
 	message := u.sessionManager.PopString(r.Context(), pkg.SESSION_KEY_MESSAGE)
 
-	if err := u.templateCache["users.tmpl"].ExecuteTemplate(w, "base", struct {
+	if err := u.templateCache["admin-users.tmpl"].ExecuteTemplate(w, "admin", struct {
 		Message   string
 		Users     *[]User
 		CsrfToken string
@@ -140,7 +140,7 @@ func (u *UserController) UserGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := u.templateCache["user.tmpl"].ExecuteTemplate(w, "base", struct {
+	if err := u.templateCache["admin-user.tmpl"].ExecuteTemplate(w, "admin", struct {
 		Message   string
 		User      *User
 		CsrfToken string

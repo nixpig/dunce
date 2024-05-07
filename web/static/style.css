@@ -1,3 +1,24 @@
+header {
+  display: flex;
+  align-items: center;
+  border-bottom: 2px solid #eb99a1;
+  padding-bottom: 1rem;
+}
+
+header nav {
+  flex-grow: 1;
+  align-items: center;
+  text-align: right;
+}
+
+header nav ul {
+  margin: 0;
+}
+
+header nav ul li {
+  display: inline;
+}
+
 .article-header__meta {
   display: flex;
   margin-bottom: 2rem;
@@ -16,4 +37,16 @@
   @media screen and (min-width: 685px) {
     text-align: right;
   }
+}
+
+h2 {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid;
+}
+
+footer {
+  margin-top: 20px;
+  padding: 10px 0;
+  border-top: 1px solid;
+  display: flex;
 }

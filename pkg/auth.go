@@ -7,7 +7,7 @@ import (
 	"github.com/justinas/nosurf"
 )
 
-func Protected(sessionManager *scs.SessionManager, next http.HandlerFunc) http.HandlerFunc {
+func ProtectedMiddleware(sessionManager *scs.SessionManager, next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !sessionManager.Exists(r.Context(), LOGGED_IN_USERNAME) {
 			sessionManager.Put(r.Context(), SESSION_KEY_MESSAGE, "You are not logged in.")
@@ -21,7 +21,7 @@ func Protected(sessionManager *scs.SessionManager, next http.HandlerFunc) http.H
 	})
 }
 
-func NoSurf(next http.HandlerFunc) http.HandlerFunc {
+func NoSurfMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		csrfHttpHandler := nosurf.New(next)
 		csrfHttpHandler.SetBaseCookie(http.Cookie{

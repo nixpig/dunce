@@ -2,10 +2,25 @@
 
 {{ define "main" }}
 
-  <h1>nixpig.dev</h1>
+  <h2>Articles</h2>
 
-  {{ .Tags }}
 
-  {{ .Articles }}
+  <table>
+    <thead>
+      <th>Article title</th>
+      <th style="text-align: right;">Published date</th>
+    </thead>
+    <tbody>
+      {{ range $article := .Articles }}
+        <tr>
+          <td>
+            <a href="/articles/{{ $article.Slug }}">{{ $article.Title }}</a>
+          </td>
+          <td style="text-align: right;">
+            {{ $article.CreatedAt.Format "2006-01-02"}}
+          </td>
+      {{ end }}
+    </tbody>
+  </table>
 
 {{ end }}

@@ -81,8 +81,8 @@ func mockTemplate() *template.Template {
 }
 
 var mockTemplateCache = map[string]*template.Template{
-	"new-tag.tmpl": mockTemplate(),
-	"tags.tmpl":    mockTemplate(),
+	"admin-new-tag.tmpl": mockTemplate(),
+	"admin-tags.tmpl":    mockTemplate(),
 }
 
 func TestTagsControllerNewHandler(t *testing.T) {

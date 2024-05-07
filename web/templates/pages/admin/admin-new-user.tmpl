@@ -5,8 +5,6 @@
     <h1 style="flex-grow: 1;">{{ template "title" . }}</h1>
   </div>
 
-  <hr>
-
   <form name="new-user" action="/admin/users" method="POST">
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}">
 

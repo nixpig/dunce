@@ -83,7 +83,7 @@ func (a *ArticleController) GetAllHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if err := a.templateCache["articles.tmpl"].ExecuteTemplate(w, "base", struct {
+	if err := a.templateCache["admin-articles.tmpl"].ExecuteTemplate(w, "admin", struct {
 		Articles  *[]Article
 		CsrfToken string
 	}{
@@ -104,7 +104,7 @@ func (a *ArticleController) NewHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := a.templateCache["new-article.tmpl"].ExecuteTemplate(w, "base", struct {
+	if err := a.templateCache["admin-new-article.tmpl"].ExecuteTemplate(w, "admin", struct {
 		Tags      *[]tag.Tag
 		CsrfToken string
 	}{
@@ -134,9 +134,9 @@ func (a *ArticleController) GetBySlugHander(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	if err := a.templateCache["article.tmpl"].ExecuteTemplate(
+	if err := a.templateCache["admin-article.tmpl"].ExecuteTemplate(
 		w,
-		"base",
+		"admin",
 		struct {
 			Article   Article
 			Tags      []tag.Tag
@@ -265,7 +265,7 @@ func (a ArticleController) PublicGetArticle(w http.ResponseWriter, r *http.Reque
 
 	if err := a.templateCache["public-article.tmpl"].ExecuteTemplate(
 		w,
-		"base",
+		"public",
 		struct {
 			Article *Article
 			Content template.HTML
