@@ -5,6 +5,7 @@ type Repository[T any, D any] interface {
 	DeleteById(id int) error
 	Exists(t *D) (bool, error)
 	GetAll() (*[]T, error)
+	GetManyByAttribute(attr, value string) (*[]T, error)
 	GetByAttribute(attr, value string) (*T, error)
 	Update(t *T) (*T, error)
 }

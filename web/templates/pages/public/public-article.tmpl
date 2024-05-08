@@ -8,17 +8,18 @@
       <b>Published</b> {{ .Article.CreatedAt.Format "2006-01-02"  }} &bull; <b>Updated</b> {{ .Article.UpdatedAt.Format "2006-01-02" }}
     </div>
 
-    <div class="article-header__tags">
-      <b>Tagged:</b>
-        {{ range $index, $tag := .Article.Tags -}}
-          {{ if ne $index 0 -}},{{- end}}
-            <a href="/tags/{{ $tag.Slug }}">{{ $tag.Name }}</a>
-        {{- end }}
-    </div>
   </div>
 
   <div>
     {{ .Content }}
+  </div>
+
+  <div class="article-footer__tags">
+    <b>Tagged:</b>
+      {{ range $index, $tag := .Article.Tags -}}
+        {{ if ne $index 0 -}},{{- end}}
+          <a href="/tags/{{ $tag.Slug }}">{{ $tag.Name }}</a>
+      {{- end }}
   </div>
 
 

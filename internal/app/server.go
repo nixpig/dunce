@@ -81,7 +81,10 @@ func Start(appConfig AppConfig) error {
 
 	homeController := home.NewHomeController(api, controllerConfig)
 
-	mux.HandleFunc("GET /articles/{slug}", stripTrailingSlashMiddleware(articleController.PublicGetArticle))
+	mux.HandleFunc("GET /articles", homeController.HomeArticlesGet)
+	mux.HandleFunc("GET /articles/{slug}", articleController.PublicGetArticle)
+	mux.HandleFunc("GET /tags", homeController.HomeTagsGet)
+	mux.HandleFunc("GET /tags/{slug}", homeController.HomeTagGet)
 
 	mux.HandleFunc("GET /", stripTrailingSlashMiddleware(rootHandler(homeController.HomeGet)))
 
@@ -104,26 +107,19 @@ func Start(appConfig AppConfig) error {
 
 func stripTrailingSlashMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/" || len(r.URL.Path) == 0 {
-			fmt.Println(" >>> is root")
+		isRoot := r.URL.Path == "/" || len(r.URL.Path) == 0
+
+		if isRoot {
 			next(w, r)
 			return
 		}
 
 		if r.URL.Path[len(r.URL.Path)-1] == '/' {
-			fmt.Println(" >>> is nested with slash; stripping")
 			r.URL.Path = r.URL.Path[:len(r.URL.Path)-1]
 			http.Redirect(w, r, r.URL.Path, 301)
 			return
 		}
 
-		// if r.URL.Path != "/" {
-		// 	fmt.Println(" >>> not root")
-		// 	http.Error(w, "Not Found", 404)
-		// 	return
-		// }
-
-		fmt.Println(" >>> fallback... ")
 		next.ServeHTTP(w, r)
 	})
 }

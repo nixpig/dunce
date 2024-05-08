@@ -1,11 +1,10 @@
-{{ define "title" }}nixpig.dev{{ end }}
+{{ define "title" }}Tag: {{ .Tag.Name }}{{ end }}
 
 {{ define "main" }}
+  <h1>{{ template "title" . }}</h1>
 
-  <h1>Home</h1>
+  <p>Articles tagged <a href="/tags/{{ .Tag.Slug }}" class="tag">{{ .Tag.Name }}</a>.
 
-
-  <h2>Recent articles</h2>
   <table>
     <thead>
       <th>Article title</th>
@@ -24,12 +23,5 @@
     </tbody>
   </table>
 
-  <h2>Tags</h2>
-
-  <div>
-    {{ range $index, $tag := .Tags }}
-      <a href="/tags/{{ $tag.Slug }}" class="tag">{{ $tag.Name }}</a>
-    {{ end }}
-  </div>
 
 {{ end }}

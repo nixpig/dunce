@@ -2,10 +2,8 @@
 
 {{ define "main" }}
 
-  <h1>Home</h1>
+  <h1>Articles</h1>
 
-
-  <h2>Recent articles</h2>
   <table>
     <thead>
       <th>Article title</th>
@@ -23,13 +21,5 @@
       {{ end }}
     </tbody>
   </table>
-
-  <h2>Tags</h2>
-
-  <div>
-    {{ range $index, $tag := .Tags }}
-      <a href="/tags/{{ $tag.Slug }}" class="tag">{{ $tag.Name }}</a>
-    {{ end }}
-  </div>
 
 {{ end }}

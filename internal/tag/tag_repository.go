@@ -92,6 +92,10 @@ func (t TagRepository) GetAll() (*[]Tag, error) {
 	return &tags, nil
 }
 
+func (t TagRepository) GetManyByAttribute(attr, value string) (*[]Tag, error) {
+	return nil, nil
+}
+
 func (t TagRepository) GetByAttribute(attr, value string) (*Tag, error) {
 	var query string
 

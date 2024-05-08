@@ -1,0 +1,13 @@
+{{ define "title" }}Tags{{ end }}
+
+{{ define "main" }}
+  <h1>{{ template "title" . }}</h1>
+
+  <div class="">
+    <ul>
+      {{ range $tag := .Tags -}}
+        <li><a href="/tags/{{ $tag.Slug }}">{{ $tag.Name }}</a></li>
+      {{ end }}
+    </ul>
+  </div>
+{{ end }}

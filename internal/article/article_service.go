@@ -55,6 +55,15 @@ func (a ArticleService) GetAll() (*[]Article, error) {
 	return articles, nil
 }
 
+func (a ArticleService) GetManyByAttribute(attr, value string) (*[]Article, error) {
+	articles, err := a.repo.GetManyByAttribute(attr, value)
+	if err != nil {
+		return nil, err
+	}
+
+	return articles, nil
+}
+
 func (a ArticleService) GetByAttribute(attr, value string) (*Article, error) {
 	article, err := a.repo.GetByAttribute(attr, value)
 	if err != nil {

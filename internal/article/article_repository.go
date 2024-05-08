@@ -167,6 +167,40 @@ func (a ArticleRepository) GetAll() (*[]Article, error) {
 	return &articles, nil
 }
 
+func (a ArticleRepository) GetManyByAttribute(attr, value string) (*[]Article, error) {
+	var articleQuery string
+	var err error
+
+	switch attr {
+	case "tagSlug":
+		articleQuery = `select a.id_, a.title_, a.subtitle_, a.slug_, a.body_, a.created_at_, a.updated_at_ from articles_ a inner join article_tags_ at on a.id_ = at.article_id_ inner join tags_ t on at.tag_id_ = t.id_ where t.slug_ = $1`
+
+	default:
+		return nil, errors.New("unsupported attribute")
+	}
+
+	rows, err := a.db.Query(context.Background(), articleQuery, value)
+	if err != nil {
+		a.log.Error(err.Error())
+		return nil, err
+	}
+
+	var articles []Article
+
+	for rows.Next() {
+		var article Article
+
+		if err := rows.Scan(&article.Id, &article.Title, &article.Subtitle, &article.Slug, &article.Body, &article.CreatedAt, &article.UpdatedAt); err != nil {
+			a.log.Error(err.Error())
+			return nil, err
+		}
+
+		articles = append(articles, article)
+	}
+
+	return &articles, nil
+}
+
 func (a ArticleRepository) GetByAttribute(attr, value string) (*Article, error) {
 	var articleQuery string
 

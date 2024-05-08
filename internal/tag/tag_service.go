@@ -55,6 +55,10 @@ func (t TagService) GetAll() (*[]Tag, error) {
 	return tags, nil
 }
 
+func (t TagService) GetManyByAttribute(attr, value string) (*[]Tag, error) {
+	return nil, nil
+}
+
 func (t TagService) GetByAttribute(attr, value string) (*Tag, error) {
 	tag, err := t.repo.GetByAttribute(attr, value)
 	if err != nil {
