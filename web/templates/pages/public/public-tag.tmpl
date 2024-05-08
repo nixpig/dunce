@@ -1,7 +1,9 @@
 {{ define "title" }}Tag: {{ .Tag.Name }}{{ end }}
 
 {{ define "main" }}
-  <h1>{{ template "title" . }}</h1>
+  <div class="hero">
+    <h1>{{ template "title" . }}</h1>
+  </div>
 
   <p>Articles tagged <a href="/tags/{{ .Tag.Slug }}" class="tag">{{ .Tag.Name }}</a>.
 

@@ -1,8 +1,8 @@
 {{ define "title" }}New user{{ end }}
 
 {{ define "main" }}
-  <div style="display: flex; align-items: flex-end;">
-    <h1 style="flex-grow: 1;">{{ template "title" . }}</h1>
+  <div class="hero">
+    <h1>{{ template "title" . }}</h1>
   </div>
 
   <form name="new-user" action="/admin/users" method="POST">

@@ -1,7 +1,9 @@
 {{ define "title" }}{{ .Article.Title }}{{ end }}
 
 {{ define "main" }}
-  <h1>{{ template "title" . }}</h1>
+  <div class="hero">
+    <h1>{{ template "title" . }}</h1>
+  </div>
 
   <div class="article-header__meta">
     <div class="article-header__dates">

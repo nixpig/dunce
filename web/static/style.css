@@ -19,6 +19,17 @@ header nav ul li {
   display: inline;
 }
 
+.hero {
+  border-bottom: 1px solid;
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.hero h1 {
+  flex-grow: 1;
+}
+
 .article-header__meta {
   display: flex;
   margin-bottom: 2rem;
@@ -39,7 +50,6 @@ header nav ul li {
   }
 }
 
-h1,
 h2 {
   padding-bottom: 1rem;
   border-bottom: 1px solid;
