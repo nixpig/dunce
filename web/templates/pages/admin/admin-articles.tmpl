@@ -23,10 +23,9 @@
 	  <td>{{ $article.Id }}</td>
 	  <td><a href="/admin/articles/{{ $article.Slug }}">{{ $article.Title }}</a></td>
 	  <td>
-	    {{ range $index, $tag := $article.Tags -}}
-	      {{ if ne $index 0 -}},{{- end }}
-	      <a href="/admin/tags/{{ $tag.Slug }}">{{ $tag.Name }}</a>
-	    {{- end }}
+	    {{ range $tag := $article.Tags }}
+	      <a href="/admin/tags/{{ $tag.Slug }}" class="tag">{{ $tag.Name }}</a>
+	    {{ end }}
 	  </td>
 	  <td>{{ $article.UpdatedAt.Format "2006-01-02" }}</td>
 	</tr>

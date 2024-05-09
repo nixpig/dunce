@@ -1,3 +1,7 @@
+body {
+  max-width: 45em;
+}
+
 header {
   display: flex;
   align-items: center;
@@ -44,7 +48,7 @@ header nav ul li {
   flex-grow: 1;
 }
 
-.article-footer__tags {
+.article-header__tags {
   @media screen and (min-width: 685px) {
     text-align: right;
   }
@@ -77,4 +81,32 @@ samp,
   font-family: monospace;
   font-size: 0.9em;
   background-color: #40363a;
+}
+
+.projects__utils,
+.projects__plugins {
+  display: flex;
+  gap: 1rem;
+}
+
+.projects__utils > div,
+.projects__plugins > div {
+  flex: 1 1 0;
+}
+
+.language::before {
+  content: "";
+  display: inline-block;
+  width: 0.675em;
+  height: 0.675em;
+  margin-right: 0.5em;
+  border-radius: 50%;
+}
+
+.language--rust::before {
+  background-color: #dea584;
+}
+
+.language--go::before {
+  background-color: #00add8;
 }

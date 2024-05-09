@@ -76,15 +76,17 @@ func (t *TagController) GetAdminTagsHandler(w http.ResponseWriter, r *http.Reque
 	message := t.sessionManager.PopString(r.Context(), pkg.SESSION_KEY_MESSAGE)
 
 	type tagTemplateView struct {
-		Message   string
-		Tags      *[]Tag
-		CsrfToken string
+		Message         string
+		Tags            *[]Tag
+		CsrfToken       string
+		IsAuthenticated bool
 	}
 
 	data := tagTemplateView{
-		Message:   message,
-		Tags:      tags,
-		CsrfToken: nosurf.Token(r),
+		Message:         message,
+		Tags:            tags,
+		CsrfToken:       nosurf.Token(r),
+		IsAuthenticated: t.sessionManager.Exists(r.Context(), string(pkg.IsLoggedInContextKey)),
 	}
 
 	err = t.templateCache["admin-tags.tmpl"].ExecuteTemplate(w, "admin", data)
@@ -104,11 +106,13 @@ func (t *TagController) GetAdminTagsSlugHandler(w http.ResponseWriter, r *http.R
 	}
 
 	if err := t.templateCache["admin-tag.tmpl"].ExecuteTemplate(w, "admin", struct {
-		Tag       *Tag
-		CsrfToken string
+		Tag             *Tag
+		CsrfToken       string
+		IsAuthenticated bool
 	}{
-		Tag:       tag,
-		CsrfToken: nosurf.Token(r),
+		Tag:             tag,
+		CsrfToken:       nosurf.Token(r),
+		IsAuthenticated: t.sessionManager.Exists(r.Context(), string(pkg.IsLoggedInContextKey)),
 	}); err != nil {
 		t.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -143,9 +147,11 @@ func (t *TagController) PostAdminTagsSlugHandler(w http.ResponseWriter, r *http.
 
 func (t *TagController) GetAdminTagsNewHandler(w http.ResponseWriter, r *http.Request) {
 	if err := t.templateCache["admin-new-tag.tmpl"].ExecuteTemplate(w, "admin", struct {
-		CsrfToken string
+		CsrfToken       string
+		IsAuthenticated bool
 	}{
-		CsrfToken: nosurf.Token(r),
+		CsrfToken:       nosurf.Token(r),
+		IsAuthenticated: t.sessionManager.Exists(r.Context(), string(pkg.IsLoggedInContextKey)),
 	}); err != nil {
 		t.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)

@@ -27,13 +27,16 @@
 	    <li><a href="/admin/tags">Tags</a></li>
 	    &bull;
 	    <li><a href="/admin/users">Users</a></li>
-	    |
-	    <li>
-	      <form style="display: inline;" action="/admin/logout" method="POST">
-		<input type="hidden" name="csrf_token" value="{{ .CsrfToken }}">
-		<button type="submit">Logout</button>
-	      </form>
-	    </li>
+
+	    {{ if .IsAuthenticated }}
+	      |
+	      <li>
+		  <form style="display: inline;" action="/admin/logout" method="POST">
+		    <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}">
+		    <button type="submit">Logout</button>
+		  </form>
+	      </li>
+	    {{ end }}
 
 	  </ul>
 	</nav>

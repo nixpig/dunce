@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/alexedwards/scs/v2"
 	"github.com/justinas/nosurf"
 	"github.com/nixpig/dunce/internal/tag"
 	"github.com/nixpig/dunce/pkg"
@@ -15,22 +16,25 @@ import (
 const longFormat = "2006-01-02 15:04:05.999999999 -0700 MST"
 
 type ArticleController struct {
-	service       pkg.Service[Article, ArticleNew]
-	tagService    pkg.Service[tag.Tag, tag.TagData]
-	log           pkg.Logger
-	templateCache map[string]*template.Template
+	service        pkg.Service[Article, ArticleNew]
+	tagService     pkg.Service[tag.Tag, tag.TagData]
+	sessionManager *scs.SessionManager
+	log            pkg.Logger
+	templateCache  map[string]*template.Template
 }
 
 func NewArticleController(
 	service pkg.Service[Article, ArticleNew],
 	tagsService pkg.Service[tag.Tag, tag.TagData],
+	sessionManager *scs.SessionManager,
 	config pkg.ControllerConfig,
 ) ArticleController {
 	return ArticleController{
-		service:       service,
-		tagService:    tagsService,
-		log:           config.Log,
-		templateCache: config.TemplateCache,
+		service:        service,
+		tagService:     tagsService,
+		sessionManager: sessionManager,
+		log:            config.Log,
+		templateCache:  config.TemplateCache,
 	}
 }
 
@@ -84,11 +88,13 @@ func (a *ArticleController) GetAllHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	if err := a.templateCache["admin-articles.tmpl"].ExecuteTemplate(w, "admin", struct {
-		Articles  *[]Article
-		CsrfToken string
+		Articles        *[]Article
+		CsrfToken       string
+		IsAuthenticated bool
 	}{
-		Articles:  articles,
-		CsrfToken: nosurf.Token(r),
+		Articles:        articles,
+		CsrfToken:       nosurf.Token(r),
+		IsAuthenticated: a.sessionManager.Exists(r.Context(), string(pkg.IsLoggedInContextKey)),
 	}); err != nil {
 		a.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -105,11 +111,13 @@ func (a *ArticleController) NewHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := a.templateCache["admin-new-article.tmpl"].ExecuteTemplate(w, "admin", struct {
-		Tags      *[]tag.Tag
-		CsrfToken string
+		Tags            *[]tag.Tag
+		CsrfToken       string
+		IsAuthenticated bool
 	}{
-		Tags:      availableTags,
-		CsrfToken: nosurf.Token(r),
+		Tags:            availableTags,
+		CsrfToken:       nosurf.Token(r),
+		IsAuthenticated: a.sessionManager.Exists(r.Context(), string(pkg.IsLoggedInContextKey)),
 	}); err != nil {
 		a.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -138,13 +146,15 @@ func (a *ArticleController) GetBySlugHander(w http.ResponseWriter, r *http.Reque
 		w,
 		"admin",
 		struct {
-			Article   Article
-			Tags      []tag.Tag
-			CsrfToken string
+			Article         Article
+			Tags            []tag.Tag
+			CsrfToken       string
+			IsAuthenticated bool
 		}{
-			Article:   *article,
-			Tags:      *allTags,
-			CsrfToken: nosurf.Token(r),
+			Article:         *article,
+			Tags:            *allTags,
+			CsrfToken:       nosurf.Token(r),
+			IsAuthenticated: a.sessionManager.Exists(r.Context(), string(pkg.IsLoggedInContextKey)),
 		},
 	); err != nil {
 		a.log.Error(err.Error())

@@ -34,11 +34,13 @@ func (u *UserController) UserLoginGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := u.templateCache["admin-login.tmpl"].ExecuteTemplate(w, "admin", struct {
-		Message   string
-		CsrfToken string
+		Message         string
+		CsrfToken       string
+		IsAuthenticated bool
 	}{
-		Message:   u.sessionManager.PopString(r.Context(), pkg.SESSION_KEY_MESSAGE),
-		CsrfToken: nosurf.Token(r),
+		Message:         u.sessionManager.PopString(r.Context(), pkg.SESSION_KEY_MESSAGE),
+		CsrfToken:       nosurf.Token(r),
+		IsAuthenticated: u.IsAuthenticated(r),
 	}); err != nil {
 		u.log.Error(err.Error())
 		http.Error(w, http.StatusText(500), http.StatusInternalServerError)
@@ -78,9 +80,11 @@ func (u *UserController) UserLogoutPost(w http.ResponseWriter, r *http.Request) 
 
 func (u *UserController) CreateUserGet(w http.ResponseWriter, r *http.Request) {
 	if err := u.templateCache["admin-new-user.tmpl"].ExecuteTemplate(w, "admin", struct {
-		CsrfToken string
+		CsrfToken       string
+		IsAuthenticated bool
 	}{
-		CsrfToken: nosurf.Token(r),
+		CsrfToken:       nosurf.Token(r),
+		IsAuthenticated: u.IsAuthenticated(r),
 	}); err != nil {
 		u.log.Error(err.Error())
 		http.Error(w, http.StatusText(500), http.StatusInternalServerError)
@@ -118,13 +122,15 @@ func (u *UserController) UsersGet(w http.ResponseWriter, r *http.Request) {
 	message := u.sessionManager.PopString(r.Context(), pkg.SESSION_KEY_MESSAGE)
 
 	if err := u.templateCache["admin-users.tmpl"].ExecuteTemplate(w, "admin", struct {
-		Message   string
-		Users     *[]User
-		CsrfToken string
+		Message         string
+		Users           *[]User
+		CsrfToken       string
+		IsAuthenticated bool
 	}{
-		Message:   message,
-		Users:     users,
-		CsrfToken: nosurf.Token(r),
+		Message:         message,
+		Users:           users,
+		CsrfToken:       nosurf.Token(r),
+		IsAuthenticated: u.IsAuthenticated(r),
 	}); err != nil {
 		u.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -141,13 +147,15 @@ func (u *UserController) UserGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := u.templateCache["admin-user.tmpl"].ExecuteTemplate(w, "admin", struct {
-		Message   string
-		User      *User
-		CsrfToken string
+		Message         string
+		User            *User
+		CsrfToken       string
+		IsAuthenticated bool
 	}{
-		Message:   "",
-		User:      user,
-		CsrfToken: nosurf.Token(r),
+		Message:         "",
+		User:            user,
+		CsrfToken:       nosurf.Token(r),
+		IsAuthenticated: u.IsAuthenticated(r),
 	}); err != nil {
 		u.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)

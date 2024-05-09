@@ -39,7 +39,11 @@ func Start(appConfig AppConfig) error {
 	mux.Handle("GET /static/", http.StripPrefix("/static/", static))
 
 	mux.HandleFunc("GET /admin", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/admin/login", http.StatusPermanentRedirect)
+		if appConfig.SessionManager.Exists(r.Context(), string(pkg.IsLoggedInContextKey)) {
+			http.Redirect(w, r, "/admin/articles", http.StatusSeeOther)
+		} else {
+			http.Redirect(w, r, "/admin/login", http.StatusSeeOther)
+		}
 	})
 
 	userRepo := user.NewUserRepository(appConfig.Db.Pool, appConfig.Logger)
@@ -68,7 +72,7 @@ func Start(appConfig AppConfig) error {
 
 	articleRepository := article.NewArticleRepository(appConfig.Db.Pool, appConfig.Logger)
 	articleService := article.NewArticleService(articleRepository, appConfig.Validator, appConfig.Logger)
-	articleController := article.NewArticleController(articleService, tagService, controllerConfig)
+	articleController := article.NewArticleController(articleService, tagService, appConfig.SessionManager, controllerConfig)
 
 	mux.HandleFunc("POST /admin/articles", userService.IsAuthenticatedMiddleware(appConfig.SessionManager, pkg.NoSurfMiddleware(pkg.ProtectedMiddleware(appConfig.SessionManager, articleController.CreateHandler))))
 	mux.HandleFunc("GET /admin/articles", userService.IsAuthenticatedMiddleware(appConfig.SessionManager, pkg.NoSurfMiddleware(pkg.ProtectedMiddleware(appConfig.SessionManager, articleController.GetAllHandler))))
