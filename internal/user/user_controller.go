@@ -12,13 +12,13 @@ import (
 )
 
 type UserController struct {
-	service        UserService
+	service        IUserService
 	log            pkg.Logger
 	templateCache  map[string]*template.Template
 	sessionManager *scs.SessionManager
 }
 
-func NewUserController(service UserService, config pkg.ControllerConfig) UserController {
+func NewUserController(service IUserService, config pkg.ControllerConfig) UserController {
 	return UserController{
 		service:        service,
 		log:            config.Log,
@@ -33,7 +33,7 @@ func (u *UserController) UserLoginGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := u.templateCache["admin-login.tmpl"].ExecuteTemplate(w, "admin", struct {
+	if err := u.templateCache["pages/admin/admin-login.tmpl"].ExecuteTemplate(w, "admin", struct {
 		Message         string
 		CsrfToken       string
 		IsAuthenticated bool
@@ -79,7 +79,7 @@ func (u *UserController) UserLogoutPost(w http.ResponseWriter, r *http.Request) 
 }
 
 func (u *UserController) CreateUserGet(w http.ResponseWriter, r *http.Request) {
-	if err := u.templateCache["admin-new-user.tmpl"].ExecuteTemplate(w, "admin", struct {
+	if err := u.templateCache["pages/admin/admin-new-user.tmpl"].ExecuteTemplate(w, "admin", struct {
 		CsrfToken       string
 		IsAuthenticated bool
 	}{
@@ -121,7 +121,7 @@ func (u *UserController) UsersGet(w http.ResponseWriter, r *http.Request) {
 
 	message := u.sessionManager.PopString(r.Context(), pkg.SESSION_KEY_MESSAGE)
 
-	if err := u.templateCache["admin-users.tmpl"].ExecuteTemplate(w, "admin", struct {
+	if err := u.templateCache["pages/admin/admin-users.tmpl"].ExecuteTemplate(w, "admin", struct {
 		Message         string
 		Users           *[]User
 		CsrfToken       string
@@ -146,7 +146,7 @@ func (u *UserController) UserGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := u.templateCache["admin-user.tmpl"].ExecuteTemplate(w, "admin", struct {
+	if err := u.templateCache["pages/admin/admin-user.tmpl"].ExecuteTemplate(w, "admin", struct {
 		Message         string
 		User            *User
 		CsrfToken       string

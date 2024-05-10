@@ -16,16 +16,16 @@ import (
 const longFormat = "2006-01-02 15:04:05.999999999 -0700 MST"
 
 type ArticleController struct {
-	service        pkg.Service[Article, ArticleNew]
-	tagService     pkg.Service[tag.Tag, tag.TagData]
+	service        IArticleService
+	tagService     tag.ITagService
 	sessionManager *scs.SessionManager
 	log            pkg.Logger
 	templateCache  map[string]*template.Template
 }
 
 func NewArticleController(
-	service pkg.Service[Article, ArticleNew],
-	tagsService pkg.Service[tag.Tag, tag.TagData],
+	service IArticleService,
+	tagsService tag.ITagService,
 	sessionManager *scs.SessionManager,
 	config pkg.ControllerConfig,
 ) ArticleController {
@@ -87,7 +87,7 @@ func (a *ArticleController) GetAllHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if err := a.templateCache["admin-articles.tmpl"].ExecuteTemplate(w, "admin", struct {
+	if err := a.templateCache["pages/admin/admin-articles.tmpl"].ExecuteTemplate(w, "admin", struct {
 		Articles        *[]Article
 		CsrfToken       string
 		IsAuthenticated bool
@@ -110,7 +110,7 @@ func (a *ArticleController) NewHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := a.templateCache["admin-new-article.tmpl"].ExecuteTemplate(w, "admin", struct {
+	if err := a.templateCache["pages/admin/admin-new-article.tmpl"].ExecuteTemplate(w, "admin", struct {
 		Tags            *[]tag.Tag
 		CsrfToken       string
 		IsAuthenticated bool
@@ -142,7 +142,7 @@ func (a *ArticleController) GetBySlugHander(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	if err := a.templateCache["admin-article.tmpl"].ExecuteTemplate(
+	if err := a.templateCache["pages/admin/admin-article.tmpl"].ExecuteTemplate(
 		w,
 		"admin",
 		struct {
@@ -273,7 +273,7 @@ func (a ArticleController) PublicGetArticle(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	if err := a.templateCache["public-article.tmpl"].ExecuteTemplate(
+	if err := a.templateCache["pages/public/public-article.tmpl"].ExecuteTemplate(
 		w,
 		"public",
 		struct {

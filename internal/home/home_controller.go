@@ -1,46 +1,47 @@
 package home
 
 import (
-	"fmt"
 	"html/template"
 	"net/http"
 
+	"github.com/alexedwards/scs/v2"
 	"github.com/nixpig/dunce/internal/article"
 	"github.com/nixpig/dunce/internal/tag"
 	"github.com/nixpig/dunce/pkg"
 )
 
 type HomeController struct {
-	templateCache map[string]*template.Template
-	api           Api
+	log            pkg.Logger
+	templateCache  map[string]*template.Template
+	sessionManager *scs.SessionManager
+	api            Api
 }
 
 func NewHomeController(api Api, config pkg.ControllerConfig) HomeController {
 	return HomeController{
-		templateCache: config.TemplateCache,
-		api:           api,
+		log:            config.Log,
+		templateCache:  config.TemplateCache,
+		sessionManager: config.SessionManager,
+		api:            api,
 	}
 }
 
 func (h *HomeController) HomeGet(w http.ResponseWriter, r *http.Request) {
-	if err := h.templateCache["index.tmpl"].ExecuteTemplate(w, "public", h.api); err != nil {
-		fmt.Println(" <<< err >>> ")
+	if err := h.templateCache["pages/public/index.tmpl"].ExecuteTemplate(w, "public", h.api); err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 }
 
 func (h *HomeController) HomeArticlesGet(w http.ResponseWriter, r *http.Request) {
-	if err := h.templateCache["public-articles.tmpl"].ExecuteTemplate(w, "public", h.api); err != nil {
-		fmt.Println(" <<< err >>> ")
+	if err := h.templateCache["pages/public/public-articles.tmpl"].ExecuteTemplate(w, "public", h.api); err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 }
 
 func (h *HomeController) HomeTagsGet(w http.ResponseWriter, r *http.Request) {
-	if err := h.templateCache["public-tags.tmpl"].ExecuteTemplate(w, "public", h.api); err != nil {
-		fmt.Println(" <<< err >>> ")
+	if err := h.templateCache["pages/public/public-tags.tmpl"].ExecuteTemplate(w, "public", h.api); err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
@@ -55,14 +56,13 @@ func (h *HomeController) HomeTagGet(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 	}
 
-	if err := h.templateCache["public-tag.tmpl"].ExecuteTemplate(w, "public", struct {
+	if err := h.templateCache["pages/public/public-tag.tmpl"].ExecuteTemplate(w, "public", struct {
 		Tag      *tag.Tag
 		Articles *[]article.Article
 	}{
 		Tag:      tagFromSlug,
 		Articles: articles,
 	}); err != nil {
-		fmt.Println(" <<< err >>> ")
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}

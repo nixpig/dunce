@@ -3,11 +3,20 @@ package user
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/nixpig/dunce/db"
 	"github.com/nixpig/dunce/pkg"
 )
+
+type IUserRepository interface {
+	Create(user *UserNew) (*User, error)
+	DeleteById(id int) error
+	Exists(username string) (bool, error)
+	GetAll() (*[]User, error)
+	GetByAttribute(attr, value string) (*User, error)
+	GetPasswordByUsername(username string) (string, error)
+	Update(user *User) (*User, error)
+}
 
 type UserRepository struct {
 	db  db.Dbconn
@@ -21,10 +30,6 @@ func NewUserRepository(db db.Dbconn, log pkg.Logger) UserRepository {
 	}
 }
 
-func (u UserRepository) Authenticate(user *User) (int, error) {
-	return 0, nil
-}
-
 func (u UserRepository) Create(user *UserNew) (*User, error) {
 	query := `insert into users_ (username_, email_, password_) values ($1, $2, $3) returning id_, username_, email_`
 
@@ -33,7 +38,7 @@ func (u UserRepository) Create(user *UserNew) (*User, error) {
 	createdUser := User{}
 
 	if err := row.Scan(&createdUser.Id, &createdUser.Username, &createdUser.Email); err != nil {
-		fmt.Println("OOPS!!", err)
+		u.log.Error(err.Error())
 		return nil, err
 	}
 

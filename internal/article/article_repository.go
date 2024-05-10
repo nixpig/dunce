@@ -12,6 +12,15 @@ import (
 	"github.com/nixpig/dunce/pkg"
 )
 
+type IArticleRepository interface {
+	DeleteById(id int) error
+	Create(article *ArticleNew) (*Article, error)
+	GetAll() (*[]Article, error)
+	GetManyByAttribute(attr, value string) (*[]Article, error)
+	GetByAttribute(attr, value string) (*Article, error)
+	Update(article *Article) (*Article, error)
+}
+
 type ArticleRepository struct {
 	db  db.Dbconn
 	log pkg.Logger
@@ -242,10 +251,6 @@ func (a ArticleRepository) GetByAttribute(attr, value string) (*Article, error) 
 	}
 
 	return &article, nil
-}
-
-func (a ArticleRepository) Exists(article *ArticleNew) (bool, error) {
-	return false, nil
 }
 
 func (a ArticleRepository) Update(article *Article) (*Article, error) {

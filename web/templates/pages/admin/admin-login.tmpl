@@ -8,10 +8,8 @@
   </div>
 
   {{ if .Message }}
-    <div>
-      <blockquote>
-	{{ .Message }}
-      </blockquote>
+    <div class="message message--error">
+      {{ .Message }}
     </div>
   {{ end }}
 

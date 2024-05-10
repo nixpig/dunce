@@ -12,15 +12,19 @@ import (
 )
 
 type TagController struct {
-	service        pkg.Service[Tag, TagData]
+	service        ITagService
 	log            pkg.Logger
 	templateCache  map[string]*template.Template
 	sessionManager *scs.SessionManager
 }
 
 func NewTagController(
-	service pkg.Service[Tag, TagData],
-	config pkg.ControllerConfig,
+	service ITagService,
+	config struct {
+		Log            pkg.Logger
+		TemplateCache  map[string]*template.Template
+		SessionManager *scs.SessionManager
+	},
 ) TagController {
 	return TagController{
 		service:        service,
@@ -89,7 +93,7 @@ func (t *TagController) GetAdminTagsHandler(w http.ResponseWriter, r *http.Reque
 		IsAuthenticated: t.sessionManager.Exists(r.Context(), string(pkg.IsLoggedInContextKey)),
 	}
 
-	err = t.templateCache["admin-tags.tmpl"].ExecuteTemplate(w, "admin", data)
+	err = t.templateCache["pages/admin/admin-tags.tmpl"].ExecuteTemplate(w, "admin", data)
 	if err != nil {
 		t.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -105,7 +109,7 @@ func (t *TagController) GetAdminTagsSlugHandler(w http.ResponseWriter, r *http.R
 		w.Write([]byte(err.Error()))
 	}
 
-	if err := t.templateCache["admin-tag.tmpl"].ExecuteTemplate(w, "admin", struct {
+	if err := t.templateCache["pages/admin/admin-tag.tmpl"].ExecuteTemplate(w, "admin", struct {
 		Tag             *Tag
 		CsrfToken       string
 		IsAuthenticated bool
@@ -146,7 +150,7 @@ func (t *TagController) PostAdminTagsSlugHandler(w http.ResponseWriter, r *http.
 }
 
 func (t *TagController) GetAdminTagsNewHandler(w http.ResponseWriter, r *http.Request) {
-	if err := t.templateCache["admin-new-tag.tmpl"].ExecuteTemplate(w, "admin", struct {
+	if err := t.templateCache["pages/admin/admin-new-tag.tmpl"].ExecuteTemplate(w, "admin", struct {
 		CsrfToken       string
 		IsAuthenticated bool
 	}{

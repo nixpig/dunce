@@ -9,10 +9,8 @@
   </div>
 
   {{ if .Message }}
-    <div>
-      <blockquote>
-	{{ .Message }}
-      </blockquote>
+    <div class="message message--success">
+      {{ .Message }}
     </div>
   {{ end }}
 

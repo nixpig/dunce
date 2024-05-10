@@ -5,14 +5,22 @@ import (
 	"github.com/nixpig/dunce/pkg"
 )
 
+type ITagService interface {
+	Create(tag *TagData) (*Tag, error)
+	DeleteById(id int) error
+	GetAll() (*[]Tag, error)
+	GetByAttribute(attr, value string) (*Tag, error)
+	Update(tag *Tag) (*Tag, error)
+}
+
 type TagService struct {
-	repo     pkg.Repository[Tag, TagData]
+	repo     ITagRepository
 	validate *validator.Validate
 	log      pkg.Logger
 }
 
 func NewTagService(
-	repo pkg.Repository[Tag, TagData],
+	repo ITagRepository,
 	validate *validator.Validate,
 	log pkg.Logger,
 ) TagService {

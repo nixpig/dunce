@@ -7,14 +7,23 @@ import (
 	"github.com/nixpig/dunce/pkg"
 )
 
+type IArticleService interface {
+	DeleteById(id int) error
+	Create(article *ArticleNew) (*Article, error)
+	GetAll() (*[]Article, error)
+	GetManyByAttribute(attr, value string) (*[]Article, error)
+	GetByAttribute(attr, value string) (*Article, error)
+	Update(article *Article) (*Article, error)
+}
+
 type ArticleService struct {
-	repo     pkg.Repository[Article, ArticleNew]
+	repo     IArticleRepository
 	validate *validator.Validate
 	log      pkg.Logger
 }
 
 func NewArticleService(
-	data pkg.Repository[Article, ArticleNew],
+	data IArticleRepository,
 	validator *validator.Validate,
 	log pkg.Logger,
 ) ArticleService {

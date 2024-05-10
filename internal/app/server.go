@@ -28,11 +28,11 @@ type AppConfig struct {
 func Start(appConfig AppConfig) error {
 	mux := http.NewServeMux()
 
-	controllerConfig := pkg.ControllerConfig{
-		TemplateCache:  appConfig.TemplateCache,
-		Log:            appConfig.Logger,
-		SessionManager: appConfig.SessionManager,
-	}
+	controllerConfig := pkg.NewControllerConfig(
+		appConfig.Logger,
+		appConfig.TemplateCache,
+		appConfig.SessionManager,
+	)
 
 	static := http.FileServer(http.Dir("./web/static/"))
 

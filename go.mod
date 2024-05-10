@@ -21,6 +21,7 @@ require (
 	github.com/alexedwards/scs/pgxstore v0.0.0-20240316134038-7e11d57e8885 // indirect
 	github.com/alexedwards/scs/v2 v2.8.0 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
+	github.com/bmatcuk/doublestar/v4 v4.6.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dlclark/regexp2 v1.11.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect

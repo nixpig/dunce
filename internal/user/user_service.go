@@ -10,14 +10,24 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type IUserService interface {
+	Create(user *UserNew) (*User, error)
+	DeleteById(id int) error
+	Exists(username string) (bool, error)
+	GetAll() (*[]User, error)
+	GetByAttribute(attr, value string) (*User, error)
+	Update(user *User) (*User, error)
+	LoginWithUsernamePassword(username, password string) error
+}
+
 type UserService struct {
-	repo     UserRepository
+	repo     IUserRepository
 	validate *validator.Validate
 	log      pkg.Logger
 }
 
 func NewUserService(
-	repo UserRepository,
+	repo IUserRepository,
 	validate *validator.Validate,
 	log pkg.Logger,
 ) UserService {

@@ -57,6 +57,11 @@ header nav ul li {
 h2 {
   padding-bottom: 1rem;
   border-bottom: 1px solid;
+  font-size: 1.625em;
+}
+
+h3 {
+  font-size: 1.25em;
 }
 
 footer {
@@ -83,10 +88,25 @@ samp,
   background-color: #40363a;
 }
 
+.projects__utils p,
+.projects__services p,
+.projects__plugins p {
+  margin-bottom: 1rem;
+}
+
+.projects__utils,
+.projects__services,
+.projects__plugins {
+}
+
 .projects__utils,
 .projects__plugins {
   display: flex;
   gap: 1rem;
+
+  @media screen and (max-width: 684px) {
+    flex-direction: column;
+  }
 }
 
 .projects__utils > div,
@@ -109,4 +129,28 @@ samp,
 
 .language--go::before {
   background-color: #00add8;
+}
+
+.message {
+  margin-left: 0px;
+  margin-right: 0px;
+  padding-left: 1em;
+  padding-top: 0.8em;
+  padding-bottom: 0.8em;
+  padding-right: 0.8em;
+  border-left: 5px solid #a5d6ff;
+  margin-bottom: 2.5rem;
+  background-color: #40363a;
+}
+
+.message--info {
+  border-color: #a5d6ff;
+}
+
+.message--error {
+  border-color: #f0883e;
+}
+
+.message--success {
+  border-color: #d2a8ff;
 }

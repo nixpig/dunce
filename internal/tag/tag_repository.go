@@ -8,6 +8,15 @@ import (
 	"github.com/nixpig/dunce/pkg"
 )
 
+type ITagRepository interface {
+	Create(tag *TagData) (*Tag, error)
+	DeleteById(id int) error
+	Exists(tag *TagData) (bool, error)
+	GetAll() (*[]Tag, error)
+	GetByAttribute(attr, value string) (*Tag, error)
+	Update(tag *Tag) (*Tag, error)
+}
+
 type TagRepository struct {
 	db  db.Dbconn
 	log pkg.Logger
@@ -90,10 +99,6 @@ func (t TagRepository) GetAll() (*[]Tag, error) {
 	}
 
 	return &tags, nil
-}
-
-func (t TagRepository) GetManyByAttribute(attr, value string) (*[]Tag, error) {
-	return nil, nil
 }
 
 func (t TagRepository) GetByAttribute(attr, value string) (*Tag, error) {
