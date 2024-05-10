@@ -5,7 +5,6 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/nixpig/dunce/pkg"
 	"github.com/pashagolub/pgxmock/v3"
 	"github.com/stretchr/testify/require"
 )
@@ -51,7 +50,7 @@ func TestTagRepository(t *testing.T) {
 
 			defer db.Close()
 
-			repo := NewTagRepository(db, pkg.NewLogger())
+			repo := NewTagRepository(db)
 
 			fn(t, db, repo)
 		})

@@ -23,25 +23,21 @@ type IUserService interface {
 type UserService struct {
 	repo     IUserRepository
 	validate *validator.Validate
-	log      pkg.Logger
 }
 
 func NewUserService(
 	repo IUserRepository,
 	validate *validator.Validate,
-	log pkg.Logger,
 ) UserService {
 	return UserService{
 		repo:     repo,
 		validate: validate,
-		log:      log,
 	}
 }
 
 func (u UserService) Create(user *UserNew) (*User, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 14)
 	if err != nil {
-		u.log.Error(err.Error())
 		return nil, err
 	}
 
@@ -71,7 +67,6 @@ func (u UserService) DeleteById(id int) error {
 func (u UserService) LoginWithUsernamePassword(username, password string) error {
 	hashedPassword, err := u.repo.GetPasswordByUsername(username)
 	if err != nil {
-		u.log.Error(err.Error())
 		return err
 	}
 
@@ -85,7 +80,6 @@ func (u UserService) LoginWithUsernamePassword(username, password string) error 
 func (u UserService) Exists(username string) (bool, error) {
 	exists, err := u.repo.Exists(username)
 	if err != nil {
-		u.log.Error(err.Error())
 		return false, err
 	}
 

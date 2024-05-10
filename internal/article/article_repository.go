@@ -9,7 +9,6 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/nixpig/dunce/db"
 	"github.com/nixpig/dunce/internal/tag"
-	"github.com/nixpig/dunce/pkg"
 )
 
 type IArticleRepository interface {
@@ -22,14 +21,12 @@ type IArticleRepository interface {
 }
 
 type ArticleRepository struct {
-	db  db.Dbconn
-	log pkg.Logger
+	db db.Dbconn
 }
 
-func NewArticleRepository(db db.Dbconn, log pkg.Logger) ArticleRepository {
+func NewArticleRepository(db db.Dbconn) ArticleRepository {
 	return ArticleRepository{
-		db:  db,
-		log: log,
+		db: db,
 	}
 }
 
@@ -39,7 +36,6 @@ func (a ArticleRepository) DeleteById(id int) error {
 
 	_, err := a.db.Exec(context.Background(), query, id)
 	if err != nil {
-		a.log.Error(err.Error())
 		return err
 	}
 
@@ -52,7 +48,6 @@ func (a ArticleRepository) Create(article *ArticleNew) (*Article, error) {
 
 	tx, err := a.db.Begin(context.Background())
 	if err != nil {
-		a.log.Error(err.Error())
 		return nil, err
 	}
 
@@ -61,7 +56,6 @@ func (a ArticleRepository) Create(article *ArticleNew) (*Article, error) {
 	var createdArticle Article
 
 	if err := row.Scan(&createdArticle.Id, &createdArticle.Title, &createdArticle.Subtitle, &createdArticle.Slug, &createdArticle.Body, &createdArticle.CreatedAt, &createdArticle.UpdatedAt); err != nil {
-		a.log.Error(err.Error())
 		return nil, err
 	}
 
@@ -81,12 +75,9 @@ func (a ArticleRepository) Create(article *ArticleNew) (*Article, error) {
 			err = br.Close()
 		}
 		if err != nil {
-			a.log.Error(err.Error())
 			tx.Rollback(context.Background())
 		} else {
-			if err := tx.Commit(context.Background()); err != nil {
-				a.log.Error(err.Error())
-			}
+			tx.Commit(context.Background())
 		}
 	}()
 
@@ -98,7 +89,6 @@ func (a ArticleRepository) Create(article *ArticleNew) (*Article, error) {
 			row := br.QueryRow()
 
 			if err := row.Scan(&addedTag.Id, &addedTag.Name, &addedTag.Slug); err != nil {
-				a.log.Error(err.Error())
 				return nil, err
 			}
 
@@ -115,7 +105,6 @@ func (a ArticleRepository) GetAll() (*[]Article, error) {
 
 	tagRows, err := a.db.Query(context.Background(), tagsQuery)
 	if err != nil {
-		a.log.Error(err.Error())
 		return nil, err
 	}
 
@@ -127,7 +116,6 @@ func (a ArticleRepository) GetAll() (*[]Article, error) {
 		var singleTag tag.Tag
 
 		if err := tagRows.Scan(&singleTag.Id, &singleTag.Name, &singleTag.Slug); err != nil {
-			a.log.Error(err.Error())
 			return nil, err
 		}
 
@@ -136,7 +124,6 @@ func (a ArticleRepository) GetAll() (*[]Article, error) {
 
 	rows, err := a.db.Query(context.Background(), articlesQuery)
 	if err != nil {
-		a.log.Error(err.Error())
 		return nil, err
 	}
 
@@ -149,7 +136,6 @@ func (a ArticleRepository) GetAll() (*[]Article, error) {
 		var articleTagIdsConcat string
 
 		if err := rows.Scan(&article.Id, &article.Title, &article.Subtitle, &article.Slug, &article.Body, &article.CreatedAt, &article.UpdatedAt, &articleTagIdsConcat); err != nil {
-			a.log.Error(err.Error())
 			return nil, err
 		}
 
@@ -160,7 +146,6 @@ func (a ArticleRepository) GetAll() (*[]Article, error) {
 		for index, articleTagId := range articleTagIds {
 			id, err := strconv.Atoi(articleTagId)
 			if err != nil {
-				a.log.Error(err.Error())
 				return nil, err
 			}
 
@@ -190,7 +175,6 @@ func (a ArticleRepository) GetManyByAttribute(attr, value string) (*[]Article, e
 
 	rows, err := a.db.Query(context.Background(), articleQuery, value)
 	if err != nil {
-		a.log.Error(err.Error())
 		return nil, err
 	}
 
@@ -200,7 +184,6 @@ func (a ArticleRepository) GetManyByAttribute(attr, value string) (*[]Article, e
 		var article Article
 
 		if err := rows.Scan(&article.Id, &article.Title, &article.Subtitle, &article.Slug, &article.Body, &article.CreatedAt, &article.UpdatedAt); err != nil {
-			a.log.Error(err.Error())
 			return nil, err
 		}
 
@@ -261,7 +244,6 @@ func (a ArticleRepository) Update(article *Article) (*Article, error) {
 
 	tagsRows, err := a.db.Query(context.Background(), tagsQuery)
 	if err != nil {
-		a.log.Error(err.Error())
 		return nil, err
 	}
 
@@ -271,7 +253,6 @@ func (a ArticleRepository) Update(article *Article) (*Article, error) {
 		var tag tag.Tag
 
 		if err := tagsRows.Scan(&tag.Id, &tag.Name, &tag.Slug); err != nil {
-			a.log.Error(err.Error())
 			return nil, err
 		}
 
@@ -280,7 +261,6 @@ func (a ArticleRepository) Update(article *Article) (*Article, error) {
 
 	tx, err := a.db.Begin(context.Background())
 	if err != nil {
-		a.log.Error(err.Error())
 		return nil, err
 	}
 
@@ -289,13 +269,11 @@ func (a ArticleRepository) Update(article *Article) (*Article, error) {
 	updatedArticle := Article{}
 
 	if err := row.Scan(&updatedArticle.Id, &updatedArticle.Title, &updatedArticle.Subtitle, &updatedArticle.Slug, &updatedArticle.Body, &updatedArticle.CreatedAt, &updatedArticle.UpdatedAt); err != nil {
-		a.log.Error(err.Error())
 		return nil, err
 	}
 
 	_, err = tx.Exec(context.Background(), deleteTagsQuery, updatedArticle.Id)
 	if err != nil {
-		a.log.Error(err.Error())
 		return nil, err
 	}
 
@@ -310,12 +288,9 @@ func (a ArticleRepository) Update(article *Article) (*Article, error) {
 	defer func() {
 		err := br.Close()
 		if err != nil {
-			a.log.Error(err.Error())
 			tx.Rollback(context.Background())
 		} else {
-			if err := tx.Commit(context.Background()); err != nil {
-				a.log.Error(err.Error())
-			}
+			tx.Commit(context.Background())
 		}
 	}()
 
@@ -326,7 +301,6 @@ func (a ArticleRepository) Update(article *Article) (*Article, error) {
 		row := br.QueryRow()
 
 		if err := row.Scan(&updatedTagId); err != nil {
-			a.log.Error(err.Error())
 			return nil, err
 		}
 

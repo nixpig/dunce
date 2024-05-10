@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"github.com/nixpig/dunce/db"
-	"github.com/nixpig/dunce/pkg"
 )
 
 type ITagRepository interface {
@@ -18,14 +17,12 @@ type ITagRepository interface {
 }
 
 type TagRepository struct {
-	db  db.Dbconn
-	log pkg.Logger
+	db db.Dbconn
 }
 
-func NewTagRepository(db db.Dbconn, log pkg.Logger) TagRepository {
+func NewTagRepository(db db.Dbconn) TagRepository {
 	return TagRepository{
-		db:  db,
-		log: log,
+		db: db,
 	}
 }
 
@@ -37,7 +34,6 @@ func (t TagRepository) Create(tag *TagData) (*Tag, error) {
 	row := t.db.QueryRow(context.Background(), query, tag.Name, tag.Slug)
 
 	if err := row.Scan(&createdTag.Id, &createdTag.Name, &createdTag.Slug); err != nil {
-		t.log.Error(err.Error())
 		return nil, err
 	}
 
@@ -49,7 +45,6 @@ func (t TagRepository) DeleteById(id int) error {
 
 	_, err := t.db.Exec(context.Background(), query, id)
 	if err != nil {
-		t.log.Error(err.Error())
 		return err
 	}
 
@@ -63,7 +58,6 @@ func (t TagRepository) Exists(tag *TagData) (bool, error) {
 
 	duplicateRow := t.db.QueryRow(context.Background(), checkDuplicatesQuery, tag.Slug)
 	if err := duplicateRow.Scan(&duplicateCount); err != nil {
-		t.log.Error(err.Error())
 		return false, err
 	}
 
@@ -79,7 +73,6 @@ func (t TagRepository) GetAll() (*[]Tag, error) {
 
 	rows, err := t.db.Query(context.Background(), query)
 	if err != nil {
-		t.log.Error(err.Error())
 		return nil, err
 	}
 
@@ -91,7 +84,6 @@ func (t TagRepository) GetAll() (*[]Tag, error) {
 		var tag Tag
 
 		if err := rows.Scan(&tag.Id, &tag.Name, &tag.Slug); err != nil {
-			t.log.Error(err.Error())
 			return nil, err
 		}
 
@@ -116,7 +108,6 @@ func (t TagRepository) GetByAttribute(attr, value string) (*Tag, error) {
 	var tag Tag
 
 	if err := row.Scan(&tag.Id, &tag.Name, &tag.Slug); err != nil {
-		t.log.Error(err.Error())
 		return nil, err
 	}
 
@@ -131,7 +122,6 @@ func (t TagRepository) Update(tag *Tag) (*Tag, error) {
 	var updatedTag Tag
 
 	if err := row.Scan(&updatedTag.Id, &updatedTag.Name, &updatedTag.Slug); err != nil {
-		t.log.Error(err.Error())
 		return nil, err
 	}
 

@@ -2,7 +2,6 @@ package tag
 
 import (
 	"github.com/go-playground/validator/v10"
-	"github.com/nixpig/dunce/pkg"
 )
 
 type ITagService interface {
@@ -16,18 +15,15 @@ type ITagService interface {
 type TagService struct {
 	repo     ITagRepository
 	validate *validator.Validate
-	log      pkg.Logger
 }
 
 func NewTagService(
 	repo ITagRepository,
 	validate *validator.Validate,
-	log pkg.Logger,
 ) TagService {
 	return TagService{
 		repo:     repo,
 		validate: validate,
-		log:      log,
 	}
 }
 
@@ -36,13 +32,11 @@ func (t TagService) Create(tag *TagData) (*Tag, error) {
 	// TODO: custom validator for tag name
 
 	if err := t.validate.Struct(tag); err != nil {
-		t.log.Error(err.Error())
 		return nil, err
 	}
 
 	createdTag, err := t.repo.Create(tag)
 	if err != nil {
-		t.log.Error(err.Error())
 		return nil, err
 	}
 
@@ -56,7 +50,6 @@ func (t TagService) DeleteById(id int) error {
 func (t TagService) GetAll() (*[]Tag, error) {
 	tags, err := t.repo.GetAll()
 	if err != nil {
-		t.log.Error(err.Error())
 		return nil, err
 	}
 
@@ -70,7 +63,6 @@ func (t TagService) GetManyByAttribute(attr, value string) (*[]Tag, error) {
 func (t TagService) GetByAttribute(attr, value string) (*Tag, error) {
 	tag, err := t.repo.GetByAttribute(attr, value)
 	if err != nil {
-		t.log.Error(err.Error())
 		return nil, err
 	}
 
@@ -79,13 +71,11 @@ func (t TagService) GetByAttribute(attr, value string) (*Tag, error) {
 
 func (t TagService) Update(tag *Tag) (*Tag, error) {
 	if err := t.validate.Struct(tag); err != nil {
-		t.log.Error(err.Error())
 		return nil, err
 	}
 
 	updatedTag, err := t.repo.Update(tag)
 	if err != nil {
-		t.log.Error(err.Error())
 		return nil, err
 	}
 

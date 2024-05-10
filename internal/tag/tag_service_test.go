@@ -81,7 +81,7 @@ func TestTagService(t *testing.T) {
 
 	for scenario, fn := range scenarios {
 		t.Run(scenario, func(t *testing.T) {
-			service := NewTagService(mockData, validate, pkg.NewLogger())
+			service := NewTagService(mockData, validate)
 
 			fn(t, service)
 		})

@@ -86,7 +86,7 @@ func TestArticleServiceCreate(t *testing.T) {
 
 	for scenario, fn := range scenarios {
 		t.Run(scenario, func(t *testing.T) {
-			service := NewArticleService(mockData, validate, pkg.NewLogger())
+			service := NewArticleService(mockData, validate)
 			fn(t, service)
 		})
 	}

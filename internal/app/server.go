@@ -46,8 +46,8 @@ func Start(appConfig AppConfig) error {
 		}
 	})
 
-	userRepo := user.NewUserRepository(appConfig.Db.Pool, appConfig.Logger)
-	userService := user.NewUserService(userRepo, appConfig.Validator, appConfig.Logger)
+	userRepo := user.NewUserRepository(appConfig.Db.Pool)
+	userService := user.NewUserService(userRepo, appConfig.Validator)
 	userController := user.NewUserController(userService, controllerConfig)
 
 	mux.HandleFunc("GET /admin/login", pkg.NoSurfMiddleware(userController.UserLoginGet))
@@ -59,8 +59,8 @@ func Start(appConfig AppConfig) error {
 	mux.HandleFunc("POST /admin/users", userService.IsAuthenticatedMiddleware(appConfig.SessionManager, pkg.NoSurfMiddleware(pkg.ProtectedMiddleware(appConfig.SessionManager, userController.CreateUserPost))))
 	mux.HandleFunc("POST /admin/users/{username}/delete", userService.IsAuthenticatedMiddleware(appConfig.SessionManager, pkg.NoSurfMiddleware(pkg.ProtectedMiddleware(appConfig.SessionManager, userController.DeleteUserPost))))
 
-	tagRepository := tag.NewTagRepository(appConfig.Db.Pool, appConfig.Logger)
-	tagService := tag.NewTagService(tagRepository, appConfig.Validator, appConfig.Logger)
+	tagRepository := tag.NewTagRepository(appConfig.Db.Pool)
+	tagService := tag.NewTagService(tagRepository, appConfig.Validator)
 	tagController := tag.NewTagController(tagService, controllerConfig)
 
 	mux.HandleFunc("POST /admin/tags", userService.IsAuthenticatedMiddleware(appConfig.SessionManager, pkg.NoSurfMiddleware(tagController.PostAdminTagsHandler)))
@@ -70,8 +70,8 @@ func Start(appConfig AppConfig) error {
 	mux.HandleFunc("POST /admin/tags/{slug}", userService.IsAuthenticatedMiddleware(appConfig.SessionManager, pkg.NoSurfMiddleware(pkg.ProtectedMiddleware(appConfig.SessionManager, tagController.PostAdminTagsSlugHandler))))
 	mux.HandleFunc("POST /admin/tags/{slug}/delete", userService.IsAuthenticatedMiddleware(appConfig.SessionManager, pkg.NoSurfMiddleware(pkg.ProtectedMiddleware(appConfig.SessionManager, tagController.DeleteAdminTagsSlugHandler))))
 
-	articleRepository := article.NewArticleRepository(appConfig.Db.Pool, appConfig.Logger)
-	articleService := article.NewArticleService(articleRepository, appConfig.Validator, appConfig.Logger)
+	articleRepository := article.NewArticleRepository(appConfig.Db.Pool)
+	articleService := article.NewArticleService(articleRepository, appConfig.Validator)
 	articleController := article.NewArticleController(articleService, tagService, appConfig.SessionManager, controllerConfig)
 
 	mux.HandleFunc("POST /admin/articles", userService.IsAuthenticatedMiddleware(appConfig.SessionManager, pkg.NoSurfMiddleware(pkg.ProtectedMiddleware(appConfig.SessionManager, articleController.CreateHandler))))

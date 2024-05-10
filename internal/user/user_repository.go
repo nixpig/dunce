@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"github.com/nixpig/dunce/db"
-	"github.com/nixpig/dunce/pkg"
 )
 
 type IUserRepository interface {
@@ -19,14 +18,12 @@ type IUserRepository interface {
 }
 
 type UserRepository struct {
-	db  db.Dbconn
-	log pkg.Logger
+	db db.Dbconn
 }
 
-func NewUserRepository(db db.Dbconn, log pkg.Logger) UserRepository {
+func NewUserRepository(db db.Dbconn) UserRepository {
 	return UserRepository{
-		db:  db,
-		log: log,
+		db: db,
 	}
 }
 
@@ -38,7 +35,6 @@ func (u UserRepository) Create(user *UserNew) (*User, error) {
 	createdUser := User{}
 
 	if err := row.Scan(&createdUser.Id, &createdUser.Username, &createdUser.Email); err != nil {
-		u.log.Error(err.Error())
 		return nil, err
 	}
 
@@ -68,7 +64,6 @@ func (u UserRepository) Exists(username string) (bool, error) {
 	var exists bool
 
 	if err := row.Scan(&exists); err != nil {
-		u.log.Error(err.Error())
 		return false, err
 	}
 
@@ -80,7 +75,6 @@ func (u UserRepository) GetAll() (*[]User, error) {
 
 	rows, err := u.db.Query(context.Background(), query)
 	if err != nil {
-		u.log.Error(err.Error())
 		return nil, err
 	}
 
@@ -109,7 +103,6 @@ func (u UserRepository) GetByAttribute(attr, value string) (*User, error) {
 		query = `select id_, username_, email_ from users_ where username_ = $1`
 	default:
 		err := errors.New("attribute not supported")
-		u.log.Error(err.Error())
 		return nil, err
 	}
 

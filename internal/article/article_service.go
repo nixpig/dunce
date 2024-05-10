@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/nixpig/dunce/pkg"
 )
 
 type IArticleService interface {
@@ -19,18 +18,15 @@ type IArticleService interface {
 type ArticleService struct {
 	repo     IArticleRepository
 	validate *validator.Validate
-	log      pkg.Logger
 }
 
 func NewArticleService(
 	data IArticleRepository,
 	validator *validator.Validate,
-	log pkg.Logger,
 ) ArticleService {
 	return ArticleService{
 		repo:     data,
 		validate: validator,
-		log:      log,
 	}
 }
 
@@ -41,13 +37,11 @@ func (a ArticleService) DeleteById(id int) error {
 func (a ArticleService) Create(article *ArticleNew) (*Article, error) {
 	if len(article.TagIds) == 0 {
 		minTagsError := errors.New("article must have at least one tag")
-		a.log.Error(minTagsError.Error())
 		return nil, minTagsError
 	}
 
 	createdArticle, err := a.repo.Create(article)
 	if err != nil {
-		a.log.Error(err.Error())
 		return nil, err
 	}
 
@@ -57,7 +51,6 @@ func (a ArticleService) Create(article *ArticleNew) (*Article, error) {
 func (a ArticleService) GetAll() (*[]Article, error) {
 	articles, err := a.repo.GetAll()
 	if err != nil {
-		a.log.Error(err.Error())
 		return nil, err
 	}
 
@@ -76,7 +69,6 @@ func (a ArticleService) GetManyByAttribute(attr, value string) (*[]Article, erro
 func (a ArticleService) GetByAttribute(attr, value string) (*Article, error) {
 	article, err := a.repo.GetByAttribute(attr, value)
 	if err != nil {
-		a.log.Error(err.Error())
 		return nil, err
 	}
 
@@ -86,7 +78,6 @@ func (a ArticleService) GetByAttribute(attr, value string) (*Article, error) {
 func (a ArticleService) Update(article *Article) (*Article, error) {
 	updatedArticle, err := a.repo.Update(article)
 	if err != nil {
-		a.log.Error(err.Error())
 		return nil, err
 	}
 

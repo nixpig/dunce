@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nixpig/dunce/pkg"
 	"github.com/pashagolub/pgxmock/v3"
 	"github.com/stretchr/testify/require"
 )
@@ -29,7 +28,7 @@ func TestArticleRepo(t *testing.T) {
 				t.Fatal("unable to create database mock")
 			}
 
-			data := NewArticleRepository(mock, pkg.NewLogger())
+			data := NewArticleRepository(mock)
 
 			fn(t, mock, data)
 		})
