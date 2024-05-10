@@ -51,6 +51,13 @@ func (m *MockArticleRepository) Exists(article *ArticleNew) (bool, error) {
 	return args.Get(0).(bool), args.Error(1)
 }
 
+func (m *MockArticleRepository) GetManyByAttribute(attr, val string) (*[]Article, error) {
+	args := m.Called(attr, val)
+
+	return args.Get(0).(*[]Article), args.Error(1)
+
+}
+
 var mockData = new(MockArticleRepository)
 
 var validate, _ = pkg.NewValidator()
