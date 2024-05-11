@@ -4,80 +4,113 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-type ITagService interface {
-	Create(tag *TagData) (*Tag, error)
+type TagService interface {
+	Create(tag *CreateTagRequestDto) (*TagResponseDto, error)
 	DeleteById(id int) error
-	GetAll() (*[]Tag, error)
-	GetByAttribute(attr, value string) (*Tag, error)
-	Update(tag *Tag) (*Tag, error)
+	GetAll() (*[]TagResponseDto, error)
+	GetByAttribute(attr, value string) (*TagResponseDto, error)
+	Update(tag *UpdateTagRequestDto) (*TagResponseDto, error)
 }
 
-type TagService struct {
-	repo     ITagRepository
+type TagServiceImpl struct {
+	repo     TagRepository
 	validate *validator.Validate
 }
 
 func NewTagService(
-	repo ITagRepository,
+	repo TagRepository,
 	validate *validator.Validate,
-) TagService {
-	return TagService{
+) TagServiceImpl {
+	return TagServiceImpl{
 		repo:     repo,
 		validate: validate,
 	}
 }
 
-func (t TagService) Create(tag *TagData) (*Tag, error) {
+func (t TagServiceImpl) Create(tag *CreateTagRequestDto) (*TagResponseDto, error) {
 	// TODO: make slug lowercase
 	// TODO: custom validator for tag name
 
-	if err := t.validate.Struct(tag); err != nil {
+	tagToCreate := Tag{
+		Name: tag.Name,
+		Slug: tag.Slug,
+	}
+
+	if err := t.validate.Struct(tagToCreate); err != nil {
 		return nil, err
 	}
 
-	createdTag, err := t.repo.Create(tag)
+	createdTag, err := t.repo.Create(&tagToCreate)
 	if err != nil {
 		return nil, err
 	}
 
-	return createdTag, nil
+	return &TagResponseDto{
+		Id:   createdTag.Id,
+		Name: createdTag.Name,
+		Slug: createdTag.Slug,
+	}, nil
 }
 
-func (t TagService) DeleteById(id int) error {
+func (t TagServiceImpl) DeleteById(id int) error {
 	return t.repo.DeleteById(id)
 }
 
-func (t TagService) GetAll() (*[]Tag, error) {
+func (t TagServiceImpl) GetAll() (*[]TagResponseDto, error) {
 	tags, err := t.repo.GetAll()
 	if err != nil {
 		return nil, err
 	}
 
-	return tags, nil
+	allTags := make([]TagResponseDto, len(*tags))
+
+	for index, tag := range *tags {
+		allTags[index] = TagResponseDto{
+			Id:   tag.Id,
+			Name: tag.Name,
+			Slug: tag.Slug,
+		}
+	}
+
+	return &allTags, nil
 }
 
-func (t TagService) GetManyByAttribute(attr, value string) (*[]Tag, error) {
-	return nil, nil
-}
-
-func (t TagService) GetByAttribute(attr, value string) (*Tag, error) {
+func (t TagServiceImpl) GetByAttribute(attr, value string) (*TagResponseDto, error) {
 	tag, err := t.repo.GetByAttribute(attr, value)
 	if err != nil {
 		return nil, err
 	}
 
-	return tag, nil
+	return &TagResponseDto{
+		Id:   tag.Id,
+		Name: tag.Name,
+		Slug: tag.Slug,
+	}, nil
 }
 
-func (t TagService) Update(tag *Tag) (*Tag, error) {
+func (t TagServiceImpl) Update(tag *UpdateTagRequestDto) (*TagResponseDto, error) {
 	if err := t.validate.Struct(tag); err != nil {
 		return nil, err
 	}
 
-	updatedTag, err := t.repo.Update(tag)
+	tagToUpdate := Tag{
+		Id:   tag.Id,
+		Name: tag.Name,
+		Slug: tag.Slug,
+	}
+
+	if err := t.validate.Struct(tagToUpdate); err != nil {
+		return nil, err
+	}
+
+	updatedTag, err := t.repo.Update(&tagToUpdate)
 	if err != nil {
 		return nil, err
 	}
 
-	return updatedTag, nil
+	return &TagResponseDto{
+		Id:   updatedTag.Id,
+		Name: updatedTag.Name,
+		Slug: updatedTag.Slug,
+	}, nil
 }

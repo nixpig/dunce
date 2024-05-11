@@ -11,26 +11,26 @@ import (
 	"github.com/nixpig/dunce/internal/tag"
 )
 
-type IArticleRepository interface {
+type ArticleRepository interface {
 	DeleteById(id int) error
 	Create(article *ArticleNew) (*Article, error)
 	GetAll() (*[]Article, error)
 	GetManyByAttribute(attr, value string) (*[]Article, error)
 	GetByAttribute(attr, value string) (*Article, error)
-	Update(article *Article) (*Article, error)
+	Update(article *UpdateArticle) (*Article, error)
 }
 
-type ArticleRepository struct {
+type articlePostgresRepository struct {
 	db db.Dbconn
 }
 
-func NewArticleRepository(db db.Dbconn) ArticleRepository {
-	return ArticleRepository{
+func NewArticlePostgresRepository(db db.Dbconn) articlePostgresRepository {
+	return articlePostgresRepository{
 		db: db,
 	}
 }
 
-func (a ArticleRepository) DeleteById(id int) error {
+func (a articlePostgresRepository) DeleteById(id int) error {
 	// FIXME: also needs to delete any tags from article_tags_ table
 	query := `delete from articles_ a using article_tags_ t where a.id_ = t.article_id_ and a.id_ = $1`
 
@@ -42,7 +42,7 @@ func (a ArticleRepository) DeleteById(id int) error {
 	return nil
 }
 
-func (a ArticleRepository) Create(article *ArticleNew) (*Article, error) {
+func (a articlePostgresRepository) Create(article *ArticleNew) (*Article, error) {
 	articleInsertQuery := `insert into articles_ (title_, subtitle_, slug_, body_, created_at_, updated_at_) values ($1, $2, $3, $4, $5, $6) returning id_, title_, subtitle_, slug_, body_, created_at_, updated_at_`
 	tagInsertQuery := `with tags as (select id_, name_, slug_ from tags_ where id_ = $2), article_tags as (insert into article_tags_ (article_id_, tag_id_) values ($1, $2)) select id_, name_, slug_ from tags`
 
@@ -99,7 +99,7 @@ func (a ArticleRepository) Create(article *ArticleNew) (*Article, error) {
 	return &createdArticle, nil
 }
 
-func (a ArticleRepository) GetAll() (*[]Article, error) {
+func (a articlePostgresRepository) GetAll() (*[]Article, error) {
 	articlesQuery := `select a.id_, a.title_, a.subtitle_, a.slug_, a.body_, a.created_at_, a.updated_at_, array_to_string(array_agg(distinct t.tag_id_), ',', '*') from articles_ a join article_tags_ t on a.id_ = t.article_id_ group by a.id_`
 	tagsQuery := `select id_, name_, slug_ from tags_`
 
@@ -161,7 +161,7 @@ func (a ArticleRepository) GetAll() (*[]Article, error) {
 	return &articles, nil
 }
 
-func (a ArticleRepository) GetManyByAttribute(attr, value string) (*[]Article, error) {
+func (a articlePostgresRepository) GetManyByAttribute(attr, value string) (*[]Article, error) {
 	var articleQuery string
 	var err error
 
@@ -193,7 +193,7 @@ func (a ArticleRepository) GetManyByAttribute(attr, value string) (*[]Article, e
 	return &articles, nil
 }
 
-func (a ArticleRepository) GetByAttribute(attr, value string) (*Article, error) {
+func (a articlePostgresRepository) GetByAttribute(attr, value string) (*Article, error) {
 	var articleQuery string
 
 	switch attr {
@@ -236,7 +236,7 @@ func (a ArticleRepository) GetByAttribute(attr, value string) (*Article, error) 
 	return &article, nil
 }
 
-func (a ArticleRepository) Update(article *Article) (*Article, error) {
+func (a articlePostgresRepository) Update(article *UpdateArticle) (*Article, error) {
 	updateArticleQuery := `update articles_ set title_ = $2, subtitle_ = $3, slug_ = $4, body_ = $5, created_at_ = $6, updated_at_ = $7 where id_ = $1 returning id_, title_, subtitle_, slug_, body_, created_at_, updated_at_`
 	deleteTagsQuery := `delete from article_tags_ where article_id_ = $1`
 	updateTagsQuery := `insert into article_tags_ (article_id_, tag_id_) values ($1, $2) returning tag_id_`
@@ -279,8 +279,8 @@ func (a ArticleRepository) Update(article *Article) (*Article, error) {
 
 	batch := &pgx.Batch{}
 
-	for _, t := range article.Tags {
-		batch.Queue(updateTagsQuery, updatedArticle.Id, t.Id)
+	for _, t := range article.TagIds {
+		batch.Queue(updateTagsQuery, updatedArticle.Id, t)
 	}
 
 	br := tx.SendBatch(context.Background(), batch)

@@ -7,7 +7,7 @@ import (
 )
 
 type Article struct {
-	Id        int
+	Id        int       `validate:"omitempty"`
 	Title     string    `validate:"required,max=255"`
 	Subtitle  string    `validate:"required,max=255"`
 	Slug      string    `validate:"required,min=2,max=50"`
@@ -15,6 +15,38 @@ type Article struct {
 	CreatedAt time.Time `validate:"required"`
 	UpdatedAt time.Time `validate:"required"`
 	Tags      []tag.Tag `validate:"required"`
+}
+
+type ArticleRequestDto struct {
+	Title     string    `validate:"required,max=255"`
+	Subtitle  string    `validate:"required,max=255"`
+	Slug      string    `validate:"required,min=2,max=50"`
+	Body      string    `validate:"required"`
+	CreatedAt time.Time `validate:"required"`
+	UpdatedAt time.Time `validate:"required"`
+	TagIds    []int     `validate:"required"`
+}
+
+type UpdateArticleRequestDto struct {
+	Id        int       `validate:"omitempty"`
+	Title     string    `validate:"required,max=255"`
+	Subtitle  string    `validate:"required,max=255"`
+	Slug      string    `validate:"required,min=2,max=50"`
+	Body      string    `validate:"required"`
+	CreatedAt time.Time `validate:"required"`
+	UpdatedAt time.Time `validate:"required"`
+	TagIds    []int     `validate:"required"`
+}
+
+type UpdateArticle struct {
+	Id        int       `validate:"omitempty"`
+	Title     string    `validate:"required,max=255"`
+	Subtitle  string    `validate:"required,max=255"`
+	Slug      string    `validate:"required,min=2,max=50"`
+	Body      string    `validate:"required"`
+	CreatedAt time.Time `validate:"required"`
+	UpdatedAt time.Time `validate:"required"`
+	TagIds    []int     `validate:"required"`
 }
 
 type ArticleNew struct {
@@ -27,50 +59,19 @@ type ArticleNew struct {
 	TagIds    []int     `validate:"required"`
 }
 
-type ArticleTag struct {
+type ArticleResponseDto struct {
 	Id        int
-	ArticleId int
-	TagId     int
+	Title     string
+	Subtitle  string
+	Slug      string
+	Body      string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Tags      []tag.Tag
 }
 
-func NewArticle(
-	title string,
-	subtitle string,
-	slug string,
-	body string,
-	createdAt time.Time,
-	updatedAt time.Time,
-	tags []tag.Tag,
-) Article {
-	return Article{
-		Title:     title,
-		Subtitle:  subtitle,
-		Slug:      slug,
-		Body:      body,
-		CreatedAt: createdAt,
-		UpdatedAt: updatedAt,
-		Tags:      tags,
-	}
-}
-
-func NewArticleWithId(
-	id int,
-	title string,
-	subtitle string,
-	slug string,
-	body string,
-	createdAt time.Time,
-	updatedAt time.Time,
-	tags []tag.Tag,
-) Article {
-	return Article{
-		Id:        id,
-		Title:     title,
-		Subtitle:  subtitle,
-		Slug:      slug,
-		Body:      body,
-		CreatedAt: createdAt,
-		UpdatedAt: updatedAt,
-		Tags:      tags,
-	}
+type ArticleTag struct {
+	Id        int `validate:"required"`
+	ArticleId int `validate:"required"`
+	TagId     int `validate:"required"`
 }

@@ -7,6 +7,12 @@ import (
 	"github.com/justinas/nosurf"
 )
 
+func NewProtectedMiddleware(sessionManager *scs.SessionManager) func(next http.HandlerFunc) http.HandlerFunc {
+	return func(next http.HandlerFunc) http.HandlerFunc {
+		return ProtectedMiddleware(sessionManager, next)
+	}
+}
+
 func ProtectedMiddleware(sessionManager *scs.SessionManager, next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !sessionManager.Exists(r.Context(), LOGGED_IN_USERNAME) {
@@ -19,6 +25,12 @@ func ProtectedMiddleware(sessionManager *scs.SessionManager, next http.HandlerFu
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+func NewNoSurfMiddleware() func(next http.HandlerFunc) http.HandlerFunc {
+	return func(next http.HandlerFunc) http.HandlerFunc {
+		return NoSurfMiddleware(next)
+	}
 }
 
 func NoSurfMiddleware(next http.HandlerFunc) http.HandlerFunc {

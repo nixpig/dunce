@@ -15,7 +15,7 @@ type MockArticleRepository struct {
 	mock.Mock
 }
 
-func (m *MockArticleRepository) Create(article *ArticleNew) (*Article, error) {
+func (m *MockArticleRepository) Create(article *ArticleRequestDto) (*Article, error) {
 	args := m.Called(article)
 
 	return args.Get(0).(*Article), args.Error(1)
@@ -45,7 +45,7 @@ func (m *MockArticleRepository) DeleteById(id int) error {
 	return args.Error(0)
 }
 
-func (m *MockArticleRepository) Exists(article *ArticleNew) (bool, error) {
+func (m *MockArticleRepository) Exists(article *ArticleRequestDto) (bool, error) {
 	args := m.Called(article)
 
 	return args.Get(0).(bool), args.Error(1)
@@ -63,7 +63,7 @@ var mockData = new(MockArticleRepository)
 var validate, _ = pkg.NewValidator()
 
 func TestArticleServiceCreate(t *testing.T) {
-	scenarios := map[string]func(t *testing.T, service ArticleService){
+	scenarios := map[string]func(t *testing.T, service ArticleServiceImpl){
 		// create
 		"create article":                       testServiceCreateArticle,
 		"fail to create article with no tags":  testServiceCreateArticleNoTags,
@@ -92,8 +92,8 @@ func TestArticleServiceCreate(t *testing.T) {
 	}
 }
 
-func testServiceCreateArticle(t *testing.T, service ArticleService) {
-	newArticle := ArticleNew{
+func testServiceCreateArticle(t *testing.T, service ArticleServiceImpl) {
+	newArticle := ArticleRequestDto{
 		Title:     "article title",
 		Subtitle:  "article subtitle",
 		Slug:      "article-slug",
@@ -116,18 +116,14 @@ func testServiceCreateArticle(t *testing.T, service ArticleService) {
 		UpdatedAt: newArticle.UpdatedAt,
 		Tags: []tag.Tag{
 			{
-				Id: 1,
-				TagData: tag.TagData{
-					Name: "tag one",
-					Slug: "slug-one",
-				},
+				Id:   1,
+				Name: "tag one",
+				Slug: "slug-one",
 			},
 			{
-				Id: 2,
-				TagData: tag.TagData{
-					Name: "tag two",
-					Slug: "slug-two",
-				},
+				Id:   2,
+				Name: "tag two",
+				Slug: "slug-two",
 			},
 		},
 	}
@@ -149,8 +145,8 @@ func testServiceCreateArticle(t *testing.T, service ArticleService) {
 	)
 }
 
-func testServiceCreateArticleNoTags(t *testing.T, service ArticleService) {
-	articleWithNoTags := ArticleNew{
+func testServiceCreateArticleNoTags(t *testing.T, service ArticleServiceImpl) {
+	articleWithNoTags := ArticleRequestDto{
 		Title:     "article title",
 		Subtitle:  "article subtitle",
 		Slug:      "article-slug",
@@ -166,8 +162,8 @@ func testServiceCreateArticleNoTags(t *testing.T, service ArticleService) {
 	require.EqualError(t, err, "article must have at least one tag", "should return error indicating article requires one or more tags")
 }
 
-func testServiceCreateArticleRepoError(t *testing.T, service ArticleService) {
-	newArticle := ArticleNew{
+func testServiceCreateArticleRepoError(t *testing.T, service ArticleServiceImpl) {
+	newArticle := ArticleRequestDto{
 		Title:     "article title",
 		Subtitle:  "article subtitle",
 		Slug:      "article-slug",
@@ -188,7 +184,7 @@ func testServiceCreateArticleRepoError(t *testing.T, service ArticleService) {
 	require.EqualError(t, err, "repo_error", "should return error")
 }
 
-func testServiceDeleteArticleByIdError(t *testing.T, service ArticleService) {
+func testServiceDeleteArticleByIdError(t *testing.T, service ArticleServiceImpl) {
 	mockCall := mockData.On("DeleteById", 23).Return(errors.New("repo_error"))
 
 	err := service.DeleteById(23)
@@ -199,7 +195,7 @@ func testServiceDeleteArticleByIdError(t *testing.T, service ArticleService) {
 	require.EqualError(t, err, "repo_error", "should bubble up error from repo")
 }
 
-func testServiceDeleteArticleById(t *testing.T, service ArticleService) {
+func testServiceDeleteArticleById(t *testing.T, service ArticleServiceImpl) {
 	mockCall := mockData.On("DeleteById", 23).Return(nil)
 
 	err := service.DeleteById(23)
@@ -210,7 +206,7 @@ func testServiceDeleteArticleById(t *testing.T, service ArticleService) {
 	require.Nil(t, err, "should not return error")
 }
 
-func testServiceGetAllArticles(t *testing.T, service ArticleService) {
+func testServiceGetAllArticles(t *testing.T, service ArticleServiceImpl) {
 	allArticles := []Article{
 		{
 			Title:     "article one title",
@@ -221,8 +217,9 @@ func testServiceGetAllArticles(t *testing.T, service ArticleService) {
 			UpdatedAt: time.Now().Add(42),
 			Tags: []tag.Tag{
 				{
-					Id:      23,
-					TagData: tag.TagData{Name: "tag one", Slug: "tag-one"},
+					Id:   23,
+					Name: "tag one",
+					Slug: "tag-one",
 				},
 			},
 		},
@@ -235,8 +232,9 @@ func testServiceGetAllArticles(t *testing.T, service ArticleService) {
 			UpdatedAt: time.Now().Add(23),
 			Tags: []tag.Tag{
 				{
-					Id:      23,
-					TagData: tag.TagData{Name: "tag one", Slug: "tag-one"},
+					Id:   23,
+					Name: "tag one",
+					Slug: "tag-one",
 				},
 			},
 		},
@@ -254,7 +252,7 @@ func testServiceGetAllArticles(t *testing.T, service ArticleService) {
 	require.Equal(t, articles, &allArticles, "should return all articles")
 }
 
-func testServiceGetAllArticlesError(t *testing.T, service ArticleService) {
+func testServiceGetAllArticlesError(t *testing.T, service ArticleServiceImpl) {
 	mockCall := mockData.On("GetAll").Return(&[]Article{}, errors.New("repo_error"))
 
 	articles, err := service.GetAll()
@@ -266,7 +264,7 @@ func testServiceGetAllArticlesError(t *testing.T, service ArticleService) {
 	require.Empty(t, articles, "should return empty articles")
 }
 
-func testServiceGetArticleBySlug(t *testing.T, service ArticleService) {
+func testServiceGetArticleBySlug(t *testing.T, service ArticleServiceImpl) {
 	article := Article{
 		Title:     "article one title",
 		Subtitle:  "article one subtitle",
@@ -276,8 +274,9 @@ func testServiceGetArticleBySlug(t *testing.T, service ArticleService) {
 		UpdatedAt: time.Now().Add(42),
 		Tags: []tag.Tag{
 			{
-				Id:      23,
-				TagData: tag.TagData{Name: "tag one", Slug: "tag-one"},
+				Id:   23,
+				Name: "tag one",
+				Slug: "tag-one",
 			},
 		},
 	}
@@ -295,7 +294,7 @@ func testServiceGetArticleBySlug(t *testing.T, service ArticleService) {
 	require.Equal(t, &article, gotArticle, "should return article by slug")
 }
 
-func testServiceGetArticleBySlugError(t *testing.T, service ArticleService) {
+func testServiceGetArticleBySlugError(t *testing.T, service ArticleServiceImpl) {
 	mockCall := mockData.
 		On("GetByAttribute", "slug", "article-slug").
 		Return(&Article{}, errors.New("repo_error"))
@@ -309,7 +308,7 @@ func testServiceGetArticleBySlugError(t *testing.T, service ArticleService) {
 	require.Nil(t, gotArticle, "should not return an article")
 }
 
-func testServiceUpdateArticle(t *testing.T, service ArticleService) {
+func testServiceUpdateArticle(t *testing.T, service ArticleServiceImpl) {
 	articleUpdate := Article{
 		Title:     "article one title",
 		Subtitle:  "article one subtitle",
@@ -319,8 +318,9 @@ func testServiceUpdateArticle(t *testing.T, service ArticleService) {
 		UpdatedAt: time.Now().Add(42),
 		Tags: []tag.Tag{
 			{
-				Id:      23,
-				TagData: tag.TagData{Name: "tag one", Slug: "tag-one"},
+				Id:   23,
+				Name: "tag one",
+				Slug: "tag-one",
 			},
 		},
 	}
@@ -338,7 +338,7 @@ func testServiceUpdateArticle(t *testing.T, service ArticleService) {
 	require.Equal(t, &articleUpdate, updated, "should return updated article")
 }
 
-func testServiceUpdateArticleError(t *testing.T, service ArticleService) {
+func testServiceUpdateArticleError(t *testing.T, service ArticleServiceImpl) {
 	articleUpdate := Article{
 		Title:     "article one title",
 		Subtitle:  "article one subtitle",
@@ -348,8 +348,9 @@ func testServiceUpdateArticleError(t *testing.T, service ArticleService) {
 		UpdatedAt: time.Now().Add(42),
 		Tags: []tag.Tag{
 			{
-				Id:      23,
-				TagData: tag.TagData{Name: "tag one", Slug: "tag-one"},
+				Id:   23,
+				Name: "tag one",
+				Slug: "tag-one",
 			},
 		},
 	}

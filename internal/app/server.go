@@ -34,6 +34,22 @@ func Start(appConfig AppConfig) error {
 		appConfig.SessionManager,
 	)
 
+	userRepo := user.NewUserRepository(appConfig.Db.Pool)
+	userService := user.NewUserService(userRepo, appConfig.Validator)
+	userController := user.NewUserController(userService, controllerConfig)
+
+	tagRepository := tag.NewTagPostgresRepository(appConfig.Db.Pool)
+	tagService := tag.NewTagService(tagRepository, appConfig.Validator)
+	tagController := tag.NewTagController(tagService, controllerConfig)
+
+	articleRepository := article.NewArticlePostgresRepository(appConfig.Db.Pool)
+	articleService := article.NewArticleService(articleRepository, appConfig.Validator)
+	articleController := article.NewArticleController(articleService, tagService, appConfig.SessionManager, controllerConfig)
+
+	isAuthenticated := user.NewIsAuthenticatedMiddleware(userService, appConfig.SessionManager)
+	protected := pkg.NewProtectedMiddleware(appConfig.SessionManager)
+	noSurf := pkg.NewNoSurfMiddleware()
+
 	static := http.FileServer(http.Dir("./web/static/"))
 
 	mux.Handle("GET /static/", http.StripPrefix("/static/", static))
@@ -46,44 +62,30 @@ func Start(appConfig AppConfig) error {
 		}
 	})
 
-	userRepo := user.NewUserRepository(appConfig.Db.Pool)
-	userService := user.NewUserService(userRepo, appConfig.Validator)
-	userController := user.NewUserController(userService, controllerConfig)
+	mux.HandleFunc("GET /admin/login", noSurf(userController.UserLoginGet))
+	mux.HandleFunc("POST /admin/login", noSurf(userController.UserLoginPost))
+	mux.HandleFunc("POST /admin/logout", noSurf(userController.UserLogoutPost))
+	mux.HandleFunc("GET /admin/users/new", isAuthenticated(noSurf(protected(userController.CreateUserGet))))
+	mux.HandleFunc("GET /admin/users/{slug}", isAuthenticated(noSurf(protected(userController.UserGet))))
+	mux.HandleFunc("GET /admin/users", isAuthenticated(noSurf(protected(userController.UsersGet))))
+	mux.HandleFunc("POST /admin/users", isAuthenticated(noSurf(protected(userController.CreateUserPost))))
+	mux.HandleFunc("POST /admin/users/{username}/delete", isAuthenticated(noSurf(protected(userController.DeleteUserPost))))
 
-	mux.HandleFunc("GET /admin/login", pkg.NoSurfMiddleware(userController.UserLoginGet))
-	mux.HandleFunc("POST /admin/login", pkg.NoSurfMiddleware(userController.UserLoginPost))
-	mux.HandleFunc("POST /admin/logout", pkg.NoSurfMiddleware(userController.UserLogoutPost))
-	mux.HandleFunc("GET /admin/users/new", userService.IsAuthenticatedMiddleware(appConfig.SessionManager, pkg.NoSurfMiddleware(pkg.ProtectedMiddleware(appConfig.SessionManager, userController.CreateUserGet))))
-	mux.HandleFunc("GET /admin/users/{slug}", userService.IsAuthenticatedMiddleware(appConfig.SessionManager, pkg.NoSurfMiddleware(pkg.ProtectedMiddleware(appConfig.SessionManager, userController.UserGet))))
-	mux.HandleFunc("GET /admin/users", userService.IsAuthenticatedMiddleware(appConfig.SessionManager, pkg.NoSurfMiddleware(pkg.ProtectedMiddleware(appConfig.SessionManager, userController.UsersGet))))
-	mux.HandleFunc("POST /admin/users", userService.IsAuthenticatedMiddleware(appConfig.SessionManager, pkg.NoSurfMiddleware(pkg.ProtectedMiddleware(appConfig.SessionManager, userController.CreateUserPost))))
-	mux.HandleFunc("POST /admin/users/{username}/delete", userService.IsAuthenticatedMiddleware(appConfig.SessionManager, pkg.NoSurfMiddleware(pkg.ProtectedMiddleware(appConfig.SessionManager, userController.DeleteUserPost))))
+	mux.HandleFunc("POST /admin/tags", isAuthenticated(noSurf(tagController.PostAdminTagsHandler)))
+	mux.HandleFunc("GET /admin/tags", isAuthenticated(noSurf(protected(tagController.GetAdminTagsHandler))))
+	mux.HandleFunc("GET /admin/tags/new", isAuthenticated(noSurf(protected(tagController.GetAdminTagsNewHandler))))
+	mux.HandleFunc("GET /admin/tags/{slug}", isAuthenticated(noSurf(protected(tagController.GetAdminTagsSlugHandler))))
+	mux.HandleFunc("POST /admin/tags/{slug}", isAuthenticated(noSurf(protected(tagController.PostAdminTagsSlugHandler))))
+	mux.HandleFunc("POST /admin/tags/{slug}/delete", isAuthenticated(noSurf(protected(tagController.DeleteAdminTagsSlugHandler))))
 
-	tagRepository := tag.NewTagRepository(appConfig.Db.Pool)
-	tagService := tag.NewTagService(tagRepository, appConfig.Validator)
-	tagController := tag.NewTagController(tagService, controllerConfig)
+	mux.HandleFunc("POST /admin/articles", isAuthenticated(noSurf(protected(articleController.CreateHandler))))
+	mux.HandleFunc("GET /admin/articles", isAuthenticated(noSurf(protected(articleController.GetAllHandler))))
+	mux.HandleFunc("GET /admin/articles/new", isAuthenticated(noSurf(protected(articleController.NewHandler))))
+	mux.HandleFunc("GET /admin/articles/{slug}", isAuthenticated(noSurf(protected(articleController.GetBySlugHander))))
+	mux.HandleFunc("POST /admin/articles/{slug}", isAuthenticated(noSurf(protected(articleController.UpdateHandler))))
+	mux.HandleFunc("POST /admin/articles/{slug}/delete", isAuthenticated(noSurf(protected(articleController.AdminArticlesDeleteHandler))))
 
-	mux.HandleFunc("POST /admin/tags", userService.IsAuthenticatedMiddleware(appConfig.SessionManager, pkg.NoSurfMiddleware(tagController.PostAdminTagsHandler)))
-	mux.HandleFunc("GET /admin/tags", userService.IsAuthenticatedMiddleware(appConfig.SessionManager, pkg.NoSurfMiddleware(pkg.ProtectedMiddleware(appConfig.SessionManager, tagController.GetAdminTagsHandler))))
-	mux.HandleFunc("GET /admin/tags/new", userService.IsAuthenticatedMiddleware(appConfig.SessionManager, pkg.NoSurfMiddleware(pkg.ProtectedMiddleware(appConfig.SessionManager, tagController.GetAdminTagsNewHandler))))
-	mux.HandleFunc("GET /admin/tags/{slug}", userService.IsAuthenticatedMiddleware(appConfig.SessionManager, pkg.NoSurfMiddleware(pkg.ProtectedMiddleware(appConfig.SessionManager, tagController.GetAdminTagsSlugHandler))))
-	mux.HandleFunc("POST /admin/tags/{slug}", userService.IsAuthenticatedMiddleware(appConfig.SessionManager, pkg.NoSurfMiddleware(pkg.ProtectedMiddleware(appConfig.SessionManager, tagController.PostAdminTagsSlugHandler))))
-	mux.HandleFunc("POST /admin/tags/{slug}/delete", userService.IsAuthenticatedMiddleware(appConfig.SessionManager, pkg.NoSurfMiddleware(pkg.ProtectedMiddleware(appConfig.SessionManager, tagController.DeleteAdminTagsSlugHandler))))
-
-	articleRepository := article.NewArticleRepository(appConfig.Db.Pool)
-	articleService := article.NewArticleService(articleRepository, appConfig.Validator)
-	articleController := article.NewArticleController(articleService, tagService, appConfig.SessionManager, controllerConfig)
-
-	mux.HandleFunc("POST /admin/articles", userService.IsAuthenticatedMiddleware(appConfig.SessionManager, pkg.NoSurfMiddleware(pkg.ProtectedMiddleware(appConfig.SessionManager, articleController.CreateHandler))))
-	mux.HandleFunc("GET /admin/articles", userService.IsAuthenticatedMiddleware(appConfig.SessionManager, pkg.NoSurfMiddleware(pkg.ProtectedMiddleware(appConfig.SessionManager, articleController.GetAllHandler))))
-	mux.HandleFunc("GET /admin/articles/new", userService.IsAuthenticatedMiddleware(appConfig.SessionManager, pkg.NoSurfMiddleware(pkg.ProtectedMiddleware(appConfig.SessionManager, articleController.NewHandler))))
-	mux.HandleFunc("GET /admin/articles/{slug}", userService.IsAuthenticatedMiddleware(appConfig.SessionManager, pkg.NoSurfMiddleware(pkg.ProtectedMiddleware(appConfig.SessionManager, articleController.GetBySlugHander))))
-	mux.HandleFunc("POST /admin/articles/{slug}", userService.IsAuthenticatedMiddleware(appConfig.SessionManager, pkg.NoSurfMiddleware(pkg.ProtectedMiddleware(appConfig.SessionManager, articleController.UpdateHandler))))
-	mux.HandleFunc("POST /admin/articles/{slug}/delete", userService.IsAuthenticatedMiddleware(appConfig.SessionManager, pkg.NoSurfMiddleware(pkg.ProtectedMiddleware(appConfig.SessionManager, articleController.AdminArticlesDeleteHandler))))
-
-	api := home.NewApi(articleService, tagService)
-
-	homeController := home.NewHomeController(api, controllerConfig)
+	homeController := home.NewHomeController(tagService, articleService, controllerConfig)
 
 	mux.HandleFunc("GET /articles", homeController.HomeArticlesGet)
 	mux.HandleFunc("GET /articles/{slug}", articleController.PublicGetArticle)

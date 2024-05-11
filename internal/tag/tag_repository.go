@@ -7,26 +7,26 @@ import (
 	"github.com/nixpig/dunce/db"
 )
 
-type ITagRepository interface {
-	Create(tag *TagData) (*Tag, error)
+type TagRepository interface {
+	Create(tag *Tag) (*Tag, error)
 	DeleteById(id int) error
-	Exists(tag *TagData) (bool, error)
+	Exists(tag *Tag) (bool, error)
 	GetAll() (*[]Tag, error)
 	GetByAttribute(attr, value string) (*Tag, error)
 	Update(tag *Tag) (*Tag, error)
 }
 
-type TagRepository struct {
+type tagPostgresRepository struct {
 	db db.Dbconn
 }
 
-func NewTagRepository(db db.Dbconn) TagRepository {
-	return TagRepository{
+func NewTagPostgresRepository(db db.Dbconn) tagPostgresRepository {
+	return tagPostgresRepository{
 		db: db,
 	}
 }
 
-func (t TagRepository) Create(tag *TagData) (*Tag, error) {
+func (t tagPostgresRepository) Create(tag *Tag) (*Tag, error) {
 	query := `insert into tags_ (name_, slug_) values ($1, $2) returning id_, name_, slug_`
 
 	var createdTag Tag
@@ -40,7 +40,7 @@ func (t TagRepository) Create(tag *TagData) (*Tag, error) {
 	return &createdTag, nil
 }
 
-func (t TagRepository) DeleteById(id int) error {
+func (t tagPostgresRepository) DeleteById(id int) error {
 	query := `delete from tags_ where id_ = $1`
 
 	_, err := t.db.Exec(context.Background(), query, id)
@@ -51,7 +51,7 @@ func (t TagRepository) DeleteById(id int) error {
 	return nil
 }
 
-func (t TagRepository) Exists(tag *TagData) (bool, error) {
+func (t tagPostgresRepository) Exists(tag *Tag) (bool, error) {
 	checkDuplicatesQuery := `select count(*) from tags_ where slug_ = $1`
 
 	var duplicateCount int
@@ -68,7 +68,7 @@ func (t TagRepository) Exists(tag *TagData) (bool, error) {
 	return false, nil
 }
 
-func (t TagRepository) GetAll() (*[]Tag, error) {
+func (t tagPostgresRepository) GetAll() (*[]Tag, error) {
 	query := `select id_, name_, slug_ from tags_`
 
 	rows, err := t.db.Query(context.Background(), query)
@@ -93,7 +93,7 @@ func (t TagRepository) GetAll() (*[]Tag, error) {
 	return &tags, nil
 }
 
-func (t TagRepository) GetByAttribute(attr, value string) (*Tag, error) {
+func (t tagPostgresRepository) GetByAttribute(attr, value string) (*Tag, error) {
 	var query string
 
 	switch attr {
@@ -114,7 +114,7 @@ func (t TagRepository) GetByAttribute(attr, value string) (*Tag, error) {
 	return &tag, nil
 }
 
-func (t TagRepository) Update(tag *Tag) (*Tag, error) {
+func (t tagPostgresRepository) Update(tag *Tag) (*Tag, error) {
 	query := `update tags_ set name_ = $2, slug_ = $3 where id_ = $1 returning id_, name_, slug_`
 
 	row := t.db.QueryRow(context.Background(), query, tag.Id, tag.Name, tag.Slug)

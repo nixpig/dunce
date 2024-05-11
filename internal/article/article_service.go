@@ -6,80 +6,158 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-type IArticleService interface {
+type ArticleService interface {
 	DeleteById(id int) error
-	Create(article *ArticleNew) (*Article, error)
-	GetAll() (*[]Article, error)
-	GetManyByAttribute(attr, value string) (*[]Article, error)
-	GetByAttribute(attr, value string) (*Article, error)
-	Update(article *Article) (*Article, error)
+	Create(article *ArticleRequestDto) (*ArticleResponseDto, error)
+	GetAll() (*[]ArticleResponseDto, error)
+	GetManyByAttribute(attr, value string) (*[]ArticleResponseDto, error)
+	GetByAttribute(attr, value string) (*ArticleResponseDto, error)
+	Update(article *UpdateArticleRequestDto) (*ArticleResponseDto, error)
 }
 
-type ArticleService struct {
-	repo     IArticleRepository
+type ArticleServiceImpl struct {
+	repo     ArticleRepository
 	validate *validator.Validate
 }
 
 func NewArticleService(
-	data IArticleRepository,
+	data ArticleRepository,
 	validator *validator.Validate,
-) ArticleService {
-	return ArticleService{
+) ArticleServiceImpl {
+	return ArticleServiceImpl{
 		repo:     data,
 		validate: validator,
 	}
 }
 
-func (a ArticleService) DeleteById(id int) error {
+func (a ArticleServiceImpl) DeleteById(id int) error {
 	return a.repo.DeleteById(id)
 }
 
-func (a ArticleService) Create(article *ArticleNew) (*Article, error) {
+func (a ArticleServiceImpl) Create(article *ArticleRequestDto) (*ArticleResponseDto, error) {
 	if len(article.TagIds) == 0 {
 		minTagsError := errors.New("article must have at least one tag")
 		return nil, minTagsError
 	}
 
-	createdArticle, err := a.repo.Create(article)
+	articleToCreate := ArticleNew{
+		Title:     article.Title,
+		Subtitle:  article.Subtitle,
+		Slug:      article.Slug,
+		Body:      article.Body,
+		CreatedAt: article.CreatedAt,
+		UpdatedAt: article.UpdatedAt,
+		TagIds:    article.TagIds,
+	}
+
+	createdArticle, err := a.repo.Create(&articleToCreate)
 	if err != nil {
 		return nil, err
 	}
 
-	return createdArticle, nil
+	return &ArticleResponseDto{
+		Id:        createdArticle.Id,
+		Title:     createdArticle.Title,
+		Subtitle:  createdArticle.Subtitle,
+		Slug:      createdArticle.Slug,
+		Body:      createdArticle.Body,
+		CreatedAt: createdArticle.CreatedAt,
+		UpdatedAt: createdArticle.UpdatedAt,
+		Tags:      createdArticle.Tags,
+	}, nil
 }
 
-func (a ArticleService) GetAll() (*[]Article, error) {
+func (a ArticleServiceImpl) GetAll() (*[]ArticleResponseDto, error) {
 	articles, err := a.repo.GetAll()
 	if err != nil {
 		return nil, err
 	}
 
-	return articles, nil
+	allArticles := make([]ArticleResponseDto, len(*articles))
+
+	for index, article := range *articles {
+		allArticles[index] = ArticleResponseDto{
+			Id:        article.Id,
+			Title:     article.Title,
+			Subtitle:  article.Subtitle,
+			Slug:      article.Slug,
+			Body:      article.Body,
+			CreatedAt: article.CreatedAt,
+			UpdatedAt: article.UpdatedAt,
+			Tags:      article.Tags,
+		}
+	}
+
+	return &allArticles, nil
 }
 
-func (a ArticleService) GetManyByAttribute(attr, value string) (*[]Article, error) {
+func (a ArticleServiceImpl) GetManyByAttribute(attr, value string) (*[]ArticleResponseDto, error) {
 	articles, err := a.repo.GetManyByAttribute(attr, value)
 	if err != nil {
 		return nil, err
 	}
 
-	return articles, nil
+	allArticles := make([]ArticleResponseDto, len(*articles))
+
+	for index, article := range *articles {
+		allArticles[index] = ArticleResponseDto{
+			Id:        article.Id,
+			Title:     article.Title,
+			Subtitle:  article.Subtitle,
+			Slug:      article.Slug,
+			Body:      article.Body,
+			CreatedAt: article.CreatedAt,
+			UpdatedAt: article.UpdatedAt,
+			Tags:      article.Tags,
+		}
+	}
+
+	return &allArticles, nil
 }
 
-func (a ArticleService) GetByAttribute(attr, value string) (*Article, error) {
+func (a ArticleServiceImpl) GetByAttribute(attr, value string) (*ArticleResponseDto, error) {
 	article, err := a.repo.GetByAttribute(attr, value)
 	if err != nil {
 		return nil, err
 	}
 
-	return article, nil
+	return &ArticleResponseDto{
+		Id:        article.Id,
+		Title:     article.Title,
+		Subtitle:  article.Subtitle,
+		Slug:      article.Slug,
+		Body:      article.Body,
+		CreatedAt: article.CreatedAt,
+		UpdatedAt: article.UpdatedAt,
+		Tags:      article.Tags,
+	}, nil
 }
 
-func (a ArticleService) Update(article *Article) (*Article, error) {
-	updatedArticle, err := a.repo.Update(article)
+func (a ArticleServiceImpl) Update(article *UpdateArticleRequestDto) (*ArticleResponseDto, error) {
+	articleToUpdate := UpdateArticle{
+		Id:        article.Id,
+		Title:     article.Title,
+		Subtitle:  article.Subtitle,
+		Slug:      article.Slug,
+		Body:      article.Body,
+		CreatedAt: article.CreatedAt,
+		UpdatedAt: article.UpdatedAt,
+		TagIds:    article.TagIds,
+	}
+
+	updatedArticle, err := a.repo.Update(&articleToUpdate)
 	if err != nil {
 		return nil, err
 	}
 
-	return updatedArticle, nil
+	return &ArticleResponseDto{
+		Id:        updatedArticle.Id,
+		Title:     updatedArticle.Title,
+		Subtitle:  updatedArticle.Subtitle,
+		Slug:      updatedArticle.Slug,
+		Body:      updatedArticle.Body,
+		CreatedAt: updatedArticle.CreatedAt,
+		UpdatedAt: updatedArticle.UpdatedAt,
+		Tags:      updatedArticle.Tags,
+	}, nil
 }

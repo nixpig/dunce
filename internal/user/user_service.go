@@ -18,6 +18,7 @@ type IUserService interface {
 	GetByAttribute(attr, value string) (*User, error)
 	Update(user *User) (*User, error)
 	LoginWithUsernamePassword(username, password string) error
+	IsAuthenticatedMiddleware(sessionManager *scs.SessionManager, next http.HandlerFunc) http.HandlerFunc
 }
 
 type UserService struct {
@@ -84,6 +85,12 @@ func (u UserService) Exists(username string) (bool, error) {
 	}
 
 	return exists, nil
+}
+
+func NewIsAuthenticatedMiddleware(userService IUserService, sessionManager *scs.SessionManager) func(next http.HandlerFunc) http.HandlerFunc {
+	return func(next http.HandlerFunc) http.HandlerFunc {
+		return userService.IsAuthenticatedMiddleware(sessionManager, next)
+	}
 }
 
 func (u UserService) IsAuthenticatedMiddleware(sessionManager *scs.SessionManager, next http.HandlerFunc) http.HandlerFunc {

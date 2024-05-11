@@ -11,7 +11,7 @@ import (
 )
 
 func TestArticleRepo(t *testing.T) {
-	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface, data ArticleRepository){
+	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface, data articlePostgresRepository){
 		// create
 		"test create new article":        testCreateNewArticle,
 		"test create fails on db errors": testCreateNewArticleFailsOnDbErrors,
@@ -28,14 +28,14 @@ func TestArticleRepo(t *testing.T) {
 				t.Fatal("unable to create database mock")
 			}
 
-			data := NewArticleRepository(mock)
+			data := NewArticlePostgresRepository(mock)
 
 			fn(t, mock, data)
 		})
 	}
 }
 
-func testCreateNewArticle(t *testing.T, mock pgxmock.PgxPoolIface, data ArticleRepository) {
+func testCreateNewArticle(t *testing.T, mock pgxmock.PgxPoolIface, data articlePostgresRepository) {
 	articleInsertQuery := `insert into articles_ (title_, subtitle_, slug_, body_, created_at_, updated_at_) values ($1, $2, $3, $4, $5, $6) returning id_, title_, subtitle_, slug_, body_, created_at_, updated_at_`
 	// tagInsertQuery := `insert into article_tags_ (article_id_, tag_id_) values ($1, $2) returning (tag_id_)`
 
@@ -54,7 +54,7 @@ func testCreateNewArticle(t *testing.T, mock pgxmock.PgxPoolIface, data ArticleR
 	// mock.ExpectQuery(regexp.QuoteMeta(tagInsertQuery)).WithArgs(13, 4).WillReturnRows(tagMockRow)
 	mock.ExpectCommit()
 
-	newArticle := ArticleNew{
+	newArticle := ArticleRequestDto{
 		Title:     "article title",
 		Subtitle:  "article subtitle",
 		Slug:      "article-slug",
@@ -84,10 +84,10 @@ func testCreateNewArticle(t *testing.T, mock pgxmock.PgxPoolIface, data ArticleR
 	}, createdArticle, "should return created article data with id")
 }
 
-func testCreateNewArticleFailsOnDbErrors(t *testing.T, mock pgxmock.PgxPoolIface, repo ArticleRepository) {
+func testCreateNewArticleFailsOnDbErrors(t *testing.T, mock pgxmock.PgxPoolIface, repo articlePostgresRepository) {
 	mock.ExpectBegin().WillReturnError(errors.New("db_begin_error"))
 
-	article, err := repo.Create(&ArticleNew{
+	article, err := repo.Create(&ArticleRequestDto{
 		Title:     "title",
 		Subtitle:  "subtitle",
 		Slug:      "slug",
@@ -103,7 +103,7 @@ func testCreateNewArticleFailsOnDbErrors(t *testing.T, mock pgxmock.PgxPoolIface
 	mock.ExpectationsWereMet()
 }
 
-func testDeleteArticle(t *testing.T, mock pgxmock.PgxPoolIface, repo ArticleRepository) {
+func testDeleteArticle(t *testing.T, mock pgxmock.PgxPoolIface, repo articlePostgresRepository) {
 	query := `delete from articles_ a using article_tags_ t where a.id_ = t.article_id_ and a.id_ = $1`
 
 	mock.
@@ -119,7 +119,7 @@ func testDeleteArticle(t *testing.T, mock pgxmock.PgxPoolIface, repo ArticleRepo
 	require.Nil(t, err, "should not return error")
 }
 
-func testDeleteArticleError(t *testing.T, mock pgxmock.PgxPoolIface, repo ArticleRepository) {
+func testDeleteArticleError(t *testing.T, mock pgxmock.PgxPoolIface, repo articlePostgresRepository) {
 	query := `delete from articles_ a using article_tags_ t where a.id_ = t.article_id_ and a.id_ = $1`
 
 	mock.

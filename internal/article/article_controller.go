@@ -3,7 +3,6 @@ package article
 import (
 	"html/template"
 	"net/http"
-	"slices"
 	"strconv"
 	"time"
 
@@ -16,25 +15,49 @@ import (
 const longFormat = "2006-01-02 15:04:05.999999999 -0700 MST"
 
 type ArticleController struct {
-	service        IArticleService
-	tagService     tag.ITagService
-	sessionManager *scs.SessionManager
+	articleService ArticleService
+	tagService     tag.TagService
 	log            pkg.Logger
-	templateCache  map[string]*template.Template
+	templates      map[string]*template.Template
+	session        *scs.SessionManager
+}
+
+type ArticleView struct {
+	Message         string
+	Article         *ArticleResponseDto
+	Tags            *[]tag.TagResponseDto
+	Content         template.HTML
+	CsrfToken       string
+	IsAuthenticated bool
+}
+
+type ArticlesView struct {
+	Message         string
+	Articles        *[]ArticleResponseDto
+	CsrfToken       string
+	IsAuthenticated bool
+}
+
+type PublishArticleView struct {
+	Message         string
+	Articles        *[]ArticleResponseDto
+	Tags            *[]tag.TagResponseDto
+	CsrfToken       string
+	IsAuthenticated bool
 }
 
 func NewArticleController(
-	service IArticleService,
-	tagsService tag.ITagService,
+	service ArticleService,
+	tagsService tag.TagService,
 	sessionManager *scs.SessionManager,
 	config pkg.ControllerConfig,
 ) ArticleController {
 	return ArticleController{
-		service:        service,
+		articleService: service,
 		tagService:     tagsService,
-		sessionManager: sessionManager,
+		session:        sessionManager,
 		log:            config.Log,
-		templateCache:  config.TemplateCache,
+		templates:      config.TemplateCache,
 	}
 }
 
@@ -60,7 +83,7 @@ func (a *ArticleController) CreateHandler(w http.ResponseWriter, r *http.Request
 		tagIds[i] = tagId
 	}
 
-	article := ArticleNew{
+	article := ArticleRequestDto{
 		Title:     r.FormValue("title"),
 		Subtitle:  r.FormValue("subtitle"),
 		Slug:      r.FormValue("slug"),
@@ -70,7 +93,7 @@ func (a *ArticleController) CreateHandler(w http.ResponseWriter, r *http.Request
 		TagIds:    tagIds,
 	}
 
-	if _, err := a.service.Create(&article); err != nil {
+	if _, err := a.articleService.Create(&article); err != nil {
 		a.log.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -80,21 +103,17 @@ func (a *ArticleController) CreateHandler(w http.ResponseWriter, r *http.Request
 }
 
 func (a *ArticleController) GetAllHandler(w http.ResponseWriter, r *http.Request) {
-	articles, err := a.service.GetAll()
+	articles, err := a.articleService.GetAll()
 	if err != nil {
 		a.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
-	if err := a.templateCache["pages/admin/admin-articles.tmpl"].ExecuteTemplate(w, "admin", struct {
-		Articles        *[]Article
-		CsrfToken       string
-		IsAuthenticated bool
-	}{
+	if err := a.templates["pages/admin/admin-articles.tmpl"].ExecuteTemplate(w, "admin", ArticlesView{
 		Articles:        articles,
 		CsrfToken:       nosurf.Token(r),
-		IsAuthenticated: a.sessionManager.Exists(r.Context(), string(pkg.IsLoggedInContextKey)),
+		IsAuthenticated: a.session.Exists(r.Context(), string(pkg.IsLoggedInContextKey)),
 	}); err != nil {
 		a.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -110,14 +129,10 @@ func (a *ArticleController) NewHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := a.templateCache["pages/admin/admin-new-article.tmpl"].ExecuteTemplate(w, "admin", struct {
-		Tags            *[]tag.Tag
-		CsrfToken       string
-		IsAuthenticated bool
-	}{
+	if err := a.templates["pages/admin/admin-new-article.tmpl"].ExecuteTemplate(w, "admin", PublishArticleView{
 		Tags:            availableTags,
 		CsrfToken:       nosurf.Token(r),
-		IsAuthenticated: a.sessionManager.Exists(r.Context(), string(pkg.IsLoggedInContextKey)),
+		IsAuthenticated: a.session.Exists(r.Context(), string(pkg.IsLoggedInContextKey)),
 	}); err != nil {
 		a.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -128,7 +143,7 @@ func (a *ArticleController) NewHandler(w http.ResponseWriter, r *http.Request) {
 func (a *ArticleController) GetBySlugHander(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("slug")
 
-	article, err := a.service.GetByAttribute("slug", slug)
+	article, err := a.articleService.GetByAttribute("slug", slug)
 	if err != nil {
 		a.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -142,19 +157,14 @@ func (a *ArticleController) GetBySlugHander(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	if err := a.templateCache["pages/admin/admin-article.tmpl"].ExecuteTemplate(
+	if err := a.templates["pages/admin/admin-article.tmpl"].ExecuteTemplate(
 		w,
 		"admin",
-		struct {
-			Article         Article
-			Tags            []tag.Tag
-			CsrfToken       string
-			IsAuthenticated bool
-		}{
-			Article:         *article,
-			Tags:            *allTags,
+		ArticleView{
+			Article:         article,
+			Tags:            allTags,
 			CsrfToken:       nosurf.Token(r),
-			IsAuthenticated: a.sessionManager.Exists(r.Context(), string(pkg.IsLoggedInContextKey)),
+			IsAuthenticated: a.session.Exists(r.Context(), string(pkg.IsLoggedInContextKey)),
 		},
 	); err != nil {
 		a.log.Error(err.Error())
@@ -199,37 +209,18 @@ func (a ArticleController) UpdateHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	tagList, err := a.tagService.GetAll()
-	if err != nil {
-		a.log.Error(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
+	article := UpdateArticleRequestDto{
+		Id:        articleId,
+		Title:     r.FormValue("title"),
+		Subtitle:  r.FormValue("subtitle"),
+		Slug:      r.FormValue("slug"),
+		Body:      r.FormValue("body"),
+		CreatedAt: createdAt,
+		UpdatedAt: time.Now(),
+		TagIds:    tagIds,
 	}
 
-	articleTags := make([]tag.Tag, len(tagIds))
-
-	for index, tagId := range tagIds {
-		tagListIndex := slices.IndexFunc(*tagList, func(t tag.Tag) bool {
-			return t.Id == tagId
-		})
-
-		if tagListIndex > -1 {
-			articleTags[index] = (*tagList)[tagListIndex]
-		}
-	}
-
-	article := NewArticleWithId(
-		articleId,
-		r.FormValue("title"),
-		r.FormValue("subtitle"),
-		r.FormValue("slug"),
-		r.FormValue("body"),
-		createdAt,
-		time.Now(),
-		articleTags,
-	)
-
-	_, err = a.service.Update(&article)
+	_, err = a.articleService.Update(&article)
 	if err != nil {
 		a.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -247,7 +238,7 @@ func (a ArticleController) AdminArticlesDeleteHandler(w http.ResponseWriter, r *
 		return
 	}
 
-	if err := a.service.DeleteById(id); err != nil {
+	if err := a.articleService.DeleteById(id); err != nil {
 		a.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -259,7 +250,7 @@ func (a ArticleController) AdminArticlesDeleteHandler(w http.ResponseWriter, r *
 func (a ArticleController) PublicGetArticle(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("slug")
 
-	article, err := a.service.GetByAttribute("slug", slug)
+	article, err := a.articleService.GetByAttribute("slug", slug)
 	if err != nil {
 		a.log.Error(err.Error())
 		http.Error(w, "Not Found", http.StatusNotFound)
@@ -273,13 +264,10 @@ func (a ArticleController) PublicGetArticle(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	if err := a.templateCache["pages/public/public-article.tmpl"].ExecuteTemplate(
+	if err := a.templates["pages/public/public-article.tmpl"].ExecuteTemplate(
 		w,
 		"public",
-		struct {
-			Article *Article
-			Content template.HTML
-		}{
+		ArticleView{
 			Article: article,
 			Content: template.HTML(content),
 		},
