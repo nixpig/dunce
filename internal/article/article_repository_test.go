@@ -54,7 +54,7 @@ func testCreateNewArticle(t *testing.T, mock pgxmock.PgxPoolIface, data articleP
 	// mock.ExpectQuery(regexp.QuoteMeta(tagInsertQuery)).WithArgs(13, 4).WillReturnRows(tagMockRow)
 	mock.ExpectCommit()
 
-	newArticle := ArticleRequestDto{
+	newArticle := ArticleNew{
 		Title:     "article title",
 		Subtitle:  "article subtitle",
 		Slug:      "article-slug",
@@ -87,7 +87,7 @@ func testCreateNewArticle(t *testing.T, mock pgxmock.PgxPoolIface, data articleP
 func testCreateNewArticleFailsOnDbErrors(t *testing.T, mock pgxmock.PgxPoolIface, repo articlePostgresRepository) {
 	mock.ExpectBegin().WillReturnError(errors.New("db_begin_error"))
 
-	article, err := repo.Create(&ArticleRequestDto{
+	article, err := repo.Create(&ArticleNew{
 		Title:     "title",
 		Subtitle:  "subtitle",
 		Slug:      "slug",

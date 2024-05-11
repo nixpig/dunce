@@ -89,13 +89,25 @@ func TestTagService(t *testing.T) {
 }
 
 func testServiceUpdateTag(t *testing.T, service TagServiceImpl) {
-	tag := Tag{
+	mockTagUpdate := Tag{
 		Id:   42,
 		Name: "tag name",
 		Slug: "tag-slug",
 	}
 
-	mockCallUpdate := mockData.On("Update", &tag).Return(&tag, nil)
+	tag := UpdateTagRequestDto{
+		Id:   42,
+		Name: "tag name",
+		Slug: "tag-slug",
+	}
+
+	expected := TagResponseDto{
+		Id:   42,
+		Name: "tag name",
+		Slug: "tag-slug",
+	}
+
+	mockCallUpdate := mockData.On("Update", &mockTagUpdate).Return(&mockTagUpdate, nil)
 
 	updatedTag, err := service.Update(&tag)
 
@@ -104,7 +116,7 @@ func testServiceUpdateTag(t *testing.T, service TagServiceImpl) {
 	mockData.AssertExpectations(t)
 
 	require.Nil(t, err, "should not error out")
-	require.Equal(t, &tag, updatedTag, "should return updated tag")
+	require.Equal(t, &expected, updatedTag, "should return updated tag")
 }
 
 func testTagServiceDeleteTagWithoutError(t *testing.T, service TagServiceImpl) {
@@ -130,7 +142,8 @@ func testTagServiceDeleteTagWithError(t *testing.T, service TagServiceImpl) {
 }
 
 func testTagServiceCreateValidTag(t *testing.T, service TagServiceImpl) {
-	newTag := Tag{Name: "tag name", Slug: "tag-slug"}
+	newTag := CreateTagRequestDto{Name: "tag name", Slug: "tag-slug"}
+	mockNewTag := Tag{Name: "tag name", Slug: "tag-slug"}
 
 	mockCreatedTag := Tag{
 		Id:   69,
@@ -138,7 +151,7 @@ func testTagServiceCreateValidTag(t *testing.T, service TagServiceImpl) {
 		Slug: "tag-slug",
 	}
 
-	mockCallCreate := mockData.On("Create", &newTag).Return(&mockCreatedTag, nil)
+	mockCallCreate := mockData.On("Create", &mockNewTag).Return(&mockCreatedTag, nil)
 
 	createdTag, err := service.Create(&newTag)
 
@@ -147,7 +160,7 @@ func testTagServiceCreateValidTag(t *testing.T, service TagServiceImpl) {
 
 	require.Nil(t, err, "should not error")
 
-	require.Equal(t, &Tag{
+	require.Equal(t, &TagResponseDto{
 		Id:   69,
 		Name: "tag name",
 		Slug: "tag-slug",
@@ -155,7 +168,7 @@ func testTagServiceCreateValidTag(t *testing.T, service TagServiceImpl) {
 }
 
 func testTagServiceCreateInvalidTag(t *testing.T, service TagServiceImpl) {
-	longTagName := Tag{
+	longTagName := CreateTagRequestDto{
 		Name: "tag name that is longer than 50 characters so exceeds limit",
 		Slug: "tag-slug",
 	}
@@ -164,7 +177,7 @@ func testTagServiceCreateInvalidTag(t *testing.T, service TagServiceImpl) {
 	require.NotNil(t, err, "should return error")
 	require.Nil(t, createdLongTagName, "should not create tag")
 
-	shortTagName := Tag{
+	shortTagName := CreateTagRequestDto{
 		Name: "s",
 		Slug: "tag-slug",
 	}
@@ -173,7 +186,7 @@ func testTagServiceCreateInvalidTag(t *testing.T, service TagServiceImpl) {
 	require.NotNil(t, err, "should return error")
 	require.Nil(t, createdShortTagName, "should not create tag")
 
-	longTagSlug := Tag{
+	longTagSlug := CreateTagRequestDto{
 		Name: "tag name",
 		Slug: "tag-slug-that-is-longer-than-50-characters-so-is-invalid",
 	}
@@ -182,7 +195,7 @@ func testTagServiceCreateInvalidTag(t *testing.T, service TagServiceImpl) {
 	require.NotNil(t, err, "should return error")
 	require.Nil(t, createdLongTagSlug, "should not create tag")
 
-	shortTagSlug := Tag{
+	shortTagSlug := CreateTagRequestDto{
 		Name: "tag name",
 		Slug: "s",
 	}
@@ -191,7 +204,7 @@ func testTagServiceCreateInvalidTag(t *testing.T, service TagServiceImpl) {
 	require.NotNil(t, err, "should return error")
 	require.Nil(t, createdShortTagSlug, "should not create tag")
 
-	incorrectFormatSlugUppercase := Tag{
+	incorrectFormatSlugUppercase := CreateTagRequestDto{
 		Name: "tag name",
 		Slug: "Sslug",
 	}
@@ -200,7 +213,7 @@ func testTagServiceCreateInvalidTag(t *testing.T, service TagServiceImpl) {
 	require.NotNil(t, err, "should return error")
 	require.Nil(t, createdIncorrectTagSlug, "should not create tag")
 
-	incorrectFormatSlugNonSlug := Tag{Name: "tag name", Slug: "s%l&u*g"}
+	incorrectFormatSlugNonSlug := CreateTagRequestDto{Name: "tag name", Slug: "s%l&u*g"}
 
 	createdIncorrectTagSlugNonSlug, err := service.Create(&incorrectFormatSlugNonSlug)
 	require.NotNil(t, err, "should return error")
@@ -208,7 +221,7 @@ func testTagServiceCreateInvalidTag(t *testing.T, service TagServiceImpl) {
 }
 
 func testTagServiceUpdateInvalidTag(t *testing.T, service TagServiceImpl) {
-	longTagName := Tag{
+	longTagName := UpdateTagRequestDto{
 		Id:   69,
 		Name: "tag name that is longer than 50 characters so exceeds limit",
 		Slug: "tag-slug",
@@ -218,7 +231,7 @@ func testTagServiceUpdateInvalidTag(t *testing.T, service TagServiceImpl) {
 	require.NotNil(t, err, "should return error")
 	require.Nil(t, UpdatedLongTagName, "should not update tag")
 
-	shortTagName := Tag{
+	shortTagName := UpdateTagRequestDto{
 		Id:   69,
 		Name: "s",
 		Slug: "tag-slug",
@@ -228,7 +241,7 @@ func testTagServiceUpdateInvalidTag(t *testing.T, service TagServiceImpl) {
 	require.NotNil(t, err, "should return error")
 	require.Nil(t, updatedShortTagName, "should not update tag")
 
-	longTagSlug := Tag{
+	longTagSlug := UpdateTagRequestDto{
 		Id:   69,
 		Name: "tag name",
 		Slug: "tag-slug-that-is-longer-than-50-characters-so-is-invalid",
@@ -238,7 +251,7 @@ func testTagServiceUpdateInvalidTag(t *testing.T, service TagServiceImpl) {
 	require.NotNil(t, err, "should return error")
 	require.Nil(t, updatedLongTagSlug, "should not update tag")
 
-	shortTagSlug := Tag{
+	shortTagSlug := UpdateTagRequestDto{
 		Id:   69,
 		Name: "tag name",
 		Slug: "s",
@@ -248,7 +261,7 @@ func testTagServiceUpdateInvalidTag(t *testing.T, service TagServiceImpl) {
 	require.NotNil(t, err, "should return error")
 	require.Nil(t, updatedShortTagSlug, "should not update tag")
 
-	incorrectFormatSlugUppercase := Tag{
+	incorrectFormatSlugUppercase := UpdateTagRequestDto{
 		Id:   1,
 		Name: "tag name",
 		Slug: "Sslug",
@@ -258,7 +271,7 @@ func testTagServiceUpdateInvalidTag(t *testing.T, service TagServiceImpl) {
 	require.NotNil(t, err, "should return error")
 	require.Nil(t, updatedIncorrectTagSlug, "should not update tag")
 
-	incorrectFormatSlugNonSlug := Tag{
+	incorrectFormatSlugNonSlug := UpdateTagRequestDto{
 		Id:   1,
 		Name: "tag name",
 		Slug: "s%l&u*g",
@@ -270,9 +283,10 @@ func testTagServiceUpdateInvalidTag(t *testing.T, service TagServiceImpl) {
 }
 
 func testTagServiceCreateExistingTag(t *testing.T, service TagServiceImpl) {
-	newTag := Tag{Name: "tag name", Slug: "tag-slug"}
+	mockNewTag := Tag{Name: "tag name", Slug: "tag-slug"}
+	newTag := CreateTagRequestDto{Name: "tag name", Slug: "tag-slug"}
 
-	mockCall := mockData.On("Create", &newTag).Return(nil, errors.New("exists"))
+	mockCall := mockData.On("Create", &mockNewTag).Return(nil, errors.New("exists"))
 
 	createdTag, err := service.Create(&newTag)
 
@@ -320,7 +334,7 @@ func testServiceGetAllTagsMultipleResults(t *testing.T, service TagServiceImpl) 
 	mockData.AssertExpectations(t)
 
 	require.Nil(t, err, "should not return error")
-	require.Equal(t, &[]Tag{
+	require.Equal(t, &[]TagResponseDto{
 		{
 			Id:   23,
 			Name: "tagname1",
@@ -354,7 +368,7 @@ func testServiceGetAllTagsSingleResult(t *testing.T, service TagServiceImpl) {
 	mockData.AssertExpectations(t)
 
 	require.Nil(t, err, "should not return error")
-	require.Equal(t, &[]Tag{
+	require.Equal(t, &[]TagResponseDto{
 		{
 			Id:   69,
 			Name: "tagname3",
@@ -376,7 +390,7 @@ func testServiceGetBySlugTagExists(t *testing.T, service TagServiceImpl) {
 	mockData.AssertExpectations(t)
 
 	require.Nil(t, err, "should not return error")
-	require.Equal(t, &Tag{
+	require.Equal(t, &TagResponseDto{
 		Id:   69,
 		Name: "tag name",
 		Slug: "tag-slug",
@@ -414,9 +428,15 @@ func testServiceUpdateTagRepoError(t *testing.T, service TagServiceImpl) {
 		Slug: "tag-slug",
 	}
 
+	updateTag := UpdateTagRequestDto{
+		Id:   23,
+		Name: "tag name",
+		Slug: "tag-slug",
+	}
+
 	mockCall := mockData.On("Update", &mockTagUpdate).Return(&Tag{}, errors.New("update_repo_error"))
 
-	tag, err := service.Update(&mockTagUpdate)
+	tag, err := service.Update(&updateTag)
 
 	mockCall.Unset()
 	mockData.AssertExpectations(t)

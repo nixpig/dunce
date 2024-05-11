@@ -15,7 +15,7 @@ type MockArticleRepository struct {
 	mock.Mock
 }
 
-func (m *MockArticleRepository) Create(article *ArticleRequestDto) (*Article, error) {
+func (m *MockArticleRepository) Create(article *ArticleNew) (*Article, error) {
 	args := m.Called(article)
 
 	return args.Get(0).(*Article), args.Error(1)
@@ -33,7 +33,7 @@ func (m *MockArticleRepository) GetByAttribute(attr, value string) (*Article, er
 	return args.Get(0).(*Article), args.Error(1)
 }
 
-func (m *MockArticleRepository) Update(article *Article) (*Article, error) {
+func (m *MockArticleRepository) Update(article *UpdateArticle) (*Article, error) {
 	args := m.Called(article)
 
 	return args.Get(0).(*Article), args.Error(1)
@@ -45,7 +45,7 @@ func (m *MockArticleRepository) DeleteById(id int) error {
 	return args.Error(0)
 }
 
-func (m *MockArticleRepository) Exists(article *ArticleRequestDto) (bool, error) {
+func (m *MockArticleRepository) Exists(article *Article) (bool, error) {
 	args := m.Called(article)
 
 	return args.Get(0).(bool), args.Error(1)
@@ -93,20 +93,36 @@ func TestArticleServiceCreate(t *testing.T) {
 }
 
 func testServiceCreateArticle(t *testing.T, service ArticleServiceImpl) {
-	newArticle := ArticleRequestDto{
+	createdAt := time.Now()
+	updatedAt := time.Now()
+
+	mockArticleCall := ArticleNew{
 		Title:     "article title",
 		Subtitle:  "article subtitle",
 		Slug:      "article-slug",
 		Body:      "article body content",
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now().Add(23),
+		CreatedAt: createdAt,
+		UpdatedAt: updatedAt,
 		TagIds: []int{
 			1,
 			2,
 		},
 	}
 
-	mockCreatedArticle := Article{
+	newArticle := ArticleRequestDto{
+		Title:     "article title",
+		Subtitle:  "article subtitle",
+		Slug:      "article-slug",
+		Body:      "article body content",
+		CreatedAt: createdAt,
+		UpdatedAt: updatedAt,
+		TagIds: []int{
+			1,
+			2,
+		},
+	}
+
+	mockCreatedArticle := ArticleResponseDto{
 		Id:        42,
 		Title:     newArticle.Title,
 		Subtitle:  newArticle.Subtitle,
@@ -128,7 +144,29 @@ func testServiceCreateArticle(t *testing.T, service ArticleServiceImpl) {
 		},
 	}
 
-	mockCallCreate := mockData.On("Create", &newArticle).Return(&mockCreatedArticle, nil)
+	mockRepoArticleResponse := Article{
+		Id:        42,
+		Title:     newArticle.Title,
+		Subtitle:  newArticle.Subtitle,
+		Slug:      newArticle.Slug,
+		Body:      newArticle.Body,
+		CreatedAt: newArticle.CreatedAt,
+		UpdatedAt: newArticle.UpdatedAt,
+		Tags: []tag.Tag{
+			{
+				Id:   1,
+				Name: "tag one",
+				Slug: "slug-one",
+			},
+			{
+				Id:   2,
+				Name: "tag two",
+				Slug: "slug-two",
+			},
+		},
+	}
+
+	mockCallCreate := mockData.On("Create", &mockArticleCall).Return(&mockRepoArticleResponse, nil)
 
 	createdArticle, err := service.Create(&newArticle)
 
@@ -163,18 +201,30 @@ func testServiceCreateArticleNoTags(t *testing.T, service ArticleServiceImpl) {
 }
 
 func testServiceCreateArticleRepoError(t *testing.T, service ArticleServiceImpl) {
+	createdAt := time.Now()
+	updatedAt := time.Now()
+
+	mockArticleData := ArticleNew{
+		Title:     "article title",
+		Subtitle:  "article subtitle",
+		Slug:      "article-slug",
+		Body:      "article body content",
+		CreatedAt: createdAt,
+		UpdatedAt: updatedAt,
+		TagIds:    []int{1, 2},
+	}
+
+	mockCall := mockData.On("Create", &mockArticleData).Return(&Article{}, errors.New("repo_error"))
+
 	newArticle := ArticleRequestDto{
 		Title:     "article title",
 		Subtitle:  "article subtitle",
 		Slug:      "article-slug",
 		Body:      "article body content",
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now().Add(23),
+		CreatedAt: createdAt,
+		UpdatedAt: updatedAt,
 		TagIds:    []int{1, 2},
 	}
-
-	mockCall := mockData.On("Create", &newArticle).Return(&Article{}, errors.New("repo_error"))
-
 	article, err := service.Create(&newArticle)
 
 	mockCall.Unset()
@@ -207,14 +257,17 @@ func testServiceDeleteArticleById(t *testing.T, service ArticleServiceImpl) {
 }
 
 func testServiceGetAllArticles(t *testing.T, service ArticleServiceImpl) {
-	allArticles := []Article{
+	createdAt := time.Now()
+	updatedAt := time.Now().Add(42)
+
+	allArticles := []ArticleResponseDto{
 		{
 			Title:     "article one title",
 			Subtitle:  "article one subtitle",
 			Slug:      "article-one-slug",
 			Body:      "article one body content",
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now().Add(42),
+			CreatedAt: createdAt,
+			UpdatedAt: updatedAt,
 			Tags: []tag.Tag{
 				{
 					Id:   23,
@@ -228,8 +281,8 @@ func testServiceGetAllArticles(t *testing.T, service ArticleServiceImpl) {
 			Subtitle:  "article two subtitle",
 			Slug:      "article-two-slug",
 			Body:      "article two body content",
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now().Add(23),
+			CreatedAt: createdAt,
+			UpdatedAt: updatedAt,
 			Tags: []tag.Tag{
 				{
 					Id:   23,
@@ -240,7 +293,40 @@ func testServiceGetAllArticles(t *testing.T, service ArticleServiceImpl) {
 		},
 	}
 
-	mockCall := mockData.On("GetAll").Return(&allArticles, nil)
+	mockAllArticles := []Article{
+		{
+			Title:     "article one title",
+			Subtitle:  "article one subtitle",
+			Slug:      "article-one-slug",
+			Body:      "article one body content",
+			CreatedAt: createdAt,
+			UpdatedAt: updatedAt,
+			Tags: []tag.Tag{
+				{
+					Id:   23,
+					Name: "tag one",
+					Slug: "tag-one",
+				},
+			},
+		},
+		{
+			Title:     "article two title",
+			Subtitle:  "article two subtitle",
+			Slug:      "article-two-slug",
+			Body:      "article two body content",
+			CreatedAt: createdAt,
+			UpdatedAt: updatedAt,
+			Tags: []tag.Tag{
+				{
+					Id:   23,
+					Name: "tag one",
+					Slug: "tag-one",
+				},
+			},
+		},
+	}
+
+	mockCall := mockData.On("GetAll").Return(&mockAllArticles, nil)
 
 	articles, err := service.GetAll()
 
@@ -265,13 +351,16 @@ func testServiceGetAllArticlesError(t *testing.T, service ArticleServiceImpl) {
 }
 
 func testServiceGetArticleBySlug(t *testing.T, service ArticleServiceImpl) {
-	article := Article{
+	createdAt := time.Now()
+	updatedAt := time.Now().Add(53)
+
+	mockRepoArticle := Article{
 		Title:     "article one title",
 		Subtitle:  "article one subtitle",
 		Slug:      "article-one-slug",
 		Body:      "article one body content",
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now().Add(42),
+		CreatedAt: createdAt,
+		UpdatedAt: updatedAt,
 		Tags: []tag.Tag{
 			{
 				Id:   23,
@@ -283,7 +372,7 @@ func testServiceGetArticleBySlug(t *testing.T, service ArticleServiceImpl) {
 
 	mockCall := mockData.
 		On("GetByAttribute", "slug", "article-slug").
-		Return(&article, nil)
+		Return(&mockRepoArticle, nil)
 
 	gotArticle, err := service.GetByAttribute("slug", "article-slug")
 
@@ -291,7 +380,21 @@ func testServiceGetArticleBySlug(t *testing.T, service ArticleServiceImpl) {
 	mockData.AssertExpectations(t)
 
 	require.Nil(t, err, "should not return error")
-	require.Equal(t, &article, gotArticle, "should return article by slug")
+	require.Equal(t, &ArticleResponseDto{
+		Title:     "article one title",
+		Subtitle:  "article one subtitle",
+		Slug:      "article-one-slug",
+		Body:      "article one body content",
+		CreatedAt: createdAt,
+		UpdatedAt: updatedAt,
+		Tags: []tag.Tag{
+			{
+				Id:   23,
+				Name: "tag one",
+				Slug: "tag-one",
+			},
+		},
+	}, gotArticle, "should return article by slug")
 }
 
 func testServiceGetArticleBySlugError(t *testing.T, service ArticleServiceImpl) {
@@ -309,25 +412,48 @@ func testServiceGetArticleBySlugError(t *testing.T, service ArticleServiceImpl) 
 }
 
 func testServiceUpdateArticle(t *testing.T, service ArticleServiceImpl) {
-	articleUpdate := Article{
+	createdAt := time.Now()
+	updatedAt := time.Now()
+
+	mockUpdateArticle := UpdateArticle{
 		Title:     "article one title",
 		Subtitle:  "article one subtitle",
 		Slug:      "article-one-slug",
 		Body:      "article one body content",
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now().Add(42),
+		CreatedAt: createdAt,
+		UpdatedAt: updatedAt,
+		TagIds:    []int{23},
+	}
+
+	articleUpdate := UpdateArticleRequestDto{
+		Title:     "article one title",
+		Subtitle:  "article one subtitle",
+		Slug:      "article-one-slug",
+		Body:      "article one body content",
+		CreatedAt: createdAt,
+		UpdatedAt: updatedAt,
+		TagIds:    []int{23},
+	}
+
+	mockUpdateArticleRepo := Article{
+		Title:     "article one title",
+		Subtitle:  "article one subtitle",
+		Slug:      "article-one-slug",
+		Body:      "article one body content",
+		CreatedAt: createdAt,
+		UpdatedAt: updatedAt,
 		Tags: []tag.Tag{
 			{
 				Id:   23,
-				Name: "tag one",
-				Slug: "tag-one",
+				Name: "foo",
+				Slug: "bar-baz",
 			},
 		},
 	}
 
 	mockCall := mockData.
-		On("Update", &articleUpdate).
-		Return(&articleUpdate, nil)
+		On("Update", &mockUpdateArticle).
+		Return(&mockUpdateArticleRepo, nil)
 
 	updated, err := service.Update(&articleUpdate)
 
@@ -335,28 +461,49 @@ func testServiceUpdateArticle(t *testing.T, service ArticleServiceImpl) {
 	mockData.AssertExpectations(t)
 
 	require.Nil(t, err, "should not return error")
-	require.Equal(t, &articleUpdate, updated, "should return updated article")
-}
-
-func testServiceUpdateArticleError(t *testing.T, service ArticleServiceImpl) {
-	articleUpdate := Article{
+	require.Equal(t, &ArticleResponseDto{
 		Title:     "article one title",
 		Subtitle:  "article one subtitle",
 		Slug:      "article-one-slug",
 		Body:      "article one body content",
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now().Add(42),
+		CreatedAt: createdAt,
+		UpdatedAt: updatedAt,
 		Tags: []tag.Tag{
 			{
 				Id:   23,
-				Name: "tag one",
-				Slug: "tag-one",
+				Name: "foo",
+				Slug: "bar-baz",
 			},
 		},
+	}, updated, "should return updated article")
+}
+
+func testServiceUpdateArticleError(t *testing.T, service ArticleServiceImpl) {
+	createdAt := time.Now()
+	updatedAt := time.Now().Add(42)
+
+	articleUpdate := UpdateArticleRequestDto{
+		Title:     "article one title",
+		Subtitle:  "article one subtitle",
+		Slug:      "article-one-slug",
+		Body:      "article one body content",
+		CreatedAt: createdAt,
+		UpdatedAt: updatedAt,
+		TagIds:    []int{23},
+	}
+
+	mockUpdateArticle := UpdateArticle{
+		Title:     "article one title",
+		Subtitle:  "article one subtitle",
+		Slug:      "article-one-slug",
+		Body:      "article one body content",
+		CreatedAt: createdAt,
+		UpdatedAt: updatedAt,
+		TagIds:    []int{23},
 	}
 
 	mockCall := mockData.
-		On("Update", &articleUpdate).
+		On("Update", &mockUpdateArticle).
 		Return(&Article{}, errors.New("repo_error"))
 
 	updated, err := service.Update(&articleUpdate)
