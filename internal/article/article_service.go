@@ -35,11 +35,6 @@ func (a ArticleServiceImpl) DeleteById(id int) error {
 }
 
 func (a ArticleServiceImpl) Create(article *ArticleRequestDto) (*ArticleResponseDto, error) {
-	if len(article.TagIds) == 0 {
-		minTagsError := errors.New("article must have at least one tag")
-		return nil, minTagsError
-	}
-
 	articleToCreate := ArticleNew{
 		Title:     article.Title,
 		Subtitle:  article.Subtitle,
@@ -48,6 +43,15 @@ func (a ArticleServiceImpl) Create(article *ArticleRequestDto) (*ArticleResponse
 		CreatedAt: article.CreatedAt,
 		UpdatedAt: article.UpdatedAt,
 		TagIds:    article.TagIds,
+	}
+
+	if err := a.validate.Struct(articleToCreate); err != nil {
+		return nil, err
+	}
+
+	if len(article.TagIds) == 0 {
+		minTagsError := errors.New("article must have at least one tag")
+		return nil, minTagsError
 	}
 
 	createdArticle, err := a.repo.Create(&articleToCreate)
@@ -143,6 +147,10 @@ func (a ArticleServiceImpl) Update(article *UpdateArticleRequestDto) (*ArticleRe
 		CreatedAt: article.CreatedAt,
 		UpdatedAt: article.UpdatedAt,
 		TagIds:    article.TagIds,
+	}
+
+	if err := a.validate.Struct(articleToUpdate); err != nil {
+		return nil, err
 	}
 
 	updatedArticle, err := a.repo.Update(&articleToUpdate)

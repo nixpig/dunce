@@ -24,8 +24,8 @@ test: export APP_ENV=test
 test: 
 	go test -v -race -buildvcs ./... 
 
-.PHONY: test_coverage
-test_coverage:
+.PHONY: coverage
+coverage:
 	go test -v -race -buildvcs -covermode atomic -coverprofile=coverage.out ./...
 	go tool cover -html=coverage.out
 

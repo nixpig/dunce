@@ -31,8 +31,7 @@ func NewArticlePostgresRepository(db db.Dbconn) articlePostgresRepository {
 }
 
 func (a articlePostgresRepository) DeleteById(id int) error {
-	// FIXME: also needs to delete any tags from article_tags_ table
-	query := `delete from articles_ a using article_tags_ t where a.id_ = t.article_id_ and a.id_ = $1`
+	query := `delete from articles_ a where a.id_ = $1`
 
 	_, err := a.db.Exec(context.Background(), query, id)
 	if err != nil {
@@ -190,6 +189,8 @@ func (a articlePostgresRepository) GetManyByAttribute(attr, value string) (*[]Ar
 		articles = append(articles, article)
 	}
 
+	// TODO: fetch and attach tags to article results
+
 	return &articles, nil
 }
 
@@ -208,7 +209,18 @@ func (a articlePostgresRepository) GetByAttribute(attr, value string) (*Article,
 	var article Article
 	var articleTagIdsConcat string
 
-	row.Scan(&article.Id, &article.Title, &article.Subtitle, &article.Slug, &article.Body, &article.CreatedAt, &article.UpdatedAt, &articleTagIdsConcat)
+	if err := row.Scan(
+		&article.Id,
+		&article.Title,
+		&article.Subtitle,
+		&article.Slug,
+		&article.Body,
+		&article.CreatedAt,
+		&article.UpdatedAt,
+		&articleTagIdsConcat,
+	); err != nil {
+		return nil, err
+	}
 
 	// TODO: hopefully pgx supports scanning postgres arrays so don't need to perform multiple queries or this funky string concat
 	tagsQuery := strings.Join(

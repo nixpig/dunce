@@ -16,7 +16,7 @@ create table if not exists articles_ (
 
 create table if not exists article_tags_ (
     id_ integer primary key generated always as identity,
-    article_id_ integer,
+    article_id_ integer references articles_(id_) not null on delete cascade,
     tag_id_ integer references tags_(id_) not null
 );
 

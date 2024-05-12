@@ -1,6 +1,8 @@
 package tag
 
 import (
+	"strings"
+
 	"github.com/go-playground/validator/v10"
 )
 
@@ -28,12 +30,9 @@ func NewTagService(
 }
 
 func (t TagServiceImpl) Create(tag *CreateTagRequestDto) (*TagResponseDto, error) {
-	// TODO: make slug lowercase
-	// TODO: custom validator for tag name
-
 	tagToCreate := Tag{
 		Name: tag.Name,
-		Slug: tag.Slug,
+		Slug: strings.ToLower(tag.Slug),
 	}
 
 	if err := t.validate.Struct(tagToCreate); err != nil {
@@ -89,14 +88,10 @@ func (t TagServiceImpl) GetByAttribute(attr, value string) (*TagResponseDto, err
 }
 
 func (t TagServiceImpl) Update(tag *UpdateTagRequestDto) (*TagResponseDto, error) {
-	if err := t.validate.Struct(tag); err != nil {
-		return nil, err
-	}
-
 	tagToUpdate := Tag{
 		Id:   tag.Id,
 		Name: tag.Name,
-		Slug: tag.Slug,
+		Slug: strings.ToLower(tag.Slug),
 	}
 
 	if err := t.validate.Struct(tagToUpdate); err != nil {

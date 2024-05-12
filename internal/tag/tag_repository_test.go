@@ -11,34 +11,24 @@ import (
 
 func TestTagRepository(t *testing.T) {
 	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository){
-		// create
-		"successfully creates new tag":            testCreateValidTag,
-		"fails to create new tag on db row error": testFailCreateTagOnRowError,
-		"fails to create new tag on db error":     testFailCreateTagOnDbError,
-
-		// getbyslug
-		"get existing tag by slug":     testGetExistingTagBySlug,
-		"get non-existent tag by slug": testGetNonExistentTagBySlug,
-
-		// getall
-		"get all (multiple results)": testGetAllTagsMultipleResults,
-		"get all (no results)":       testGetAllTagsNoResults,
-		"get all (single result)":    testGetAllTagsSingleResult,
-		"get all db query error":     testGetAllDbQueryError,
-		"get all db row error":       testGetAllDbRowError,
-
-		// update
-		"update tag":              testTagDataUpdateTag,
-		"update tag db row error": testTagUpdateRowError,
-
-		// delete
-		"delete existing tag":     testDeleteExistingTag,
-		"delete non-existing tag": testDeleteNonExistingTag,
-
-		// exists
-		"check existing tag exists":     testTagExists,
-		"check existing tag not exists": testTagNotExists,
-		"check existing tag error":      testTagExistsError,
+		"test create tag (success)":                            testTagRepoCreateValidTag,
+		"test create tag (handle db row error)":                testTagRepoFailCreateTagOnRowError,
+		"test create tag (handle db error)":                    testTagRepoFailCreateTagOnDbError,
+		"test get by slug (success - tag exists)":              testTagRepoGetExistingTagBySlug,
+		"test get by slug (error - slug not exists)":           testTagRepoGetNonExistentTagBySlug,
+		"test get by attr (error - non-implemented attribute)": testTagRepoGetByNonExistentAttr,
+		"test get all (success - multiple results)":            testTagRepoGetAllTagsMultipleResults,
+		"test get all (success - single result)":               testTagRepoGetAllTagsSingleResult,
+		"test get all (success - no (empty) results)":          testTagRepoGetAllTagsNoResults,
+		"test get all (handle db query error)":                 testTagRepoGetAllDbQueryError,
+		"test get all (handle db row error)":                   testTagRepoGetAllDbRowError,
+		"test update tag (success)":                            testTagRepoTagDataUpdateTag,
+		"test update tag (handle - db row error)":              testTagRepoTagUpdateRowError,
+		"test delete tag (success)":                            testTagRepoDeleteExistingTag,
+		"test delete tag (error - non-existing tag)":           testTagRepoDeleteNonExistingTag,
+		"test check exists (success - tag exists)":             testTagRepoTagExists,
+		"test check exists (success - tag not exists)":         testTagRepoTagNotExists,
+		"test check exists (handle db error)":                  testTagRepoTagExistsError,
 	}
 
 	for scenario, fn := range scenarios {
@@ -57,7 +47,7 @@ func TestTagRepository(t *testing.T) {
 	}
 }
 
-func testCreateValidTag(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
+func testTagRepoCreateValidTag(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
 	query := `insert into tags_ (name_, slug_) values ($1, $2) returning id_, name_, slug_`
 
 	mockTagRows := mock.NewRows([]string{"id_", "name_", "slug_"}).AddRow(23, "tag_name", "tag_slug")
@@ -84,7 +74,7 @@ func testCreateValidTag(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgre
 
 }
 
-func testCreateInvalidTag(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
+func testTagRepoCreateInvalidTag(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
 	query := `insert into tags_ (name_, slug_) values ($1, $2) returning id_, name_, slug_`
 
 	mock.ExpectQuery(regexp.QuoteMeta(query)).WillReturnError(errors.New("database_error"))
@@ -103,7 +93,7 @@ func testCreateInvalidTag(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostg
 	}
 }
 
-func testDeleteExistingTag(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
+func testTagRepoDeleteExistingTag(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
 	query := `delete from tags_ where id_ = $1`
 
 	mockDeleted := pgxmock.NewResult("delete", 1)
@@ -118,7 +108,7 @@ func testDeleteExistingTag(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPost
 	}
 }
 
-func testDeleteNonExistingTag(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
+func testTagRepoDeleteNonExistingTag(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
 	query := `delete from tags_ where id_ = $1`
 
 	mock.ExpectExec(regexp.QuoteMeta(query)).WithArgs(23).WillReturnError(errors.New("database_error"))
@@ -131,7 +121,7 @@ func testDeleteNonExistingTag(t *testing.T, mock pgxmock.PgxPoolIface, repo tagP
 	}
 }
 
-func testTagExists(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
+func testTagRepoTagExists(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
 	query := `select count(*) from tags_ where slug_ = $1`
 
 	mockDuplicateTag := Tag{
@@ -155,7 +145,7 @@ func testTagExists(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepo
 	}
 }
 
-func testTagNotExists(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
+func testTagRepoTagNotExists(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
 	query := `select count(*) from tags_ where slug_ = $1`
 
 	mockDuplicateTag := Tag{Name: "existing tag name", Slug: "existing-tag-slug"}
@@ -176,7 +166,7 @@ func testTagNotExists(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresR
 	}
 }
 
-func testTagExistsError(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
+func testTagRepoTagExistsError(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
 	query := `select count(*) from tags_ where slug_ = $1`
 
 	mockDuplicateTag := Tag{Name: "existing tag name", Slug: "existing-tag-slug"}
@@ -192,7 +182,7 @@ func testTagExistsError(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgre
 	}
 }
 
-func testGetAllTagsNoResults(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
+func testTagRepoGetAllTagsNoResults(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
 	query := `select id_, name_, slug_ from tags_`
 
 	mockEmptyRows := mock.NewRows([]string{"id_", "name_", "slug_"}).AddRows()
@@ -209,7 +199,7 @@ func testGetAllTagsNoResults(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPo
 	}
 }
 
-func testGetAllTagsMultipleResults(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
+func testTagRepoGetAllTagsMultipleResults(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
 	query := `select id_, name_, slug_ from tags_`
 
 	singleResult := mock.
@@ -245,7 +235,7 @@ func testGetAllTagsMultipleResults(t *testing.T, mock pgxmock.PgxPoolIface, repo
 	}
 }
 
-func testGetAllTagsSingleResult(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
+func testTagRepoGetAllTagsSingleResult(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
 	query := `select id_, name_, slug_ from tags_`
 
 	singleResult := mock.
@@ -270,7 +260,7 @@ func testGetAllTagsSingleResult(t *testing.T, mock pgxmock.PgxPoolIface, repo ta
 	}
 }
 
-func testGetExistingTagBySlug(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
+func testTagRepoGetExistingTagBySlug(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
 	query := `select id_, name_, slug_ from tags_ where slug_ = $1`
 
 	mockRow := mock.NewRows([]string{"id_", "name_", "slug_"}).AddRow(23, "tagname", "tag-slug")
@@ -294,7 +284,7 @@ func testGetExistingTagBySlug(t *testing.T, mock pgxmock.PgxPoolIface, repo tagP
 	}
 }
 
-func testGetNonExistentTagBySlug(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
+func testTagRepoGetNonExistentTagBySlug(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
 	query := `select id_, name_, slug_ from tags_ where slug_ = $1`
 
 	mockRow := mock.NewRows([]string{"id_", "name_", "slug_"})
@@ -314,7 +304,7 @@ func testGetNonExistentTagBySlug(t *testing.T, mock pgxmock.PgxPoolIface, repo t
 	}
 }
 
-func testTagDataUpdateTag(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
+func testTagRepoTagDataUpdateTag(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
 	query := `update tags_ set name_ = $2, slug_ = $3 where id_ = $1 returning id_, name_, slug_`
 
 	mockRes := mock.NewRows([]string{"id_", "name_", "id_"}).AddRow(23, "tagname", "tag-slug")
@@ -341,7 +331,7 @@ func testTagDataUpdateTag(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostg
 	}
 }
 
-func testFailCreateTagOnRowError(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
+func testTagRepoFailCreateTagOnRowError(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
 	query := `insert into tags_ (name_, slug_) values ($1, $2) returning id_, name_, slug_`
 
 	mockTagErrorRows := mock.NewRows([]string{"id_", "name_", "slug_"}).RowError(1, errors.New("row_error"))
@@ -360,7 +350,7 @@ func testFailCreateTagOnRowError(t *testing.T, mock pgxmock.PgxPoolIface, repo t
 	}
 }
 
-func testFailCreateTagOnDbError(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
+func testTagRepoFailCreateTagOnDbError(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
 	query := `insert into tags_ (name_, slug_) values ($1, $2) returning id_, name_, slug_`
 
 	mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs("tag_name", "tag_slug").WillReturnError(errors.New("database_error"))
@@ -377,7 +367,7 @@ func testFailCreateTagOnDbError(t *testing.T, mock pgxmock.PgxPoolIface, repo ta
 	}
 }
 
-func testGetAllDbQueryError(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
+func testTagRepoGetAllDbQueryError(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
 	query := `select id_, name_, slug_ from tags_`
 
 	mock.ExpectQuery(query).WillReturnError(errors.New("db_error"))
@@ -393,7 +383,7 @@ func testGetAllDbQueryError(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPos
 	}
 }
 
-func testGetAllDbRowError(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
+func testTagRepoGetAllDbRowError(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
 	query := `select id_, name_, slug_ from tags_`
 
 	errorRow := mock.
@@ -413,7 +403,7 @@ func testGetAllDbRowError(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostg
 	}
 }
 
-func testTagUpdateRowError(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
+func testTagRepoTagUpdateRowError(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
 	query := `update tags_ set name_ = $2, slug_ = $3 where id_ = $1 returning id_, name_, slug_`
 
 	mock.
@@ -435,4 +425,10 @@ func testTagUpdateRowError(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPost
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Fatal("mock expectations were not met")
 	}
+}
+
+func testTagRepoGetByNonExistentAttr(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
+	tag, err := repo.GetByAttribute("foo", "bar")
+	require.EqualError(t, err, "invalid attribute", "should return invalid attribute error")
+	require.Nil(t, tag, "should not return any tag")
 }

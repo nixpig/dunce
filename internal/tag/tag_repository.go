@@ -100,7 +100,7 @@ func (t tagPostgresRepository) GetByAttribute(attr, value string) (*Tag, error) 
 	case "slug":
 		query = `select id_, name_, slug_ from tags_ where slug_ = $1`
 	default:
-		return nil, errors.New("invalid atrribute")
+		return nil, errors.New("invalid attribute")
 	}
 
 	row := t.db.QueryRow(context.Background(), query, value)

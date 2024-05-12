@@ -5,11 +5,40 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/nixpig/dunce/internal/tag"
 	"github.com/nixpig/dunce/pkg"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
+
+var mockData = new(MockArticleRepository)
+
+var validate, _ = pkg.NewValidator()
+
+func TestArticleService(t *testing.T) {
+	scenarios := map[string]func(t *testing.T, service ArticleServiceImpl){
+		"create article (success)":                      testArticleServiceCreateArticle,
+		"create article (error - fails validation)":     testArticleServiceCreateFailsValidation,
+		"create article (error - fail with no tags)":    testArticleServiceCreateArticleNoTags,
+		"create article (error - repo error)":           testArticleServiceCreateArticleRepoError,
+		"get all articles (success - multiple results)": testArticleServiceGetAllArticles,
+		"get all articles (error)":                      testArticleServiceGetAllArticlesError,
+		"get by slug (success)":                         testArticleServiceGetArticleBySlug,
+		"get by slug (error)":                           testArticleServiceGetArticleBySlugError,
+		"update article (success)":                      testArticleServiceUpdateArticle,
+		"update article (error)":                        testArticleServiceUpdateArticleError,
+		"delete article by id (success)":                testArticleServiceDeleteArticleById,
+		"delete article by id (error)":                  testArticleServiceDeleteArticleByIdError,
+	}
+
+	for scenario, fn := range scenarios {
+		t.Run(scenario, func(t *testing.T) {
+			service := NewArticleService(mockData, validate)
+			fn(t, service)
+		})
+	}
+}
 
 type MockArticleRepository struct {
 	mock.Mock
@@ -55,44 +84,9 @@ func (m *MockArticleRepository) GetManyByAttribute(attr, val string) (*[]Article
 	args := m.Called(attr, val)
 
 	return args.Get(0).(*[]Article), args.Error(1)
-
 }
 
-var mockData = new(MockArticleRepository)
-
-var validate, _ = pkg.NewValidator()
-
-func TestArticleServiceCreate(t *testing.T) {
-	scenarios := map[string]func(t *testing.T, service ArticleServiceImpl){
-		// create
-		"create article":                       testServiceCreateArticle,
-		"fail to create article with no tags":  testServiceCreateArticleNoTags,
-		"fail to create article on repo error": testServiceCreateArticleRepoError,
-
-		// read
-		"get all articles":       testServiceGetAllArticles,
-		"get all articles error": testServiceGetAllArticlesError,
-		"get by slug":            testServiceGetArticleBySlug,
-		"get by slug error":      testServiceGetArticleBySlugError,
-
-		// update
-		"update article success": testServiceUpdateArticle,
-		"update article error":   testServiceUpdateArticleError,
-
-		// delete
-		"delete article by id":       testServiceDeleteArticleById,
-		"delete article by id error": testServiceDeleteArticleByIdError,
-	}
-
-	for scenario, fn := range scenarios {
-		t.Run(scenario, func(t *testing.T) {
-			service := NewArticleService(mockData, validate)
-			fn(t, service)
-		})
-	}
-}
-
-func testServiceCreateArticle(t *testing.T, service ArticleServiceImpl) {
+func testArticleServiceCreateArticle(t *testing.T, service ArticleServiceImpl) {
 	createdAt := time.Now()
 	updatedAt := time.Now()
 
@@ -183,7 +177,7 @@ func testServiceCreateArticle(t *testing.T, service ArticleServiceImpl) {
 	)
 }
 
-func testServiceCreateArticleNoTags(t *testing.T, service ArticleServiceImpl) {
+func testArticleServiceCreateArticleNoTags(t *testing.T, service ArticleServiceImpl) {
 	articleWithNoTags := ArticleRequestDto{
 		Title:     "article title",
 		Subtitle:  "article subtitle",
@@ -200,7 +194,7 @@ func testServiceCreateArticleNoTags(t *testing.T, service ArticleServiceImpl) {
 	require.EqualError(t, err, "article must have at least one tag", "should return error indicating article requires one or more tags")
 }
 
-func testServiceCreateArticleRepoError(t *testing.T, service ArticleServiceImpl) {
+func testArticleServiceCreateArticleRepoError(t *testing.T, service ArticleServiceImpl) {
 	createdAt := time.Now()
 	updatedAt := time.Now()
 
@@ -234,7 +228,7 @@ func testServiceCreateArticleRepoError(t *testing.T, service ArticleServiceImpl)
 	require.EqualError(t, err, "repo_error", "should return error")
 }
 
-func testServiceDeleteArticleByIdError(t *testing.T, service ArticleServiceImpl) {
+func testArticleServiceDeleteArticleByIdError(t *testing.T, service ArticleServiceImpl) {
 	mockCall := mockData.On("DeleteById", 23).Return(errors.New("repo_error"))
 
 	err := service.DeleteById(23)
@@ -245,7 +239,7 @@ func testServiceDeleteArticleByIdError(t *testing.T, service ArticleServiceImpl)
 	require.EqualError(t, err, "repo_error", "should bubble up error from repo")
 }
 
-func testServiceDeleteArticleById(t *testing.T, service ArticleServiceImpl) {
+func testArticleServiceDeleteArticleById(t *testing.T, service ArticleServiceImpl) {
 	mockCall := mockData.On("DeleteById", 23).Return(nil)
 
 	err := service.DeleteById(23)
@@ -256,7 +250,7 @@ func testServiceDeleteArticleById(t *testing.T, service ArticleServiceImpl) {
 	require.Nil(t, err, "should not return error")
 }
 
-func testServiceGetAllArticles(t *testing.T, service ArticleServiceImpl) {
+func testArticleServiceGetAllArticles(t *testing.T, service ArticleServiceImpl) {
 	createdAt := time.Now()
 	updatedAt := time.Now().Add(42)
 
@@ -338,7 +332,7 @@ func testServiceGetAllArticles(t *testing.T, service ArticleServiceImpl) {
 	require.Equal(t, articles, &allArticles, "should return all articles")
 }
 
-func testServiceGetAllArticlesError(t *testing.T, service ArticleServiceImpl) {
+func testArticleServiceGetAllArticlesError(t *testing.T, service ArticleServiceImpl) {
 	mockCall := mockData.On("GetAll").Return(&[]Article{}, errors.New("repo_error"))
 
 	articles, err := service.GetAll()
@@ -350,7 +344,7 @@ func testServiceGetAllArticlesError(t *testing.T, service ArticleServiceImpl) {
 	require.Empty(t, articles, "should return empty articles")
 }
 
-func testServiceGetArticleBySlug(t *testing.T, service ArticleServiceImpl) {
+func testArticleServiceGetArticleBySlug(t *testing.T, service ArticleServiceImpl) {
 	createdAt := time.Now()
 	updatedAt := time.Now().Add(53)
 
@@ -397,7 +391,7 @@ func testServiceGetArticleBySlug(t *testing.T, service ArticleServiceImpl) {
 	}, gotArticle, "should return article by slug")
 }
 
-func testServiceGetArticleBySlugError(t *testing.T, service ArticleServiceImpl) {
+func testArticleServiceGetArticleBySlugError(t *testing.T, service ArticleServiceImpl) {
 	mockCall := mockData.
 		On("GetByAttribute", "slug", "article-slug").
 		Return(&Article{}, errors.New("repo_error"))
@@ -411,7 +405,7 @@ func testServiceGetArticleBySlugError(t *testing.T, service ArticleServiceImpl) 
 	require.Nil(t, gotArticle, "should not return an article")
 }
 
-func testServiceUpdateArticle(t *testing.T, service ArticleServiceImpl) {
+func testArticleServiceUpdateArticle(t *testing.T, service ArticleServiceImpl) {
 	createdAt := time.Now()
 	updatedAt := time.Now()
 
@@ -478,7 +472,7 @@ func testServiceUpdateArticle(t *testing.T, service ArticleServiceImpl) {
 	}, updated, "should return updated article")
 }
 
-func testServiceUpdateArticleError(t *testing.T, service ArticleServiceImpl) {
+func testArticleServiceUpdateArticleError(t *testing.T, service ArticleServiceImpl) {
 	createdAt := time.Now()
 	updatedAt := time.Now().Add(42)
 
@@ -514,4 +508,24 @@ func testServiceUpdateArticleError(t *testing.T, service ArticleServiceImpl) {
 	require.EqualError(t, err, "repo_error", "should return error")
 	require.Empty(t, updated, "should not return non-updated article")
 
+}
+
+func testArticleServiceCreateFailsValidation(t *testing.T, service ArticleServiceImpl) {
+	gotMissingFields, err := service.Create(&ArticleRequestDto{})
+
+	require.Nil(t, gotMissingFields, "should not create article")
+
+	errs := make(map[string]string)
+
+	for _, v := range err.(validator.ValidationErrors) {
+		errs[v.Field()] = v.Tag()
+	}
+
+	require.Equal(t, "required", errs["Title"], "should error for no Title")
+	require.Equal(t, "required", errs["Subtitle"], "should error for no Subtitle")
+	require.Equal(t, "required", errs["Slug"], "should error for no Slug")
+	require.Equal(t, "required", errs["Body"], "should error for no Body")
+	require.Equal(t, "required", errs["CreatedAt"], "should error for no CreatedAt")
+	require.Equal(t, "required", errs["UpdatedAt"], "should error for no UpdatedAt")
+	require.Equal(t, "required", errs["TagIds"], "should error for no TagIds")
 }
