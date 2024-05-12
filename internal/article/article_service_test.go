@@ -26,7 +26,10 @@ func TestArticleService(t *testing.T) {
 		"get all articles (error)":                      testArticleServiceGetAllArticlesError,
 		"get by slug (success)":                         testArticleServiceGetArticleBySlug,
 		"get by slug (error)":                           testArticleServiceGetArticleBySlugError,
+		"get many by attriute (success)":                testArticleServiceGetManyArticlesByTagSlug,
+		"get many by attriute (error)":                  testArticleServiceGetManyArticlesByTagSlugError,
 		"update article (success)":                      testArticleServiceUpdateArticle,
+		"update article (error - fails validation)":     testArticleServiceUpdateFailsValidation,
 		"update article (error)":                        testArticleServiceUpdateArticleError,
 		"delete article by id (success)":                testArticleServiceDeleteArticleById,
 		"delete article by id (error)":                  testArticleServiceDeleteArticleByIdError,
@@ -515,17 +518,221 @@ func testArticleServiceCreateFailsValidation(t *testing.T, service ArticleServic
 
 	require.Nil(t, gotMissingFields, "should not create article")
 
-	errs := make(map[string]string)
+	missingFieldErrs := make(map[string]string)
 
 	for _, v := range err.(validator.ValidationErrors) {
-		errs[v.Field()] = v.Tag()
+		missingFieldErrs[v.Field()] = v.Tag()
 	}
 
-	require.Equal(t, "required", errs["Title"], "should error for no Title")
-	require.Equal(t, "required", errs["Subtitle"], "should error for no Subtitle")
-	require.Equal(t, "required", errs["Slug"], "should error for no Slug")
-	require.Equal(t, "required", errs["Body"], "should error for no Body")
-	require.Equal(t, "required", errs["CreatedAt"], "should error for no CreatedAt")
-	require.Equal(t, "required", errs["UpdatedAt"], "should error for no UpdatedAt")
-	require.Equal(t, "required", errs["TagIds"], "should error for no TagIds")
+	require.Nil(t, gotMissingFields, "should not return a tag")
+
+	require.Equal(t, "required", missingFieldErrs["Title"], "should error for no Title")
+	require.Equal(t, "required", missingFieldErrs["Subtitle"], "should error for no Subtitle")
+	require.Equal(t, "required", missingFieldErrs["Slug"], "should error for no Slug")
+	require.Equal(t, "required", missingFieldErrs["Body"], "should error for no Body")
+	require.Equal(t, "required", missingFieldErrs["CreatedAt"], "should error for no CreatedAt")
+	require.Equal(t, "required", missingFieldErrs["UpdatedAt"], "should error for no UpdatedAt")
+	require.Equal(t, "required", missingFieldErrs["TagIds"], "should error for no TagIds")
+
+	gotMaxValidations, err := service.Create(&ArticleRequestDto{
+		Title:     "abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345",
+		Subtitle:  "abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345",
+		Slug:      "abcdeabcdeabcdeabcdeabcdeabcdeabcdeabcdeabcdeabcdeabcde",
+		Body:      "Lorem ipsum dolar sit amet...",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		TagIds:    []int{1, 2, 3},
+	})
+
+	maxValidationErrs := make(map[string]string)
+
+	for _, v := range err.(validator.ValidationErrors) {
+		maxValidationErrs[v.Field()] = v.Tag()
+	}
+
+	require.Nil(t, gotMaxValidations, "should not return a tag")
+
+	require.Equal(t, "max", maxValidationErrs["Title"], "should not allow long Title")
+	require.Equal(t, "max", maxValidationErrs["Subtitle"], "should not allow long Subtitle")
+	require.Equal(t, "max", maxValidationErrs["Slug"], "should not allow long Slug")
+
+	gotMinValidations, err := service.Create(&ArticleRequestDto{
+		Title:     "Some title",
+		Subtitle:  "Some subtitle",
+		Slug:      "a",
+		Body:      "Lorem ipsum dolar sit amet...",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		TagIds:    []int{1, 2, 3},
+	})
+
+	minValidationErrs := make(map[string]string)
+
+	for _, v := range err.(validator.ValidationErrors) {
+		minValidationErrs[v.Field()] = v.Tag()
+	}
+
+	require.Nil(t, gotMinValidations, "should not return a tag")
+
+	require.Equal(t, "min", minValidationErrs["Slug"], "should not allow short Slug")
+}
+
+func testArticleServiceUpdateFailsValidation(t *testing.T, service ArticleServiceImpl) {
+	gotMissingFields, err := service.Update(&UpdateArticleRequestDto{})
+
+	require.Nil(t, gotMissingFields, "should not update article")
+
+	missingFieldErrs := make(map[string]string)
+
+	for _, v := range err.(validator.ValidationErrors) {
+		missingFieldErrs[v.Field()] = v.Tag()
+	}
+
+	require.Nil(t, gotMissingFields, "should not return a tag")
+
+	require.Equal(t, "required", missingFieldErrs["Title"], "should error for no Title")
+	require.Equal(t, "required", missingFieldErrs["Subtitle"], "should error for no Subtitle")
+	require.Equal(t, "required", missingFieldErrs["Slug"], "should error for no Slug")
+	require.Equal(t, "required", missingFieldErrs["Body"], "should error for no Body")
+	require.Equal(t, "required", missingFieldErrs["CreatedAt"], "should error for no CreatedAt")
+	require.Equal(t, "required", missingFieldErrs["UpdatedAt"], "should error for no UpdatedAt")
+	require.Equal(t, "required", missingFieldErrs["TagIds"], "should error for no TagIds")
+
+	gotMaxValidations, err := service.Update(&UpdateArticleRequestDto{
+		Title:     "abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345",
+		Subtitle:  "abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345",
+		Slug:      "abcdeabcdeabcdeabcdeabcdeabcdeabcdeabcdeabcdeabcdeabcde",
+		Body:      "Lorem ipsum dolar sit amet...",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		TagIds:    []int{1, 2, 3},
+	})
+
+	maxValidationErrs := make(map[string]string)
+
+	for _, v := range err.(validator.ValidationErrors) {
+		maxValidationErrs[v.Field()] = v.Tag()
+	}
+
+	require.Nil(t, gotMaxValidations, "should not return a tag")
+
+	require.Equal(t, "max", maxValidationErrs["Title"], "should not allow long Title")
+	require.Equal(t, "max", maxValidationErrs["Subtitle"], "should not allow long Subtitle")
+	require.Equal(t, "max", maxValidationErrs["Slug"], "should not allow long Slug")
+
+	gotMinValidations, err := service.Update(&UpdateArticleRequestDto{
+		Title:     "Some title",
+		Subtitle:  "Some subtitle",
+		Slug:      "a",
+		Body:      "Lorem ipsum dolar sit amet...",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		TagIds:    []int{1, 2, 3},
+	})
+
+	minValidationErrs := make(map[string]string)
+
+	for _, v := range err.(validator.ValidationErrors) {
+		minValidationErrs[v.Field()] = v.Tag()
+	}
+
+	require.Nil(t, gotMinValidations, "should not return a tag")
+
+	require.Equal(t, "min", minValidationErrs["Slug"], "should not allow short Slug")
+}
+
+func testArticleServiceGetManyArticlesByTagSlug(t *testing.T, service ArticleServiceImpl) {
+	createdAt := time.Now()
+	updatedAt := time.Now().Add(53)
+
+	mockRepoArticles := []Article{
+		{
+			Title:     "article one title",
+			Subtitle:  "article one subtitle",
+			Slug:      "article-one-slug",
+			Body:      "article one body content",
+			CreatedAt: createdAt,
+			UpdatedAt: updatedAt,
+			Tags: []tag.Tag{
+				{
+					Id:   23,
+					Name: "tag one",
+					Slug: "tag-one",
+				},
+			},
+		},
+		{
+			Title:     "article two title",
+			Subtitle:  "article two subtitle",
+			Slug:      "article-two-slug",
+			Body:      "article two body content",
+			CreatedAt: createdAt,
+			UpdatedAt: updatedAt,
+			Tags: []tag.Tag{
+				{
+					Id:   23,
+					Name: "tag one",
+					Slug: "tag-one",
+				},
+			},
+		},
+	}
+
+	mockCall := mockData.
+		On("GetManyByAttribute", "tagSlug", "tag-one").
+		Return(&mockRepoArticles, nil)
+
+	gotArticle, err := service.GetManyByAttribute("tagSlug", "tag-one")
+
+	mockCall.Unset()
+	mockData.AssertExpectations(t)
+
+	require.Nil(t, err, "should not return error")
+	require.Equal(t, &[]ArticleResponseDto{
+		{
+			Title:     "article one title",
+			Subtitle:  "article one subtitle",
+			Slug:      "article-one-slug",
+			Body:      "article one body content",
+			CreatedAt: createdAt,
+			UpdatedAt: updatedAt,
+			Tags: []tag.Tag{
+				{
+					Id:   23,
+					Name: "tag one",
+					Slug: "tag-one",
+				},
+			},
+		},
+		{
+			Title:     "article two title",
+			Subtitle:  "article two subtitle",
+			Slug:      "article-two-slug",
+			Body:      "article two body content",
+			CreatedAt: createdAt,
+			UpdatedAt: updatedAt,
+			Tags: []tag.Tag{
+				{
+					Id:   23,
+					Name: "tag one",
+					Slug: "tag-one",
+				},
+			},
+		},
+	}, gotArticle, "should return article by slug")
+}
+
+func testArticleServiceGetManyArticlesByTagSlugError(t *testing.T, service ArticleServiceImpl) {
+	mockCall := mockData.
+		On("GetManyByAttribute", "tagSlug", "tag-one").
+		Return(&[]Article{}, errors.New("repo_error"))
+
+	got, err := service.GetManyByAttribute("tagSlug", "tag-one")
+
+	mockCall.Unset()
+	mockData.AssertExpectations(t)
+
+	require.Empty(t, got, "should not return article(s)")
+	require.EqualError(t, err, "repo_error", "should return repo error")
+
 }
