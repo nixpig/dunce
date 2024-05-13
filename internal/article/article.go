@@ -17,7 +17,7 @@ type Article struct {
 	Tags      []tag.Tag `validate:"required"`
 }
 
-type ArticleRequestDto struct {
+type ArticleNewRequestDto struct {
 	Title     string    `validate:"required,max=255"`
 	Subtitle  string    `validate:"required,max=255"`
 	Slug      string    `validate:"required,min=2,max=50"`
@@ -27,7 +27,7 @@ type ArticleRequestDto struct {
 	TagIds    []int     `validate:"required"`
 }
 
-type UpdateArticleRequestDto struct {
+type ArticleUpdateRequestDto struct {
 	Id        int       `validate:"omitempty"`
 	Title     string    `validate:"required,max=255"`
 	Subtitle  string    `validate:"required,max=255"`

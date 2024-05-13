@@ -32,6 +32,11 @@ type TagsView struct {
 	IsAuthenticated bool
 }
 
+type TagCreateView struct {
+	CsrfToken       string
+	IsAuthenticated bool
+}
+
 func NewTagController(
 	tagService TagService,
 	config struct {
@@ -49,7 +54,7 @@ func NewTagController(
 }
 
 func (t *TagController) PostAdminTagsHandler(w http.ResponseWriter, r *http.Request) {
-	tag := CreateTagRequestDto{
+	tag := TagNewRequestDto{
 		Name: r.FormValue("name"),
 		Slug: r.FormValue("slug"),
 	}
@@ -97,7 +102,7 @@ func (t *TagController) GetAdminTagsHandler(w http.ResponseWriter, r *http.Reque
 		Message:         message,
 		Tags:            tags,
 		CsrfToken:       nosurf.Token(r),
-		IsAuthenticated: t.session.Exists(r.Context(), string(pkg.IsLoggedInContextKey)),
+		IsAuthenticated: t.session.Exists(r.Context(), string(pkg.IS_LOGGED_IN_CONTEXT_KEY)),
 	}
 
 	err = t.templates["pages/admin/admin-tags.tmpl"].ExecuteTemplate(w, "admin", tagView)
@@ -119,7 +124,7 @@ func (t *TagController) GetAdminTagsSlugHandler(w http.ResponseWriter, r *http.R
 	tagView := TagView{
 		Tag:             tag,
 		CsrfToken:       nosurf.Token(r),
-		IsAuthenticated: t.session.Exists(r.Context(), string(pkg.IsLoggedInContextKey)),
+		IsAuthenticated: t.session.Exists(r.Context(), string(pkg.IS_LOGGED_IN_CONTEXT_KEY)),
 	}
 
 	if err := t.templates["pages/admin/admin-tag.tmpl"].ExecuteTemplate(w, "admin", tagView); err != nil {
@@ -136,7 +141,7 @@ func (t *TagController) PostAdminTagsSlugHandler(w http.ResponseWriter, r *http.
 		http.Error(w, "Invalid tag ID", http.StatusBadRequest)
 	}
 
-	tag := UpdateTagRequestDto{
+	tag := TagUpdateRequestDto{
 		Id:   id,
 		Name: r.FormValue("name"),
 		Slug: r.FormValue("slug"),
@@ -154,9 +159,9 @@ func (t *TagController) PostAdminTagsSlugHandler(w http.ResponseWriter, r *http.
 }
 
 func (t *TagController) GetAdminTagsNewHandler(w http.ResponseWriter, r *http.Request) {
-	tagView := TagsView{
+	tagView := TagCreateView{
 		CsrfToken:       nosurf.Token(r),
-		IsAuthenticated: t.session.Exists(r.Context(), string(pkg.IsLoggedInContextKey)),
+		IsAuthenticated: t.session.Exists(r.Context(), string(pkg.IS_LOGGED_IN_CONTEXT_KEY)),
 	}
 
 	if err := t.templates["pages/admin/admin-new-tag.tmpl"].ExecuteTemplate(w, "admin", tagView); err != nil {

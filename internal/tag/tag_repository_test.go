@@ -50,9 +50,14 @@ func TestTagRepository(t *testing.T) {
 func testTagRepoCreateValidTag(t *testing.T, mock pgxmock.PgxPoolIface, repo tagPostgresRepository) {
 	query := `insert into tags_ (name_, slug_) values ($1, $2) returning id_, name_, slug_`
 
-	mockTagRows := mock.NewRows([]string{"id_", "name_", "slug_"}).AddRow(23, "tag_name", "tag_slug")
+	mockTagRows := mock.
+		NewRows([]string{"id_", "name_", "slug_"}).
+		AddRow(23, "tag_name", "tag_slug")
 
-	mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs("tag_name", "tag_slug").WillReturnRows(mockTagRows)
+	mock.
+		ExpectQuery(regexp.QuoteMeta(query)).
+		WithArgs("tag_name", "tag_slug").
+		WillReturnRows(mockTagRows)
 
 	newTag := Tag{
 		Name: "tag_name",

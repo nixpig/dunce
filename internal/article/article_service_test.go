@@ -106,7 +106,7 @@ func testArticleServiceCreateArticle(t *testing.T, service ArticleServiceImpl) {
 		},
 	}
 
-	newArticle := ArticleRequestDto{
+	newArticle := ArticleNewRequestDto{
 		Title:     "article title",
 		Subtitle:  "article subtitle",
 		Slug:      "article-slug",
@@ -181,7 +181,7 @@ func testArticleServiceCreateArticle(t *testing.T, service ArticleServiceImpl) {
 }
 
 func testArticleServiceCreateArticleNoTags(t *testing.T, service ArticleServiceImpl) {
-	articleWithNoTags := ArticleRequestDto{
+	articleWithNoTags := ArticleNewRequestDto{
 		Title:     "article title",
 		Subtitle:  "article subtitle",
 		Slug:      "article-slug",
@@ -213,7 +213,7 @@ func testArticleServiceCreateArticleRepoError(t *testing.T, service ArticleServi
 
 	mockCall := mockData.On("Create", &mockArticleData).Return(&Article{}, errors.New("repo_error"))
 
-	newArticle := ArticleRequestDto{
+	newArticle := ArticleNewRequestDto{
 		Title:     "article title",
 		Subtitle:  "article subtitle",
 		Slug:      "article-slug",
@@ -422,7 +422,7 @@ func testArticleServiceUpdateArticle(t *testing.T, service ArticleServiceImpl) {
 		TagIds:    []int{23},
 	}
 
-	articleUpdate := UpdateArticleRequestDto{
+	articleUpdate := ArticleUpdateRequestDto{
 		Title:     "article one title",
 		Subtitle:  "article one subtitle",
 		Slug:      "article-one-slug",
@@ -479,7 +479,7 @@ func testArticleServiceUpdateArticleError(t *testing.T, service ArticleServiceIm
 	createdAt := time.Now()
 	updatedAt := time.Now().Add(42)
 
-	articleUpdate := UpdateArticleRequestDto{
+	articleUpdate := ArticleUpdateRequestDto{
 		Title:     "article one title",
 		Subtitle:  "article one subtitle",
 		Slug:      "article-one-slug",
@@ -514,7 +514,7 @@ func testArticleServiceUpdateArticleError(t *testing.T, service ArticleServiceIm
 }
 
 func testArticleServiceCreateFailsValidation(t *testing.T, service ArticleServiceImpl) {
-	gotMissingFields, err := service.Create(&ArticleRequestDto{})
+	gotMissingFields, err := service.Create(&ArticleNewRequestDto{})
 
 	require.Nil(t, gotMissingFields, "should not create article")
 
@@ -534,7 +534,7 @@ func testArticleServiceCreateFailsValidation(t *testing.T, service ArticleServic
 	require.Equal(t, "required", missingFieldErrs["UpdatedAt"], "should error for no UpdatedAt")
 	require.Equal(t, "required", missingFieldErrs["TagIds"], "should error for no TagIds")
 
-	gotMaxValidations, err := service.Create(&ArticleRequestDto{
+	gotMaxValidations, err := service.Create(&ArticleNewRequestDto{
 		Title:     "abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345",
 		Subtitle:  "abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345",
 		Slug:      "abcdeabcdeabcdeabcdeabcdeabcdeabcdeabcdeabcdeabcdeabcde",
@@ -556,7 +556,7 @@ func testArticleServiceCreateFailsValidation(t *testing.T, service ArticleServic
 	require.Equal(t, "max", maxValidationErrs["Subtitle"], "should not allow long Subtitle")
 	require.Equal(t, "max", maxValidationErrs["Slug"], "should not allow long Slug")
 
-	gotMinValidations, err := service.Create(&ArticleRequestDto{
+	gotMinValidations, err := service.Create(&ArticleNewRequestDto{
 		Title:     "Some title",
 		Subtitle:  "Some subtitle",
 		Slug:      "a",
@@ -578,7 +578,7 @@ func testArticleServiceCreateFailsValidation(t *testing.T, service ArticleServic
 }
 
 func testArticleServiceUpdateFailsValidation(t *testing.T, service ArticleServiceImpl) {
-	gotMissingFields, err := service.Update(&UpdateArticleRequestDto{})
+	gotMissingFields, err := service.Update(&ArticleUpdateRequestDto{})
 
 	require.Nil(t, gotMissingFields, "should not update article")
 
@@ -598,7 +598,7 @@ func testArticleServiceUpdateFailsValidation(t *testing.T, service ArticleServic
 	require.Equal(t, "required", missingFieldErrs["UpdatedAt"], "should error for no UpdatedAt")
 	require.Equal(t, "required", missingFieldErrs["TagIds"], "should error for no TagIds")
 
-	gotMaxValidations, err := service.Update(&UpdateArticleRequestDto{
+	gotMaxValidations, err := service.Update(&ArticleUpdateRequestDto{
 		Title:     "abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345",
 		Subtitle:  "abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345abcde12345",
 		Slug:      "abcdeabcdeabcdeabcdeabcdeabcdeabcdeabcdeabcdeabcdeabcde",
@@ -620,7 +620,7 @@ func testArticleServiceUpdateFailsValidation(t *testing.T, service ArticleServic
 	require.Equal(t, "max", maxValidationErrs["Subtitle"], "should not allow long Subtitle")
 	require.Equal(t, "max", maxValidationErrs["Slug"], "should not allow long Slug")
 
-	gotMinValidations, err := service.Update(&UpdateArticleRequestDto{
+	gotMinValidations, err := service.Update(&ArticleUpdateRequestDto{
 		Title:     "Some title",
 		Subtitle:  "Some subtitle",
 		Slug:      "a",

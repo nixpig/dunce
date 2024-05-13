@@ -15,7 +15,7 @@ type MockTagService struct {
 	mock.Mock
 }
 
-func (s *MockTagService) Create(tag *CreateTagRequestDto) (*TagResponseDto, error) {
+func (s *MockTagService) Create(tag *TagNewRequestDto) (*TagResponseDto, error) {
 	args := s.Called(tag)
 
 	return args.Get(0).(*TagResponseDto), args.Error(1)
@@ -39,7 +39,7 @@ func (s *MockTagService) GetByAttribute(attr, slug string) (*TagResponseDto, err
 	return args.Get(0).(*TagResponseDto), args.Error(1)
 }
 
-func (s *MockTagService) Update(tag *UpdateTagRequestDto) (*TagResponseDto, error) {
+func (s *MockTagService) Update(tag *TagUpdateRequestDto) (*TagResponseDto, error) {
 	args := s.Called(tag)
 
 	return args.Get(0).(*TagResponseDto), args.Error(1)

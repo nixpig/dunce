@@ -7,9 +7,9 @@ import (
 	"github.com/nixpig/dunce/db"
 )
 
-type IUserRepository interface {
-	Create(user *UserNew) (*User, error)
-	DeleteById(id int) error
+type UserRepository interface {
+	Create(user *User) (*User, error)
+	DeleteById(id uint) error
 	Exists(username string) (bool, error)
 	GetAll() (*[]User, error)
 	GetByAttribute(attr, value string) (*User, error)
@@ -17,22 +17,22 @@ type IUserRepository interface {
 	Update(user *User) (*User, error)
 }
 
-type UserRepository struct {
+type userPostgresRepository struct {
 	db db.Dbconn
 }
 
-func NewUserRepository(db db.Dbconn) UserRepository {
-	return UserRepository{
+func NewUserPostgresRepository(db db.Dbconn) userPostgresRepository {
+	return userPostgresRepository{
 		db: db,
 	}
 }
 
-func (u UserRepository) Create(user *UserNew) (*User, error) {
+func (u userPostgresRepository) Create(user *User) (*User, error) {
 	query := `insert into users_ (username_, email_, password_) values ($1, $2, $3) returning id_, username_, email_`
 
-	row := u.db.QueryRow(context.Background(), query, user.Username, user.Email, user.Password)
+	var createdUser User
 
-	createdUser := User{}
+	row := u.db.QueryRow(context.Background(), query, user.Username, user.Email, user.Password)
 
 	if err := row.Scan(&createdUser.Id, &createdUser.Username, &createdUser.Email); err != nil {
 		return nil, err
@@ -41,7 +41,7 @@ func (u UserRepository) Create(user *UserNew) (*User, error) {
 	return &createdUser, nil
 }
 
-func (u UserRepository) DeleteById(id int) error {
+func (u userPostgresRepository) DeleteById(id uint) error {
 	query := `delete from users_ where id_ = $1`
 
 	res, err := u.db.Exec(context.Background(), query, id)
@@ -56,7 +56,7 @@ func (u UserRepository) DeleteById(id int) error {
 	return nil
 }
 
-func (u UserRepository) Exists(username string) (bool, error) {
+func (u userPostgresRepository) Exists(username string) (bool, error) {
 	query := `select exists(select true from users_ where username_ = $1)`
 
 	row := u.db.QueryRow(context.Background(), query, username)
@@ -70,7 +70,7 @@ func (u UserRepository) Exists(username string) (bool, error) {
 	return exists, nil
 }
 
-func (u UserRepository) GetAll() (*[]User, error) {
+func (u userPostgresRepository) GetAll() (*[]User, error) {
 	query := `select id_, username_, email_ from users_`
 
 	rows, err := u.db.Query(context.Background(), query)
@@ -95,7 +95,7 @@ func (u UserRepository) GetAll() (*[]User, error) {
 	return &users, nil
 }
 
-func (u UserRepository) GetByAttribute(attr, value string) (*User, error) {
+func (u userPostgresRepository) GetByAttribute(attr, value string) (*User, error) {
 	var query string
 
 	switch attr {
@@ -117,7 +117,7 @@ func (u UserRepository) GetByAttribute(attr, value string) (*User, error) {
 	return &user, nil
 }
 
-func (u UserRepository) GetPasswordByUsername(username string) (string, error) {
+func (u userPostgresRepository) GetPasswordByUsername(username string) (string, error) {
 	query := `select password_ from users_ where username_ = $1`
 
 	row := u.db.QueryRow(context.Background(), query, username)
@@ -131,6 +131,6 @@ func (u UserRepository) GetPasswordByUsername(username string) (string, error) {
 	return password, nil
 }
 
-func (u UserRepository) Update(user *User) (*User, error) {
+func (u userPostgresRepository) Update(user *User) (*User, error) {
 	return nil, nil
 }

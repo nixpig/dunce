@@ -12,13 +12,38 @@ import (
 )
 
 type UserController struct {
-	service        IUserService
+	service        UserService
 	log            pkg.Logger
 	templateCache  map[string]*template.Template
 	sessionManager *scs.SessionManager
 }
 
-func NewUserController(service IUserService, config pkg.ControllerConfig) UserController {
+type UserView struct {
+	Message         string
+	User            *UserResponseDto
+	CsrfToken       string
+	IsAuthenticated bool
+}
+
+type UsersView struct {
+	Message         string
+	Users           *[]UserResponseDto
+	CsrfToken       string
+	IsAuthenticated bool
+}
+
+type UserLoginView struct {
+	Message         string
+	CsrfToken       string
+	IsAuthenticated bool
+}
+
+type UserCreateView struct {
+	CsrfToken       string
+	IsAuthenticated bool
+}
+
+func NewUserController(service UserService, config pkg.ControllerConfig) UserController {
 	return UserController{
 		service:        service,
 		log:            config.Log,
@@ -33,11 +58,7 @@ func (u *UserController) UserLoginGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := u.templateCache["pages/admin/admin-login.tmpl"].ExecuteTemplate(w, "admin", struct {
-		Message         string
-		CsrfToken       string
-		IsAuthenticated bool
-	}{
+	if err := u.templateCache["pages/admin/admin-login.tmpl"].ExecuteTemplate(w, "admin", UserLoginView{
 		Message:         u.sessionManager.PopString(r.Context(), pkg.SESSION_KEY_MESSAGE),
 		CsrfToken:       nosurf.Token(r),
 		IsAuthenticated: u.IsAuthenticated(r),
@@ -79,10 +100,7 @@ func (u *UserController) UserLogoutPost(w http.ResponseWriter, r *http.Request) 
 }
 
 func (u *UserController) CreateUserGet(w http.ResponseWriter, r *http.Request) {
-	if err := u.templateCache["pages/admin/admin-new-user.tmpl"].ExecuteTemplate(w, "admin", struct {
-		CsrfToken       string
-		IsAuthenticated bool
-	}{
+	if err := u.templateCache["pages/admin/admin-new-user.tmpl"].ExecuteTemplate(w, "admin", UserCreateView{
 		CsrfToken:       nosurf.Token(r),
 		IsAuthenticated: u.IsAuthenticated(r),
 	}); err != nil {
@@ -93,7 +111,7 @@ func (u *UserController) CreateUserGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UserController) CreateUserPost(w http.ResponseWriter, r *http.Request) {
-	user := UserNew{
+	user := UserNewRequestDto{
 		Username: r.FormValue("username"),
 		Password: r.FormValue("password"),
 		Email:    r.FormValue("email"),
@@ -121,12 +139,7 @@ func (u *UserController) UsersGet(w http.ResponseWriter, r *http.Request) {
 
 	message := u.sessionManager.PopString(r.Context(), pkg.SESSION_KEY_MESSAGE)
 
-	if err := u.templateCache["pages/admin/admin-users.tmpl"].ExecuteTemplate(w, "admin", struct {
-		Message         string
-		Users           *[]User
-		CsrfToken       string
-		IsAuthenticated bool
-	}{
+	if err := u.templateCache["pages/admin/admin-users.tmpl"].ExecuteTemplate(w, "admin", UsersView{
 		Message:         message,
 		Users:           users,
 		CsrfToken:       nosurf.Token(r),
@@ -146,12 +159,7 @@ func (u *UserController) UserGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := u.templateCache["pages/admin/admin-user.tmpl"].ExecuteTemplate(w, "admin", struct {
-		Message         string
-		User            *User
-		CsrfToken       string
-		IsAuthenticated bool
-	}{
+	if err := u.templateCache["pages/admin/admin-user.tmpl"].ExecuteTemplate(w, "admin", UserView{
 		Message:         "",
 		User:            user,
 		CsrfToken:       nosurf.Token(r),
@@ -172,7 +180,7 @@ func (u *UserController) DeleteUserPost(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	if err := u.service.DeleteById(id); err != nil {
+	if err := u.service.DeleteById(uint(id)); err != nil {
 		u.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -184,7 +192,7 @@ func (u *UserController) DeleteUserPost(w http.ResponseWriter, r *http.Request) 
 }
 
 func (u *UserController) IsAuthenticated(r *http.Request) bool {
-	isAuthenticated, ok := r.Context().Value(pkg.IsLoggedInContextKey).(bool)
+	isAuthenticated, ok := r.Context().Value(pkg.IS_LOGGED_IN_CONTEXT_KEY).(bool)
 	if !ok {
 		return false
 	}

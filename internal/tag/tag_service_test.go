@@ -104,7 +104,7 @@ func testTagServiceUpdateConvertSlugToLowercase(t *testing.T, service TagService
 		Slug: "tag-slug",
 	}, nil)
 
-	got, err := service.Update(&UpdateTagRequestDto{
+	got, err := service.Update(&TagUpdateRequestDto{
 		Id:   42,
 		Name: "tag name",
 		Slug: "TaG-slUg",
@@ -133,7 +133,7 @@ func testTagServiceUpdateTag(t *testing.T, service TagServiceImpl) {
 		Slug: "tag-slug",
 	}, nil)
 
-	got, err := service.Update(&UpdateTagRequestDto{
+	got, err := service.Update(&TagUpdateRequestDto{
 		Id:   42,
 		Name: "tag name",
 		Slug: "tag-slug",
@@ -183,7 +183,7 @@ func testTagServiceCreateConvertSlugToLowercase(t *testing.T, service TagService
 		Slug: "tag-slug",
 	}, nil)
 
-	got, err := service.Create(&CreateTagRequestDto{
+	got, err := service.Create(&TagNewRequestDto{
 		Name: "tag name",
 		Slug: "tAg-SluG",
 	})
@@ -210,7 +210,7 @@ func testTagServiceCreateValidTag(t *testing.T, service TagServiceImpl) {
 		Slug: "tag-slug",
 	}, nil)
 
-	got, err := service.Create(&CreateTagRequestDto{
+	got, err := service.Create(&TagNewRequestDto{
 		Name: "tag name",
 		Slug: "tag-slug",
 	})
@@ -228,7 +228,7 @@ func testTagServiceCreateValidTag(t *testing.T, service TagServiceImpl) {
 }
 
 func testTagServiceCreateInvalidTag(t *testing.T, service TagServiceImpl) {
-	gotLongTagName, err := service.Create(&CreateTagRequestDto{
+	gotLongTagName, err := service.Create(&TagNewRequestDto{
 		Name: "tag name that is longer than 50 characters so exceeds limit",
 		Slug: "tag-slug",
 	})
@@ -236,35 +236,35 @@ func testTagServiceCreateInvalidTag(t *testing.T, service TagServiceImpl) {
 	require.NotNil(t, err, "should return error")
 	require.Nil(t, gotLongTagName, "should not create tag")
 
-	gotShortTagName, err := service.Create(&CreateTagRequestDto{
+	gotShortTagName, err := service.Create(&TagNewRequestDto{
 		Name: "s",
 		Slug: "tag-slug",
 	})
 	require.NotNil(t, err, "should return error")
 	require.Nil(t, gotShortTagName, "should not create tag")
 
-	gotLongTagSlug, err := service.Create(&CreateTagRequestDto{
+	gotLongTagSlug, err := service.Create(&TagNewRequestDto{
 		Name: "tag name",
 		Slug: "tag-slug-that-is-longer-than-50-characters-so-is-invalid",
 	})
 	require.NotNil(t, err, "should return error")
 	require.Nil(t, gotLongTagSlug, "should not create tag")
 
-	gotShortTagSlug, err := service.Create(&CreateTagRequestDto{
+	gotShortTagSlug, err := service.Create(&TagNewRequestDto{
 		Name: "tag name",
 		Slug: "s",
 	})
 	require.NotNil(t, err, "should return error")
 	require.Nil(t, gotShortTagSlug, "should not create tag")
 
-	gotInvalidTagSlugWithSpecials, err := service.Create(&CreateTagRequestDto{
+	gotInvalidTagSlugWithSpecials, err := service.Create(&TagNewRequestDto{
 		Name: "tag name",
 		Slug: "s%l&u*g",
 	})
 	require.NotNil(t, err, "should return error")
 	require.Nil(t, gotInvalidTagSlugWithSpecials, "should not create tag")
 
-	gotInvalidTagSlugWithSpaces, err := service.Create(&CreateTagRequestDto{
+	gotInvalidTagSlugWithSpaces, err := service.Create(&TagNewRequestDto{
 		Name: "tag name",
 		Slug: "s l u g",
 	})
@@ -273,7 +273,7 @@ func testTagServiceCreateInvalidTag(t *testing.T, service TagServiceImpl) {
 }
 
 func testTagServiceUpdateInvalidTag(t *testing.T, service TagServiceImpl) {
-	gotLongTagName, err := service.Update(&UpdateTagRequestDto{
+	gotLongTagName, err := service.Update(&TagUpdateRequestDto{
 		Id:   69,
 		Name: "tag name that is longer than 50 characters so exceeds limit",
 		Slug: "tag-slug",
@@ -281,7 +281,7 @@ func testTagServiceUpdateInvalidTag(t *testing.T, service TagServiceImpl) {
 	require.NotNil(t, err, "should return error")
 	require.Nil(t, gotLongTagName, "should not update tag")
 
-	gotShortTagName, err := service.Update(&UpdateTagRequestDto{
+	gotShortTagName, err := service.Update(&TagUpdateRequestDto{
 		Id:   69,
 		Name: "s",
 		Slug: "tag-slug",
@@ -289,7 +289,7 @@ func testTagServiceUpdateInvalidTag(t *testing.T, service TagServiceImpl) {
 	require.NotNil(t, err, "should return error")
 	require.Nil(t, gotShortTagName, "should not update tag")
 
-	gotLongTagSlug, err := service.Update(&UpdateTagRequestDto{
+	gotLongTagSlug, err := service.Update(&TagUpdateRequestDto{
 		Id:   69,
 		Name: "tag name",
 		Slug: "tag-slug-that-is-longer-than-50-characters-so-is-invalid",
@@ -297,7 +297,7 @@ func testTagServiceUpdateInvalidTag(t *testing.T, service TagServiceImpl) {
 	require.NotNil(t, err, "should return error")
 	require.Nil(t, gotLongTagSlug, "should not update tag")
 
-	gotShortTagSlug, err := service.Update(&UpdateTagRequestDto{
+	gotShortTagSlug, err := service.Update(&TagUpdateRequestDto{
 		Id:   69,
 		Name: "tag name",
 		Slug: "s",
@@ -305,7 +305,7 @@ func testTagServiceUpdateInvalidTag(t *testing.T, service TagServiceImpl) {
 	require.NotNil(t, err, "should return error")
 	require.Nil(t, gotShortTagSlug, "should not update tag")
 
-	gotInvalidTagSlugWithSpecials, err := service.Update(&UpdateTagRequestDto{
+	gotInvalidTagSlugWithSpecials, err := service.Update(&TagUpdateRequestDto{
 		Id:   1,
 		Name: "tag name",
 		Slug: "s%l&u*g",
@@ -313,7 +313,7 @@ func testTagServiceUpdateInvalidTag(t *testing.T, service TagServiceImpl) {
 	require.NotNil(t, err, "should return error")
 	require.Nil(t, gotInvalidTagSlugWithSpecials, "should not update tag")
 
-	gotInvalidTagSlugWithSpaces, err := service.Update(&UpdateTagRequestDto{
+	gotInvalidTagSlugWithSpaces, err := service.Update(&TagUpdateRequestDto{
 		Name: "tag name",
 		Slug: "s l u g",
 	})
@@ -327,7 +327,7 @@ func testTagServiceCreateExistingTag(t *testing.T, service TagServiceImpl) {
 		Slug: "tag-slug",
 	}).Return(nil, errors.New("exists"))
 
-	gotTag, err := service.Create(&CreateTagRequestDto{
+	gotTag, err := service.Create(&TagNewRequestDto{
 		Name: "tag name",
 		Slug: "tag-slug",
 	})
@@ -470,7 +470,7 @@ func testTagServiceUpdateTagRepoError(t *testing.T, service TagServiceImpl) {
 		Slug: "tag-slug",
 	}).Return(&Tag{}, errors.New("update_repo_error"))
 
-	got, err := service.Update(&UpdateTagRequestDto{
+	got, err := service.Update(&TagUpdateRequestDto{
 		Id:   23,
 		Name: "tag name",
 		Slug: "tag-slug",

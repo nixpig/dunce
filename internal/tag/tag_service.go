@@ -7,11 +7,11 @@ import (
 )
 
 type TagService interface {
-	Create(tag *CreateTagRequestDto) (*TagResponseDto, error)
+	Create(tag *TagNewRequestDto) (*TagResponseDto, error)
 	DeleteById(id int) error
 	GetAll() (*[]TagResponseDto, error)
 	GetByAttribute(attr, value string) (*TagResponseDto, error)
-	Update(tag *UpdateTagRequestDto) (*TagResponseDto, error)
+	Update(tag *TagUpdateRequestDto) (*TagResponseDto, error)
 }
 
 type TagServiceImpl struct {
@@ -29,7 +29,7 @@ func NewTagService(
 	}
 }
 
-func (t TagServiceImpl) Create(tag *CreateTagRequestDto) (*TagResponseDto, error) {
+func (t TagServiceImpl) Create(tag *TagNewRequestDto) (*TagResponseDto, error) {
 	tagToCreate := Tag{
 		Name: tag.Name,
 		Slug: strings.ToLower(tag.Slug),
@@ -87,7 +87,7 @@ func (t TagServiceImpl) GetByAttribute(attr, value string) (*TagResponseDto, err
 	}, nil
 }
 
-func (t TagServiceImpl) Update(tag *UpdateTagRequestDto) (*TagResponseDto, error) {
+func (t TagServiceImpl) Update(tag *TagUpdateRequestDto) (*TagResponseDto, error) {
 	tagToUpdate := Tag{
 		Id:   tag.Id,
 		Name: tag.Name,

@@ -8,11 +8,11 @@ import (
 
 type ArticleService interface {
 	DeleteById(id int) error
-	Create(article *ArticleRequestDto) (*ArticleResponseDto, error)
+	Create(article *ArticleNewRequestDto) (*ArticleResponseDto, error)
 	GetAll() (*[]ArticleResponseDto, error)
 	GetManyByAttribute(attr, value string) (*[]ArticleResponseDto, error)
 	GetByAttribute(attr, value string) (*ArticleResponseDto, error)
-	Update(article *UpdateArticleRequestDto) (*ArticleResponseDto, error)
+	Update(article *ArticleUpdateRequestDto) (*ArticleResponseDto, error)
 }
 
 type ArticleServiceImpl struct {
@@ -34,7 +34,7 @@ func (a ArticleServiceImpl) DeleteById(id int) error {
 	return a.repo.DeleteById(id)
 }
 
-func (a ArticleServiceImpl) Create(article *ArticleRequestDto) (*ArticleResponseDto, error) {
+func (a ArticleServiceImpl) Create(article *ArticleNewRequestDto) (*ArticleResponseDto, error) {
 	articleToCreate := ArticleNew{
 		Title:     article.Title,
 		Subtitle:  article.Subtitle,
@@ -137,7 +137,7 @@ func (a ArticleServiceImpl) GetByAttribute(attr, value string) (*ArticleResponse
 	}, nil
 }
 
-func (a ArticleServiceImpl) Update(article *UpdateArticleRequestDto) (*ArticleResponseDto, error) {
+func (a ArticleServiceImpl) Update(article *ArticleUpdateRequestDto) (*ArticleResponseDto, error) {
 	articleToUpdate := UpdateArticle{
 		Id:        article.Id,
 		Title:     article.Title,

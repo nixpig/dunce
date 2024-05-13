@@ -12,7 +12,7 @@ import (
 )
 
 func TestArticleRepo(t *testing.T) {
-	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface, data articlePostgresRepository){
+	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface, repo articlePostgresRepository){
 		"test create article (success)":                            testArticleRepoCreateNewArticle,
 		"test create article (handle db error)":                    testArticleRepoCreateNewArticleFailsOnDbErrors,
 		"test delete article (success)":                            testArticleRepoDeleteArticle,
@@ -87,7 +87,9 @@ func testArticleRepoCreateNewArticle(t *testing.T, mock pgxmock.PgxPoolIface, da
 	createdArticle, err := data.Create(&newArticle)
 
 	mock.Reset()
-	mock.ExpectationsWereMet()
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal("expectations were not met: ", err)
+	}
 
 	require.NoError(t, err, "should not error out")
 
@@ -120,7 +122,9 @@ func testArticleRepoCreateNewArticleFailsOnDbErrors(t *testing.T, mock pgxmock.P
 	require.EqualError(t, err, "db_begin_error", "should return db error")
 
 	mock.Reset()
-	mock.ExpectationsWereMet()
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal("expectations were not met: ", err)
+	}
 }
 
 func testArticleRepoDeleteArticle(t *testing.T, mock pgxmock.PgxPoolIface, repo articlePostgresRepository) {
@@ -134,7 +138,9 @@ func testArticleRepoDeleteArticle(t *testing.T, mock pgxmock.PgxPoolIface, repo 
 	err := repo.DeleteById(23)
 
 	mock.Reset()
-	mock.ExpectationsWereMet()
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal("expectations were not met: ", err)
+	}
 
 	require.Nil(t, err, "should not return error")
 }
@@ -150,7 +156,9 @@ func testArticleRepoDeleteArticleError(t *testing.T, mock pgxmock.PgxPoolIface, 
 	err := repo.DeleteById(23)
 
 	mock.Reset()
-	mock.ExpectationsWereMet()
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal("expectations were not met: ", err)
+	}
 
 	require.EqualError(t, err, "db_delete_error", "should return db error")
 }
@@ -198,7 +206,9 @@ func testArticleRepoGetArticleBySlug(t *testing.T, mock pgxmock.PgxPoolIface, re
 	got, err := repo.GetByAttribute("slug", "tag-slug")
 
 	mock.Reset()
-	mock.ExpectationsWereMet()
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal("expectations not met: ", err)
+	}
 
 	require.Nil(t, err, "should not return error")
 
@@ -235,7 +245,9 @@ func testArticleRepoGetArticleByAttrArticleDbError(t *testing.T, mock pgxmock.Pg
 	got, err := repo.GetByAttribute("slug", "tag-slug")
 
 	mock.Reset()
-	mock.ExpectationsWereMet()
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal("expectations not met: ", err)
+	}
 
 	require.Nil(t, got, "should not return article")
 	require.EqualError(t, err, "article_db_error", "should return db error")
@@ -281,7 +293,9 @@ func testArticleRepoGetArticleByAttrTagsDbError(t *testing.T, mock pgxmock.PgxPo
 	got, err := repo.GetByAttribute("slug", "tag-slug")
 
 	mock.Reset()
-	mock.ExpectationsWereMet()
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal("expectations not met: ", err)
+	}
 
 	require.Nil(t, got, "should not return tags")
 
@@ -320,7 +334,9 @@ func testArticleRepoGetManyArticlesByTagSlugSingleResult(t *testing.T, mock pgxm
 	got, err := repo.GetManyByAttribute("tagSlug", "some-slug")
 
 	mock.Reset()
-	mock.ExpectationsWereMet()
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal("expectations not met: ", err)
+	}
 
 	require.Nil(t, err, "should not return error")
 	require.Equal(t, &[]Article{{
@@ -382,7 +398,9 @@ func testArticleRepoGetManyArticlesByTagSlugMultipleResults(t *testing.T, mock p
 	got, err := repo.GetManyByAttribute("tagSlug", "some-slug")
 
 	mock.Reset()
-	mock.ExpectationsWereMet()
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal("expectations not met: ", err)
+	}
 
 	require.Nil(t, err, "should not return error")
 	require.Equal(t, &[]Article{
@@ -451,7 +469,9 @@ func testArticleRepoGetAllArticlesSingleResult(t *testing.T, mock pgxmock.PgxPoo
 	got, err := repo.GetAll()
 
 	mock.Reset()
-	mock.ExpectationsWereMet()
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal("expectations not met: ", err)
+	}
 
 	require.Nil(t, err, "should not return error")
 
@@ -523,7 +543,9 @@ func testArticleRepoGetAllArticlesMultipleResults(t *testing.T, mock pgxmock.Pgx
 	got, err := repo.GetAll()
 
 	mock.Reset()
-	mock.ExpectationsWereMet()
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal("expectations not met: ", err)
+	}
 
 	require.Nil(t, err, "should not return error")
 

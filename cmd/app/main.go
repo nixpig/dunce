@@ -17,11 +17,11 @@ func main() {
 	appConfig := app.AppConfig{}
 
 	if err := config.Init(); err != nil {
-		log.Printf("unable to load config from env '%v' which may be fatal; continuing...", err)
+		log.Printf("unable to load config from env due to '%v' which may not be fatal; continuing...", err)
 	}
 
 	if err := db.MigrateUp(); err != nil {
-		log.Printf("did not run database migration due to '%v' which may be fatal; continuing...", err)
+		log.Printf("did not run database migration due to '%v' which may not be fatal; continuing...", err)
 	}
 
 	appConfig.Db, err = db.Connect()
@@ -32,7 +32,7 @@ func main() {
 
 	appConfig.Validator, err = pkg.NewValidator()
 	if err != nil {
-		log.Fatalf("unable to create validation: %v", err)
+		log.Fatalf("unable to create validator: %v", err)
 		os.Exit(1)
 	}
 

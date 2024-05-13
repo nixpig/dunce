@@ -38,7 +38,7 @@ type ArticlesView struct {
 	IsAuthenticated bool
 }
 
-type PublishArticleView struct {
+type ArticlePublishView struct {
 	Message         string
 	Articles        *[]ArticleResponseDto
 	Tags            *[]tag.TagResponseDto
@@ -83,7 +83,7 @@ func (a *ArticleController) CreateHandler(w http.ResponseWriter, r *http.Request
 		tagIds[i] = tagId
 	}
 
-	article := ArticleRequestDto{
+	article := ArticleNewRequestDto{
 		Title:     r.FormValue("title"),
 		Subtitle:  r.FormValue("subtitle"),
 		Slug:      r.FormValue("slug"),
@@ -113,7 +113,7 @@ func (a *ArticleController) GetAllHandler(w http.ResponseWriter, r *http.Request
 	if err := a.templates["pages/admin/admin-articles.tmpl"].ExecuteTemplate(w, "admin", ArticlesView{
 		Articles:        articles,
 		CsrfToken:       nosurf.Token(r),
-		IsAuthenticated: a.session.Exists(r.Context(), string(pkg.IsLoggedInContextKey)),
+		IsAuthenticated: a.session.Exists(r.Context(), string(pkg.IS_LOGGED_IN_CONTEXT_KEY)),
 	}); err != nil {
 		a.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -129,10 +129,10 @@ func (a *ArticleController) NewHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := a.templates["pages/admin/admin-new-article.tmpl"].ExecuteTemplate(w, "admin", PublishArticleView{
+	if err := a.templates["pages/admin/admin-new-article.tmpl"].ExecuteTemplate(w, "admin", ArticlePublishView{
 		Tags:            availableTags,
 		CsrfToken:       nosurf.Token(r),
-		IsAuthenticated: a.session.Exists(r.Context(), string(pkg.IsLoggedInContextKey)),
+		IsAuthenticated: a.session.Exists(r.Context(), string(pkg.IS_LOGGED_IN_CONTEXT_KEY)),
 	}); err != nil {
 		a.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -164,7 +164,7 @@ func (a *ArticleController) GetBySlugHander(w http.ResponseWriter, r *http.Reque
 			Article:         article,
 			Tags:            allTags,
 			CsrfToken:       nosurf.Token(r),
-			IsAuthenticated: a.session.Exists(r.Context(), string(pkg.IsLoggedInContextKey)),
+			IsAuthenticated: a.session.Exists(r.Context(), string(pkg.IS_LOGGED_IN_CONTEXT_KEY)),
 		},
 	); err != nil {
 		a.log.Error(err.Error())
@@ -209,7 +209,7 @@ func (a ArticleController) UpdateHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	article := UpdateArticleRequestDto{
+	article := ArticleUpdateRequestDto{
 		Id:        articleId,
 		Title:     r.FormValue("title"),
 		Subtitle:  r.FormValue("subtitle"),

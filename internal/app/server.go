@@ -14,6 +14,7 @@ import (
 	"github.com/nixpig/dunce/internal/tag"
 	"github.com/nixpig/dunce/internal/user"
 	"github.com/nixpig/dunce/pkg"
+	"github.com/nixpig/dunce/pkg/middleware"
 )
 
 type AppConfig struct {
@@ -34,7 +35,7 @@ func Start(appConfig AppConfig) error {
 		appConfig.SessionManager,
 	)
 
-	userRepo := user.NewUserRepository(appConfig.Db.Pool)
+	userRepo := user.NewUserPostgresRepository(appConfig.Db.Pool)
 	userService := user.NewUserService(userRepo, appConfig.Validator)
 	userController := user.NewUserController(userService, controllerConfig)
 
@@ -46,22 +47,16 @@ func Start(appConfig AppConfig) error {
 	articleService := article.NewArticleService(articleRepository, appConfig.Validator)
 	articleController := article.NewArticleController(articleService, tagService, appConfig.SessionManager, controllerConfig)
 
-	isAuthenticated := user.NewIsAuthenticatedMiddleware(userService, appConfig.SessionManager)
-	protected := pkg.NewProtectedMiddleware(appConfig.SessionManager)
-	noSurf := pkg.NewNoSurfMiddleware()
+	isAuthenticated := middleware.NewAuthenticatedMiddleware(userService, appConfig.SessionManager)
+	protected := middleware.NewProtectedMiddleware(appConfig.SessionManager)
+	noSurf := middleware.NewNoSurfMiddleware()
+	stripSlash := middleware.NewStripSlashMiddleware()
 
 	static := http.FileServer(http.Dir("./web/static/"))
 
 	mux.Handle("GET /static/", http.StripPrefix("/static/", static))
 
-	mux.HandleFunc("GET /admin", func(w http.ResponseWriter, r *http.Request) {
-		if appConfig.SessionManager.Exists(r.Context(), string(pkg.IsLoggedInContextKey)) {
-			http.Redirect(w, r, "/admin/articles", http.StatusSeeOther)
-		} else {
-			http.Redirect(w, r, "/admin/login", http.StatusSeeOther)
-		}
-	})
-
+	mux.HandleFunc("GET /admin", adminRootHandler(appConfig))
 	mux.HandleFunc("GET /admin/login", noSurf(userController.UserLoginGet))
 	mux.HandleFunc("POST /admin/login", noSurf(userController.UserLoginPost))
 	mux.HandleFunc("POST /admin/logout", noSurf(userController.UserLogoutPost))
@@ -92,7 +87,7 @@ func Start(appConfig AppConfig) error {
 	mux.HandleFunc("GET /tags", homeController.HomeTagsGet)
 	mux.HandleFunc("GET /tags/{slug}", homeController.HomeTagGet)
 
-	mux.HandleFunc("GET /", stripTrailingSlashMiddleware(rootHandler(homeController.HomeGet)))
+	mux.HandleFunc("GET /", stripSlash(publicRootHandler(homeController.HomeGet)))
 
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%v", appConfig.Port),
@@ -111,26 +106,7 @@ func Start(appConfig AppConfig) error {
 	return nil
 }
 
-func stripTrailingSlashMiddleware(next http.HandlerFunc) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		isRoot := r.URL.Path == "/" || len(r.URL.Path) == 0
-
-		if isRoot {
-			next(w, r)
-			return
-		}
-
-		if r.URL.Path[len(r.URL.Path)-1] == '/' {
-			r.URL.Path = r.URL.Path[:len(r.URL.Path)-1]
-			http.Redirect(w, r, r.URL.Path, 301)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
-}
-
-func rootHandler(next http.HandlerFunc) http.HandlerFunc {
+func publicRootHandler(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" && r.URL.Path != "" {
 			http.Error(w, "Not Found", 404)
@@ -138,5 +114,15 @@ func rootHandler(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		next(w, r)
+	}
+}
+
+func adminRootHandler(appConfig AppConfig) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if appConfig.SessionManager.Exists(r.Context(), string(pkg.IS_LOGGED_IN_CONTEXT_KEY)) {
+			http.Redirect(w, r, "/admin/articles", http.StatusSeeOther)
+		} else {
+			http.Redirect(w, r, "/admin/login", http.StatusSeeOther)
+		}
 	}
 }
