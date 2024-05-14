@@ -12,7 +12,7 @@ import (
 var mockData = new(MockTagRepository)
 
 func TestTagService(t *testing.T) {
-	scenarios := map[string]func(t *testing.T, service TagServiceImpl){
+	scenarios := map[string]func(t *testing.T, service TagService){
 		"update tag (success)":                              testTagServiceUpdateTag,
 		"update tag (success - converts slug to lowercase)": testTagServiceUpdateConvertSlugToLowercase,
 		"update tag (handle error from repo)":               testTagServiceUpdateTagRepoError,
@@ -93,7 +93,7 @@ func (m *MockTagRepository) Update(tag *Tag) (*Tag, error) {
 	return args.Get(0).(*Tag), args.Error(1)
 }
 
-func testTagServiceUpdateConvertSlugToLowercase(t *testing.T, service TagServiceImpl) {
+func testTagServiceUpdateConvertSlugToLowercase(t *testing.T, service TagService) {
 	mockRepoUpdate := mockData.On("Update", &Tag{
 		Id:   42,
 		Name: "tag name",
@@ -111,7 +111,9 @@ func testTagServiceUpdateConvertSlugToLowercase(t *testing.T, service TagService
 	})
 
 	mockRepoUpdate.Unset()
-	mockData.AssertExpectations(t)
+	if res := mockData.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
 
 	require.Nil(t, err, "should not error out")
 
@@ -122,7 +124,7 @@ func testTagServiceUpdateConvertSlugToLowercase(t *testing.T, service TagService
 	}, got, "should return updated tag")
 }
 
-func testTagServiceUpdateTag(t *testing.T, service TagServiceImpl) {
+func testTagServiceUpdateTag(t *testing.T, service TagService) {
 	mockRepoUpdate := mockData.On("Update", &Tag{
 		Id:   42,
 		Name: "tag name",
@@ -140,7 +142,9 @@ func testTagServiceUpdateTag(t *testing.T, service TagServiceImpl) {
 	})
 
 	mockRepoUpdate.Unset()
-	mockData.AssertExpectations(t)
+	if res := mockData.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
 
 	require.Nil(t, err, "should not error out")
 
@@ -151,29 +155,33 @@ func testTagServiceUpdateTag(t *testing.T, service TagServiceImpl) {
 	}, got, "should return updated tag")
 }
 
-func testTagServiceDeleteTagWithoutError(t *testing.T, service TagServiceImpl) {
+func testTagServiceDeleteTagWithoutError(t *testing.T, service TagService) {
 	mockRepoDeleteById := mockData.On("DeleteById", 23).Return(nil)
 
 	got := service.DeleteById(23)
 
 	mockRepoDeleteById.Unset()
-	mockData.AssertExpectations(t)
+	if res := mockData.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
 
 	require.Nil(t, got, "should not error out")
 }
 
-func testTagServiceDeleteTagWithError(t *testing.T, service TagServiceImpl) {
+func testTagServiceDeleteTagWithError(t *testing.T, service TagService) {
 	mockRepoDeleteById := mockData.On("DeleteById", 42).Return(errors.New("data_error"))
 
 	got := service.DeleteById(42)
 
 	mockRepoDeleteById.Unset()
-	mockData.AssertExpectations(t)
+	if res := mockData.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
 
 	require.EqualError(t, got, "data_error", "should return error from data layer")
 }
 
-func testTagServiceCreateConvertSlugToLowercase(t *testing.T, service TagServiceImpl) {
+func testTagServiceCreateConvertSlugToLowercase(t *testing.T, service TagService) {
 	mockRepoCreate := mockData.On("Create", &Tag{
 		Name: "tag name",
 		Slug: "tag-slug",
@@ -189,7 +197,9 @@ func testTagServiceCreateConvertSlugToLowercase(t *testing.T, service TagService
 	})
 
 	mockRepoCreate.Unset()
-	mockData.AssertExpectations(t)
+	if res := mockData.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
 
 	require.Nil(t, err, "should not error")
 
@@ -200,7 +210,7 @@ func testTagServiceCreateConvertSlugToLowercase(t *testing.T, service TagService
 	}, got, "should return tag with id")
 }
 
-func testTagServiceCreateValidTag(t *testing.T, service TagServiceImpl) {
+func testTagServiceCreateValidTag(t *testing.T, service TagService) {
 	mockRepoCreate := mockData.On("Create", &Tag{
 		Name: "tag name",
 		Slug: "tag-slug",
@@ -216,7 +226,9 @@ func testTagServiceCreateValidTag(t *testing.T, service TagServiceImpl) {
 	})
 
 	mockRepoCreate.Unset()
-	mockData.AssertExpectations(t)
+	if res := mockData.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
 
 	require.Nil(t, err, "should not error")
 
@@ -227,7 +239,7 @@ func testTagServiceCreateValidTag(t *testing.T, service TagServiceImpl) {
 	}, got, "should return tag with id")
 }
 
-func testTagServiceCreateInvalidTag(t *testing.T, service TagServiceImpl) {
+func testTagServiceCreateInvalidTag(t *testing.T, service TagService) {
 	gotLongTagName, err := service.Create(&TagNewRequestDto{
 		Name: "tag name that is longer than 50 characters so exceeds limit",
 		Slug: "tag-slug",
@@ -272,7 +284,7 @@ func testTagServiceCreateInvalidTag(t *testing.T, service TagServiceImpl) {
 	require.Nil(t, gotInvalidTagSlugWithSpaces, "should not create tag")
 }
 
-func testTagServiceUpdateInvalidTag(t *testing.T, service TagServiceImpl) {
+func testTagServiceUpdateInvalidTag(t *testing.T, service TagService) {
 	gotLongTagName, err := service.Update(&TagUpdateRequestDto{
 		Id:   69,
 		Name: "tag name that is longer than 50 characters so exceeds limit",
@@ -321,7 +333,7 @@ func testTagServiceUpdateInvalidTag(t *testing.T, service TagServiceImpl) {
 	require.Nil(t, gotInvalidTagSlugWithSpaces, "should not create tag")
 }
 
-func testTagServiceCreateExistingTag(t *testing.T, service TagServiceImpl) {
+func testTagServiceCreateExistingTag(t *testing.T, service TagService) {
 	mockRepoCreate := mockData.On("Create", &Tag{
 		Name: "tag name",
 		Slug: "tag-slug",
@@ -333,25 +345,29 @@ func testTagServiceCreateExistingTag(t *testing.T, service TagServiceImpl) {
 	})
 
 	mockRepoCreate.Unset()
-	mockData.AssertExpectations(t)
+	if res := mockData.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
 
 	require.Nil(t, gotTag, "should not return tag")
 	require.NotNil(t, err, "should return error")
 }
 
-func testTagServiceGetAllTagsNoResults(t *testing.T, service TagServiceImpl) {
+func testTagServiceGetAllTagsNoResults(t *testing.T, service TagService) {
 	mockRepoGetAll := mockData.On("GetAll").Return(&[]Tag{}, nil)
 
 	got, err := service.GetAll()
 
 	mockRepoGetAll.Unset()
-	mockData.AssertExpectations(t)
+	if res := mockData.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
 
 	require.Nil(t, err, "should not return error")
 	require.Empty(t, got, "should not return any tags")
 }
 
-func testTagServiceGetAllTagsMultipleResults(t *testing.T, service TagServiceImpl) {
+func testTagServiceGetAllTagsMultipleResults(t *testing.T, service TagService) {
 	mockRepoGetAll := mockData.On("GetAll").Return(&[]Tag{
 		{
 			Id:   23,
@@ -373,7 +389,9 @@ func testTagServiceGetAllTagsMultipleResults(t *testing.T, service TagServiceImp
 	got, err := service.GetAll()
 
 	mockRepoGetAll.Unset()
-	mockData.AssertExpectations(t)
+	if res := mockData.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
 
 	require.Nil(t, err, "should not return error")
 	require.Equal(t, &[]TagResponseDto{
@@ -395,7 +413,7 @@ func testTagServiceGetAllTagsMultipleResults(t *testing.T, service TagServiceImp
 	}, got, "should return all tags")
 }
 
-func testTagServiceGetAllTagsSingleResult(t *testing.T, service TagServiceImpl) {
+func testTagServiceGetAllTagsSingleResult(t *testing.T, service TagService) {
 	mockRepoGetAll := mockData.On("GetAll").Return(&[]Tag{
 		{
 			Id:   69,
@@ -407,7 +425,9 @@ func testTagServiceGetAllTagsSingleResult(t *testing.T, service TagServiceImpl) 
 	tags, err := service.GetAll()
 
 	mockRepoGetAll.Unset()
-	mockData.AssertExpectations(t)
+	if res := mockData.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
 
 	require.Nil(t, err, "should not return error")
 	require.Equal(t, &[]TagResponseDto{
@@ -419,7 +439,7 @@ func testTagServiceGetAllTagsSingleResult(t *testing.T, service TagServiceImpl) 
 	}, tags, "should return all tags")
 }
 
-func testTagServiceGetBySlugTagExists(t *testing.T, service TagServiceImpl) {
+func testTagServiceGetBySlugTagExists(t *testing.T, service TagService) {
 	mockRepoGetByAttribute := mockData.On("GetByAttribute", "slug", "tag-slug").Return(&Tag{
 		Id:   69,
 		Name: "tag name",
@@ -429,7 +449,9 @@ func testTagServiceGetBySlugTagExists(t *testing.T, service TagServiceImpl) {
 	got, err := service.GetByAttribute("slug", "tag-slug")
 
 	mockRepoGetByAttribute.Unset()
-	mockData.AssertExpectations(t)
+	if res := mockData.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
 
 	require.Nil(t, err, "should not return error")
 	require.Equal(t, &TagResponseDto{
@@ -439,31 +461,35 @@ func testTagServiceGetBySlugTagExists(t *testing.T, service TagServiceImpl) {
 	}, got, "should return tag")
 }
 
-func testTagServiceGetBySlugTagDoesNotExist(t *testing.T, service TagServiceImpl) {
+func testTagServiceGetBySlugTagDoesNotExist(t *testing.T, service TagService) {
 	mockRepoGetByAttribute := mockData.On("GetByAttribute", "slug", "tag-slug").Return(nil, errors.New("data_error"))
 
 	got, err := service.GetByAttribute("slug", "tag-slug")
 
 	mockRepoGetByAttribute.Unset()
-	mockData.AssertExpectations(t)
+	if res := mockData.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
 
 	require.EqualError(t, err, "data_error", "should return error from data layer")
 	require.Nil(t, got, "should not return tag")
 }
 
-func testTagServiceGetAllTagsRepoError(t *testing.T, service TagServiceImpl) {
+func testTagServiceGetAllTagsRepoError(t *testing.T, service TagService) {
 	mockRepoGetAll := mockData.On("GetAll").Return(&[]Tag{}, errors.New("getall_repo_error"))
 
 	got, err := service.GetAll()
 
 	mockRepoGetAll.Unset()
-	mockData.AssertExpectations(t)
+	if res := mockData.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
 
 	require.EqualError(t, err, "getall_repo_error", "should return error from repo method call")
 	require.Nil(t, got, "should not return any tags")
 }
 
-func testTagServiceUpdateTagRepoError(t *testing.T, service TagServiceImpl) {
+func testTagServiceUpdateTagRepoError(t *testing.T, service TagService) {
 	mockCall := mockData.On("Update", &Tag{
 		Id:   23,
 		Name: "tag name",
@@ -477,7 +503,9 @@ func testTagServiceUpdateTagRepoError(t *testing.T, service TagServiceImpl) {
 	})
 
 	mockCall.Unset()
-	mockData.AssertExpectations(t)
+	if res := mockData.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
 
 	require.EqualError(t, err, "update_repo_error", "should return error")
 	require.Nil(t, got, "should not return/update a tag")

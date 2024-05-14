@@ -12,7 +12,7 @@ import (
 )
 
 func TestArticleRepo(t *testing.T) {
-	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface, repo articlePostgresRepository){
+	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface, repo ArticleRepository){
 		"test create article (success)":                            testArticleRepoCreateNewArticle,
 		"test create article (handle db error)":                    testArticleRepoCreateNewArticleFailsOnDbErrors,
 		"test delete article (success)":                            testArticleRepoDeleteArticle,
@@ -45,7 +45,7 @@ func TestArticleRepo(t *testing.T) {
 	}
 }
 
-func testArticleRepoCreateNewArticle(t *testing.T, mock pgxmock.PgxPoolIface, data articlePostgresRepository) {
+func testArticleRepoCreateNewArticle(t *testing.T, mock pgxmock.PgxPoolIface, data ArticleRepository) {
 	articleInsertQuery := `insert into articles_ (title_, subtitle_, slug_, body_, created_at_, updated_at_) values ($1, $2, $3, $4, $5, $6) returning id_, title_, subtitle_, slug_, body_, created_at_, updated_at_`
 
 	createdAt := time.Now()
@@ -106,7 +106,7 @@ func testArticleRepoCreateNewArticle(t *testing.T, mock pgxmock.PgxPoolIface, da
 	}, createdArticle, "should return created article data with id")
 }
 
-func testArticleRepoCreateNewArticleFailsOnDbErrors(t *testing.T, mock pgxmock.PgxPoolIface, repo articlePostgresRepository) {
+func testArticleRepoCreateNewArticleFailsOnDbErrors(t *testing.T, mock pgxmock.PgxPoolIface, repo ArticleRepository) {
 	mock.ExpectBegin().WillReturnError(errors.New("db_begin_error"))
 
 	article, err := repo.Create(&ArticleNew{
@@ -127,7 +127,7 @@ func testArticleRepoCreateNewArticleFailsOnDbErrors(t *testing.T, mock pgxmock.P
 	}
 }
 
-func testArticleRepoDeleteArticle(t *testing.T, mock pgxmock.PgxPoolIface, repo articlePostgresRepository) {
+func testArticleRepoDeleteArticle(t *testing.T, mock pgxmock.PgxPoolIface, repo ArticleRepository) {
 	query := `delete from articles_ a where a.id_ = $1`
 
 	mock.
@@ -145,7 +145,7 @@ func testArticleRepoDeleteArticle(t *testing.T, mock pgxmock.PgxPoolIface, repo 
 	require.Nil(t, err, "should not return error")
 }
 
-func testArticleRepoDeleteArticleError(t *testing.T, mock pgxmock.PgxPoolIface, repo articlePostgresRepository) {
+func testArticleRepoDeleteArticleError(t *testing.T, mock pgxmock.PgxPoolIface, repo ArticleRepository) {
 	query := `delete from articles_ a where a.id_ = $1`
 
 	mock.
@@ -163,7 +163,7 @@ func testArticleRepoDeleteArticleError(t *testing.T, mock pgxmock.PgxPoolIface, 
 	require.EqualError(t, err, "db_delete_error", "should return db error")
 }
 
-func testArticleRepoGetArticleBySlug(t *testing.T, mock pgxmock.PgxPoolIface, repo articlePostgresRepository) {
+func testArticleRepoGetArticleBySlug(t *testing.T, mock pgxmock.PgxPoolIface, repo ArticleRepository) {
 	articleQuery := `select a.id_, a.title_, a.subtitle_, a.slug_, a.body_, a.created_at_, a.updated_at_, array_to_string(array_agg(distinct t.tag_id_), ',', '*') from articles_ a join article_tags_ t on a.id_ = t.article_id_ where a.slug_ = $1 group by a.id_`
 
 	createdAt := time.Now()
@@ -227,14 +227,14 @@ func testArticleRepoGetArticleBySlug(t *testing.T, mock pgxmock.PgxPoolIface, re
 	}, got, "should return article")
 }
 
-func testArticleRepoGetArticleByInvalidAttr(t *testing.T, mock pgxmock.PgxPoolIface, repo articlePostgresRepository) {
+func testArticleRepoGetArticleByInvalidAttr(t *testing.T, mock pgxmock.PgxPoolIface, repo ArticleRepository) {
 	got, err := repo.GetByAttribute("foo", "bar")
 
 	require.Nil(t, got, "should not return any article")
 	require.EqualError(t, err, "invalid attribute", "should return invalid attribute error")
 }
 
-func testArticleRepoGetArticleByAttrArticleDbError(t *testing.T, mock pgxmock.PgxPoolIface, repo articlePostgresRepository) {
+func testArticleRepoGetArticleByAttrArticleDbError(t *testing.T, mock pgxmock.PgxPoolIface, repo ArticleRepository) {
 	articleQuery := `select a.id_, a.title_, a.subtitle_, a.slug_, a.body_, a.created_at_, a.updated_at_, array_to_string(array_agg(distinct t.tag_id_), ',', '*') from articles_ a join article_tags_ t on a.id_ = t.article_id_ where a.slug_ = $1 group by a.id_`
 
 	mock.
@@ -253,7 +253,7 @@ func testArticleRepoGetArticleByAttrArticleDbError(t *testing.T, mock pgxmock.Pg
 	require.EqualError(t, err, "article_db_error", "should return db error")
 }
 
-func testArticleRepoGetArticleByAttrTagsDbError(t *testing.T, mock pgxmock.PgxPoolIface, repo articlePostgresRepository) {
+func testArticleRepoGetArticleByAttrTagsDbError(t *testing.T, mock pgxmock.PgxPoolIface, repo ArticleRepository) {
 	articleQuery := `select a.id_, a.title_, a.subtitle_, a.slug_, a.body_, a.created_at_, a.updated_at_, array_to_string(array_agg(distinct t.tag_id_), ',', '*') from articles_ a join article_tags_ t on a.id_ = t.article_id_ where a.slug_ = $1 group by a.id_`
 
 	createdAt := time.Now()
@@ -302,7 +302,7 @@ func testArticleRepoGetArticleByAttrTagsDbError(t *testing.T, mock pgxmock.PgxPo
 	require.EqualError(t, err, "tags_db_error", "should return db error")
 }
 
-func testArticleRepoGetManyArticlesByTagSlugSingleResult(t *testing.T, mock pgxmock.PgxPoolIface, repo articlePostgresRepository) {
+func testArticleRepoGetManyArticlesByTagSlugSingleResult(t *testing.T, mock pgxmock.PgxPoolIface, repo ArticleRepository) {
 	articleQuery := `select a.id_, a.title_, a.subtitle_, a.slug_, a.body_, a.created_at_, a.updated_at_ from articles_ a inner join article_tags_ at on a.id_ = at.article_id_ inner join tags_ t on at.tag_id_ = t.id_ where t.slug_ = $1`
 
 	createdAt := time.Now().Add(time.Hour * -12)
@@ -351,14 +351,14 @@ func testArticleRepoGetManyArticlesByTagSlugSingleResult(t *testing.T, mock pgxm
 	}}, got, "should return the article")
 }
 
-func testArticleRepoGetManyByUnknownAttr(t *testing.T, mock pgxmock.PgxPoolIface, repo articlePostgresRepository) {
+func testArticleRepoGetManyByUnknownAttr(t *testing.T, mock pgxmock.PgxPoolIface, repo ArticleRepository) {
 	got, err := repo.GetManyByAttribute("foo", "bar")
 
 	require.Nil(t, got, "shouldn't return any articles")
 	require.EqualError(t, err, "unsupported attribute", "should return unsupported attribute error")
 }
 
-func testArticleRepoGetManyArticlesByTagSlugMultipleResults(t *testing.T, mock pgxmock.PgxPoolIface, repo articlePostgresRepository) {
+func testArticleRepoGetManyArticlesByTagSlugMultipleResults(t *testing.T, mock pgxmock.PgxPoolIface, repo ArticleRepository) {
 	articleQuery := `select a.id_, a.title_, a.subtitle_, a.slug_, a.body_, a.created_at_, a.updated_at_ from articles_ a inner join article_tags_ at on a.id_ = at.article_id_ inner join tags_ t on at.tag_id_ = t.id_ where t.slug_ = $1`
 
 	createdAt := time.Now().Add(time.Hour * -12)
@@ -427,7 +427,7 @@ func testArticleRepoGetManyArticlesByTagSlugMultipleResults(t *testing.T, mock p
 	}, got, "should return the article")
 }
 
-func testArticleRepoGetAllArticlesSingleResult(t *testing.T, mock pgxmock.PgxPoolIface, repo articlePostgresRepository) {
+func testArticleRepoGetAllArticlesSingleResult(t *testing.T, mock pgxmock.PgxPoolIface, repo ArticleRepository) {
 	tagQuery := `select id_, name_, slug_ from tags_`
 
 	mockTagRows := mock.
@@ -492,7 +492,7 @@ func testArticleRepoGetAllArticlesSingleResult(t *testing.T, mock pgxmock.PgxPoo
 	}, got, "should return article")
 }
 
-func testArticleRepoGetAllArticlesMultipleResults(t *testing.T, mock pgxmock.PgxPoolIface, repo articlePostgresRepository) {
+func testArticleRepoGetAllArticlesMultipleResults(t *testing.T, mock pgxmock.PgxPoolIface, repo ArticleRepository) {
 	tagQuery := `select id_, name_, slug_ from tags_`
 
 	mockTagRows := mock.

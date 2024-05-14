@@ -17,7 +17,7 @@ var mockData = new(MockArticleRepository)
 var validate, _ = pkg.NewValidator()
 
 func TestArticleService(t *testing.T) {
-	scenarios := map[string]func(t *testing.T, service ArticleServiceImpl){
+	scenarios := map[string]func(t *testing.T, service ArticleService){
 		"create article (success)":                      testArticleServiceCreateArticle,
 		"create article (error - fails validation)":     testArticleServiceCreateFailsValidation,
 		"create article (error - fail with no tags)":    testArticleServiceCreateArticleNoTags,
@@ -89,7 +89,7 @@ func (m *MockArticleRepository) GetManyByAttribute(attr, val string) (*[]Article
 	return args.Get(0).(*[]Article), args.Error(1)
 }
 
-func testArticleServiceCreateArticle(t *testing.T, service ArticleServiceImpl) {
+func testArticleServiceCreateArticle(t *testing.T, service ArticleService) {
 	createdAt := time.Now()
 	updatedAt := time.Now()
 
@@ -168,7 +168,9 @@ func testArticleServiceCreateArticle(t *testing.T, service ArticleServiceImpl) {
 	createdArticle, err := service.Create(&newArticle)
 
 	mockCallCreate.Unset()
-	mockData.AssertExpectations(t)
+	if res := mockData.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
 
 	require.Nil(t, err, "should not error")
 
@@ -180,7 +182,7 @@ func testArticleServiceCreateArticle(t *testing.T, service ArticleServiceImpl) {
 	)
 }
 
-func testArticleServiceCreateArticleNoTags(t *testing.T, service ArticleServiceImpl) {
+func testArticleServiceCreateArticleNoTags(t *testing.T, service ArticleService) {
 	articleWithNoTags := ArticleNewRequestDto{
 		Title:     "article title",
 		Subtitle:  "article subtitle",
@@ -197,7 +199,7 @@ func testArticleServiceCreateArticleNoTags(t *testing.T, service ArticleServiceI
 	require.EqualError(t, err, "article must have at least one tag", "should return error indicating article requires one or more tags")
 }
 
-func testArticleServiceCreateArticleRepoError(t *testing.T, service ArticleServiceImpl) {
+func testArticleServiceCreateArticleRepoError(t *testing.T, service ArticleService) {
 	createdAt := time.Now()
 	updatedAt := time.Now()
 
@@ -225,35 +227,41 @@ func testArticleServiceCreateArticleRepoError(t *testing.T, service ArticleServi
 	article, err := service.Create(&newArticle)
 
 	mockCall.Unset()
-	mockData.AssertExpectations(t)
+	if res := mockData.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
 
 	require.Nil(t, article, "should not return article")
 	require.EqualError(t, err, "repo_error", "should return error")
 }
 
-func testArticleServiceDeleteArticleByIdError(t *testing.T, service ArticleServiceImpl) {
+func testArticleServiceDeleteArticleByIdError(t *testing.T, service ArticleService) {
 	mockCall := mockData.On("DeleteById", 23).Return(errors.New("repo_error"))
 
 	err := service.DeleteById(23)
 
 	mockCall.Unset()
-	mockData.AssertExpectations(t)
+	if res := mockData.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
 
 	require.EqualError(t, err, "repo_error", "should bubble up error from repo")
 }
 
-func testArticleServiceDeleteArticleById(t *testing.T, service ArticleServiceImpl) {
+func testArticleServiceDeleteArticleById(t *testing.T, service ArticleService) {
 	mockCall := mockData.On("DeleteById", 23).Return(nil)
 
 	err := service.DeleteById(23)
 
 	mockCall.Unset()
-	mockData.AssertExpectations(t)
+	if res := mockData.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
 
 	require.Nil(t, err, "should not return error")
 }
 
-func testArticleServiceGetAllArticles(t *testing.T, service ArticleServiceImpl) {
+func testArticleServiceGetAllArticles(t *testing.T, service ArticleService) {
 	createdAt := time.Now()
 	updatedAt := time.Now().Add(42)
 
@@ -328,26 +336,30 @@ func testArticleServiceGetAllArticles(t *testing.T, service ArticleServiceImpl) 
 	articles, err := service.GetAll()
 
 	mockCall.Unset()
-	mockData.AssertExpectations(t)
+	if res := mockData.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
 
 	require.Nil(t, err, "should not return error")
 
 	require.Equal(t, articles, &allArticles, "should return all articles")
 }
 
-func testArticleServiceGetAllArticlesError(t *testing.T, service ArticleServiceImpl) {
+func testArticleServiceGetAllArticlesError(t *testing.T, service ArticleService) {
 	mockCall := mockData.On("GetAll").Return(&[]Article{}, errors.New("repo_error"))
 
 	articles, err := service.GetAll()
 
 	mockCall.Unset()
-	mockData.AssertExpectations(t)
+	if res := mockData.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
 
 	require.EqualError(t, err, "repo_error", "should return error from repo")
 	require.Empty(t, articles, "should return empty articles")
 }
 
-func testArticleServiceGetArticleBySlug(t *testing.T, service ArticleServiceImpl) {
+func testArticleServiceGetArticleBySlug(t *testing.T, service ArticleService) {
 	createdAt := time.Now()
 	updatedAt := time.Now().Add(53)
 
@@ -374,7 +386,9 @@ func testArticleServiceGetArticleBySlug(t *testing.T, service ArticleServiceImpl
 	gotArticle, err := service.GetByAttribute("slug", "article-slug")
 
 	mockCall.Unset()
-	mockData.AssertExpectations(t)
+	if res := mockData.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
 
 	require.Nil(t, err, "should not return error")
 	require.Equal(t, &ArticleResponseDto{
@@ -394,7 +408,7 @@ func testArticleServiceGetArticleBySlug(t *testing.T, service ArticleServiceImpl
 	}, gotArticle, "should return article by slug")
 }
 
-func testArticleServiceGetArticleBySlugError(t *testing.T, service ArticleServiceImpl) {
+func testArticleServiceGetArticleBySlugError(t *testing.T, service ArticleService) {
 	mockCall := mockData.
 		On("GetByAttribute", "slug", "article-slug").
 		Return(&Article{}, errors.New("repo_error"))
@@ -402,13 +416,15 @@ func testArticleServiceGetArticleBySlugError(t *testing.T, service ArticleServic
 	gotArticle, err := service.GetByAttribute("slug", "article-slug")
 
 	mockCall.Unset()
-	mockData.AssertExpectations(t)
+	if res := mockData.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
 
 	require.EqualError(t, err, "repo_error", "should return error")
 	require.Nil(t, gotArticle, "should not return an article")
 }
 
-func testArticleServiceUpdateArticle(t *testing.T, service ArticleServiceImpl) {
+func testArticleServiceUpdateArticle(t *testing.T, service ArticleService) {
 	createdAt := time.Now()
 	updatedAt := time.Now()
 
@@ -455,7 +471,9 @@ func testArticleServiceUpdateArticle(t *testing.T, service ArticleServiceImpl) {
 	updated, err := service.Update(&articleUpdate)
 
 	mockCall.Unset()
-	mockData.AssertExpectations(t)
+	if res := mockData.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
 
 	require.Nil(t, err, "should not return error")
 	require.Equal(t, &ArticleResponseDto{
@@ -475,7 +493,7 @@ func testArticleServiceUpdateArticle(t *testing.T, service ArticleServiceImpl) {
 	}, updated, "should return updated article")
 }
 
-func testArticleServiceUpdateArticleError(t *testing.T, service ArticleServiceImpl) {
+func testArticleServiceUpdateArticleError(t *testing.T, service ArticleService) {
 	createdAt := time.Now()
 	updatedAt := time.Now().Add(42)
 
@@ -506,14 +524,16 @@ func testArticleServiceUpdateArticleError(t *testing.T, service ArticleServiceIm
 	updated, err := service.Update(&articleUpdate)
 
 	mockCall.Unset()
-	mockData.AssertExpectations(t)
+	if res := mockData.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
 
 	require.EqualError(t, err, "repo_error", "should return error")
 	require.Empty(t, updated, "should not return non-updated article")
 
 }
 
-func testArticleServiceCreateFailsValidation(t *testing.T, service ArticleServiceImpl) {
+func testArticleServiceCreateFailsValidation(t *testing.T, service ArticleService) {
 	gotMissingFields, err := service.Create(&ArticleNewRequestDto{})
 
 	require.Nil(t, gotMissingFields, "should not create article")
@@ -577,7 +597,7 @@ func testArticleServiceCreateFailsValidation(t *testing.T, service ArticleServic
 	require.Equal(t, "min", minValidationErrs["Slug"], "should not allow short Slug")
 }
 
-func testArticleServiceUpdateFailsValidation(t *testing.T, service ArticleServiceImpl) {
+func testArticleServiceUpdateFailsValidation(t *testing.T, service ArticleService) {
 	gotMissingFields, err := service.Update(&ArticleUpdateRequestDto{})
 
 	require.Nil(t, gotMissingFields, "should not update article")
@@ -641,7 +661,7 @@ func testArticleServiceUpdateFailsValidation(t *testing.T, service ArticleServic
 	require.Equal(t, "min", minValidationErrs["Slug"], "should not allow short Slug")
 }
 
-func testArticleServiceGetManyArticlesByTagSlug(t *testing.T, service ArticleServiceImpl) {
+func testArticleServiceGetManyArticlesByTagSlug(t *testing.T, service ArticleService) {
 	createdAt := time.Now()
 	updatedAt := time.Now().Add(53)
 
@@ -685,7 +705,9 @@ func testArticleServiceGetManyArticlesByTagSlug(t *testing.T, service ArticleSer
 	gotArticle, err := service.GetManyByAttribute("tagSlug", "tag-one")
 
 	mockCall.Unset()
-	mockData.AssertExpectations(t)
+	if res := mockData.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
 
 	require.Nil(t, err, "should not return error")
 	require.Equal(t, &[]ArticleResponseDto{
@@ -722,7 +744,7 @@ func testArticleServiceGetManyArticlesByTagSlug(t *testing.T, service ArticleSer
 	}, gotArticle, "should return article by slug")
 }
 
-func testArticleServiceGetManyArticlesByTagSlugError(t *testing.T, service ArticleServiceImpl) {
+func testArticleServiceGetManyArticlesByTagSlugError(t *testing.T, service ArticleService) {
 	mockCall := mockData.
 		On("GetManyByAttribute", "tagSlug", "tag-one").
 		Return(&[]Article{}, errors.New("repo_error"))
@@ -730,9 +752,10 @@ func testArticleServiceGetManyArticlesByTagSlugError(t *testing.T, service Artic
 	got, err := service.GetManyByAttribute("tagSlug", "tag-one")
 
 	mockCall.Unset()
-	mockData.AssertExpectations(t)
+	if res := mockData.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
 
 	require.Empty(t, got, "should not return article(s)")
 	require.EqualError(t, err, "repo_error", "should return repo error")
-
 }

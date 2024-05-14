@@ -10,7 +10,7 @@ import (
 )
 
 func TestUserRepo(t *testing.T) {
-	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface, repo userPostgresRepository){
+	scenarios := map[string]func(t *testing.T, mock pgxmock.PgxPoolIface, repo UserRepository){
 		"create user (success)":                              testUserRepoCreate,
 		"create user (error)":                                testUserRepoCreateError,
 		"delete user (success)":                              testUserRepoDelete,
@@ -45,7 +45,7 @@ func TestUserRepo(t *testing.T) {
 	}
 }
 
-func testUserRepoCreate(t *testing.T, mock pgxmock.PgxPoolIface, repo userPostgresRepository) {
+func testUserRepoCreate(t *testing.T, mock pgxmock.PgxPoolIface, repo UserRepository) {
 	query := `insert into users_ (username_, email_, password_) values ($1, $2, $3) returning id_, username_, email_`
 
 	mockRow := mock.
@@ -76,7 +76,7 @@ func testUserRepoCreate(t *testing.T, mock pgxmock.PgxPoolIface, repo userPostgr
 
 }
 
-func testUserRepoCreateError(t *testing.T, mock pgxmock.PgxPoolIface, repo userPostgresRepository) {
+func testUserRepoCreateError(t *testing.T, mock pgxmock.PgxPoolIface, repo UserRepository) {
 	query := `insert into users_ (username_, email_, password_) values ($1, $2, $3) returning id_, username_, email_`
 
 	mock.
@@ -101,7 +101,7 @@ func testUserRepoCreateError(t *testing.T, mock pgxmock.PgxPoolIface, repo userP
 
 }
 
-func testUserRepoDelete(t *testing.T, mock pgxmock.PgxPoolIface, repo userPostgresRepository) {
+func testUserRepoDelete(t *testing.T, mock pgxmock.PgxPoolIface, repo UserRepository) {
 	query := `delete from users_ where id_ = $1`
 
 	var id uint = 23
@@ -122,7 +122,7 @@ func testUserRepoDelete(t *testing.T, mock pgxmock.PgxPoolIface, repo userPostgr
 	mock.Reset()
 }
 
-func testUserRepoDeleteDbError(t *testing.T, mock pgxmock.PgxPoolIface, repo userPostgresRepository) {
+func testUserRepoDeleteDbError(t *testing.T, mock pgxmock.PgxPoolIface, repo UserRepository) {
 	query := `delete from users_ where id_ = $1`
 
 	var id uint = 69
@@ -143,7 +143,7 @@ func testUserRepoDeleteDbError(t *testing.T, mock pgxmock.PgxPoolIface, repo use
 	mock.Reset()
 }
 
-func testUserRepoDeleteNoRows(t *testing.T, mock pgxmock.PgxPoolIface, repo userPostgresRepository) {
+func testUserRepoDeleteNoRows(t *testing.T, mock pgxmock.PgxPoolIface, repo UserRepository) {
 	query := `delete from users_ where id_ = $1`
 
 	var id uint = 69
@@ -165,7 +165,7 @@ func testUserRepoDeleteNoRows(t *testing.T, mock pgxmock.PgxPoolIface, repo user
 
 }
 
-func testUserRepoUserExists(t *testing.T, mock pgxmock.PgxPoolIface, repo userPostgresRepository) {
+func testUserRepoUserExists(t *testing.T, mock pgxmock.PgxPoolIface, repo UserRepository) {
 	query := `select exists(select true from users_ where username_ = $1)`
 
 	mock.
@@ -185,7 +185,7 @@ func testUserRepoUserExists(t *testing.T, mock pgxmock.PgxPoolIface, repo userPo
 	mock.Reset()
 }
 
-func testUserRepoUserNotExists(t *testing.T, mock pgxmock.PgxPoolIface, repo userPostgresRepository) {
+func testUserRepoUserNotExists(t *testing.T, mock pgxmock.PgxPoolIface, repo UserRepository) {
 	query := `select exists(select true from users_ where username_ = $1)`
 
 	mock.
@@ -205,7 +205,7 @@ func testUserRepoUserNotExists(t *testing.T, mock pgxmock.PgxPoolIface, repo use
 	mock.Reset()
 }
 
-func testUserRepoExistsDbError(t *testing.T, mock pgxmock.PgxPoolIface, repo userPostgresRepository) {
+func testUserRepoExistsDbError(t *testing.T, mock pgxmock.PgxPoolIface, repo UserRepository) {
 	query := `select exists(select true from users_ where username_ = $1)`
 
 	mock.
@@ -226,7 +226,7 @@ func testUserRepoExistsDbError(t *testing.T, mock pgxmock.PgxPoolIface, repo use
 
 }
 
-func testUserRepoGetAll(t *testing.T, mock pgxmock.PgxPoolIface, repo userPostgresRepository) {
+func testUserRepoGetAll(t *testing.T, mock pgxmock.PgxPoolIface, repo UserRepository) {
 	query := `select id_, username_, email_ from users_`
 
 	mockRows := mock.
@@ -260,7 +260,7 @@ func testUserRepoGetAll(t *testing.T, mock pgxmock.PgxPoolIface, repo userPostgr
 	mock.Reset()
 }
 
-func testUserRepoGetAllDbError(t *testing.T, mock pgxmock.PgxPoolIface, repo userPostgresRepository) {
+func testUserRepoGetAllDbError(t *testing.T, mock pgxmock.PgxPoolIface, repo UserRepository) {
 	query := `select id_, username_, email_ from users_`
 
 	mock.ExpectQuery(regexp.QuoteMeta(query)).WillReturnError(errors.New("db_error"))
@@ -279,7 +279,7 @@ func testUserRepoGetAllDbError(t *testing.T, mock pgxmock.PgxPoolIface, repo use
 
 }
 
-func testUserRepoGetAllScanError(t *testing.T, mock pgxmock.PgxPoolIface, repo userPostgresRepository) {
+func testUserRepoGetAllScanError(t *testing.T, mock pgxmock.PgxPoolIface, repo UserRepository) {
 	query := `select id_, username_, email_ from users_`
 
 	mockRows := mock.
@@ -301,7 +301,7 @@ func testUserRepoGetAllScanError(t *testing.T, mock pgxmock.PgxPoolIface, repo u
 	mock.Reset()
 }
 
-func testUserRepoGetByUsername(t *testing.T, mock pgxmock.PgxPoolIface, repo userPostgresRepository) {
+func testUserRepoGetByUsername(t *testing.T, mock pgxmock.PgxPoolIface, repo UserRepository) {
 	query := `select id_, username_, email_ from users_ where username_ = $1`
 
 	mockRows := mock.
@@ -327,14 +327,14 @@ func testUserRepoGetByUsername(t *testing.T, mock pgxmock.PgxPoolIface, repo use
 	mock.Reset()
 }
 
-func testUserRepoGetByUnknownAttribute(t *testing.T, mock pgxmock.PgxPoolIface, repo userPostgresRepository) {
+func testUserRepoGetByUnknownAttribute(t *testing.T, mock pgxmock.PgxPoolIface, repo UserRepository) {
 	user, err := repo.GetByAttribute("foo", "bar")
 
 	require.Error(t, err, "should return error")
 	require.Nil(t, user, "should not return user")
 }
 
-func testUserRepoGetByAttributeDbError(t *testing.T, mock pgxmock.PgxPoolIface, repo userPostgresRepository) {
+func testUserRepoGetByAttributeDbError(t *testing.T, mock pgxmock.PgxPoolIface, repo UserRepository) {
 	query := `select id_, username_, email_ from users_ where username_ = $1`
 
 	mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs("janedoe").WillReturnError(errors.New("db_error"))
@@ -351,7 +351,7 @@ func testUserRepoGetByAttributeDbError(t *testing.T, mock pgxmock.PgxPoolIface, 
 	mock.Reset()
 }
 
-func testUserRepoGetPasswordByUsername(t *testing.T, mock pgxmock.PgxPoolIface, repo userPostgresRepository) {
+func testUserRepoGetPasswordByUsername(t *testing.T, mock pgxmock.PgxPoolIface, repo UserRepository) {
 	query := `select password_ from users_ where username_ = $1`
 
 	mockRow := mock.NewRows([]string{"password_"}).AddRow("p4ssw0rd")
@@ -370,7 +370,7 @@ func testUserRepoGetPasswordByUsername(t *testing.T, mock pgxmock.PgxPoolIface, 
 	mock.Reset()
 }
 
-func testUserRepoGetPasswordByUsernameDbError(t *testing.T, mock pgxmock.PgxPoolIface, repo userPostgresRepository) {
+func testUserRepoGetPasswordByUsernameDbError(t *testing.T, mock pgxmock.PgxPoolIface, repo UserRepository) {
 	query := `select password_ from users_ where username_ = $1`
 
 	mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs("janedoe").WillReturnError(errors.New("db_error"))
