@@ -2,7 +2,7 @@ package user
 
 import (
 	"github.com/go-playground/validator/v10"
-	"golang.org/x/crypto/bcrypt"
+	"github.com/nixpig/dunce/pkg"
 )
 
 type UserService interface {
@@ -18,20 +18,23 @@ type UserService interface {
 type UserServiceImpl struct {
 	repo     UserRepository
 	validate *validator.Validate
+	crypto   pkg.Crypto
 }
 
 func NewUserService(
 	repo UserRepository,
 	validate *validator.Validate,
+	crypto pkg.Crypto,
 ) UserServiceImpl {
 	return UserServiceImpl{
 		repo:     repo,
 		validate: validate,
+		crypto:   crypto,
 	}
 }
 
 func (u UserServiceImpl) Create(user *UserNewRequestDto) (*UserResponseDto, error) {
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 14)
+	hashedPassword, err := u.crypto.GenerateFromPassword([]byte(user.Password), 14)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +120,7 @@ func (u UserServiceImpl) LoginWithUsernamePassword(username, password string) er
 		return err
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password)); err != nil {
+	if err := u.crypto.CompareHashAndPassword([]byte(hashedPassword), []byte(password)); err != nil {
 		return err
 	}
 

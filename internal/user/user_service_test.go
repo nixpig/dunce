@@ -10,20 +10,31 @@ import (
 )
 
 var mockRepo = new(MockUserRepo)
+var mockCrypto = new(MockCrypto)
 
 func TestUserService(t *testing.T) {
 	scenarios := map[string]func(t *testing.T, service UserService){
-		"get all users (success - multiple results)": testUserServiceGetAllMultiple,
-		"get all users (success - zero results)":     testUserServiceGetAllZero,
-		"get all users (success - single result)":    testUserServiceGetAllSingle,
-		"get all users (error - repo)":               testUserServiceRepoError,
-		"get by attribute (success)":                 testUserServiceGetByAttr,
-		"get by attribute (error - repo)":            testUserServiceGetByAttrRepoError,
-		"user exists (success - true)":               testUserServiceUserExistsTrue,
-		"user exists (success - false)":              testUserServiceUserExistsFalse,
-		"user exists (error - false)":                testUserServiceUserExistsError,
-		"delete user by id (success)":                testUserServiceDeleteById,
-		"delete user by id (error)":                  testUserServiceDeleteByIdError,
+		"get all users (success - multiple results)":                    testUserServiceGetAllMultiple,
+		"get all users (success - zero results)":                        testUserServiceGetAllZero,
+		"get all users (success - single result)":                       testUserServiceGetAllSingle,
+		"get all users (error - repo)":                                  testUserServiceRepoError,
+		"get by attribute (success)":                                    testUserServiceGetByAttr,
+		"get by attribute (error - repo)":                               testUserServiceGetByAttrRepoError,
+		"user exists (success - true)":                                  testUserServiceUserExistsTrue,
+		"user exists (success - false)":                                 testUserServiceUserExistsFalse,
+		"user exists (error - false)":                                   testUserServiceUserExistsError,
+		"delete user by id (success)":                                   testUserServiceDeleteById,
+		"delete user by id (error)":                                     testUserServiceDeleteByIdError,
+		"create user (success)":                                         testUserServiceCreateUser,
+		"create user (error - password hashing)":                        testUserServiceCreateUserPasswordHashingError,
+		"create user (error - validation)":                              testUserServiceCreateUserValidationError,
+		"create user (error - repo)":                                    testUserServiceCreateUserRepoError,
+		"update user (success)":                                         testUserServiceUpdateUser,
+		"update user (error - repo)":                                    testUserServiceUpdateUserRepoError,
+		"update user (error - validation)":                              testUserServiceUpdateUserValidationError,
+		"login with username and password (success)":                    testUserServiceLoginUsernamePassword,
+		"login with username and password (error - repo)":               testUserServiceLoginUsernamePasswordRepoError,
+		"login with username and password (error - incorrect password)": testUserServiceLoginUsernamePasswordIncorrectPassword,
 	}
 
 	for scenario, fn := range scenarios {
@@ -33,55 +44,71 @@ func TestUserService(t *testing.T) {
 				t.Fatal("unable to construct validator")
 			}
 
-			service := NewUserService(mockRepo, validator)
+			service := NewUserService(mockRepo, validator, mockCrypto)
 
 			fn(t, service)
 		})
 	}
 }
 
-type MockUserRepo struct {
+type MockCrypto struct {
 	mock.Mock
 }
 
-func (m *MockUserRepo) Create(user *User) (*User, error) {
-	args := m.Called(user)
+func (mc MockCrypto) GenerateFromPassword(password []byte, cost int) ([]byte, error) {
+	args := mc.Called(password, cost)
 
-	return args.Get(0).(*User), args.Error(1)
+	return args.Get(0).([]byte), args.Error(1)
 }
 
-func (m *MockUserRepo) DeleteById(id uint) error {
-	args := m.Called(id)
+func (mc MockCrypto) CompareHashAndPassword(hashedPassword []byte, password []byte) error {
+	args := mc.Called(hashedPassword, password)
 
 	return args.Error(0)
 }
 
-func (m *MockUserRepo) Exists(username string) (bool, error) {
-	args := m.Called(username)
+type MockUserRepo struct {
+	mock.Mock
+}
+
+func (mu *MockUserRepo) Create(user *User) (*User, error) {
+	args := mu.Called(user)
+
+	return args.Get(0).(*User), args.Error(1)
+}
+
+func (mu *MockUserRepo) DeleteById(id uint) error {
+	args := mu.Called(id)
+
+	return args.Error(0)
+}
+
+func (mu *MockUserRepo) Exists(username string) (bool, error) {
+	args := mu.Called(username)
 
 	return args.Get(0).(bool), args.Error(1)
 }
 
-func (m *MockUserRepo) GetAll() (*[]User, error) {
-	args := m.Called()
+func (mu *MockUserRepo) GetAll() (*[]User, error) {
+	args := mu.Called()
 
 	return args.Get(0).(*[]User), args.Error(1)
 }
 
-func (m *MockUserRepo) GetByAttribute(attr, value string) (*User, error) {
-	args := m.Called(attr, value)
+func (mu *MockUserRepo) GetByAttribute(attr, value string) (*User, error) {
+	args := mu.Called(attr, value)
 
 	return args.Get(0).(*User), args.Error(1)
 }
 
-func (m *MockUserRepo) Update(user *User) (*User, error) {
-	args := m.Called(user)
+func (mu *MockUserRepo) Update(user *User) (*User, error) {
+	args := mu.Called(user)
 
 	return args.Get(0).(*User), args.Error(1)
 }
 
-func (m *MockUserRepo) GetPasswordByUsername(username string) (string, error) {
-	args := m.Called(username)
+func (mu *MockUserRepo) GetPasswordByUsername(username string) (string, error) {
+	args := mu.Called(username)
 
 	return args.Get(0).(string), args.Error(1)
 }
@@ -298,6 +325,251 @@ func testUserServiceDeleteByIdError(t *testing.T, service UserService) {
 	mockRepoDeleteById.Unset()
 
 	if res := mockRepo.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
+}
+
+func testUserServiceCreateUser(t *testing.T, service UserService) {
+	mockCryptoGenerateFromPassword := mockCrypto.
+		On("GenerateFromPassword", []byte("foo"), 14).
+		Return([]byte("hashed_password"), nil)
+
+	mockRepoCreate := mockRepo.
+		On("Create", &User{
+			Username: "janedoe",
+			Email:    "jane@example.org",
+			Password: "hashed_password",
+		}).
+		Return(&User{
+			Id:       23,
+			Username: "janedoe",
+			Email:    "jane@example.org",
+		}, nil)
+
+	createdUser, err := service.Create(&UserNewRequestDto{
+		Username: "janedoe",
+		Email:    "jane@example.org",
+		Password: "foo",
+	})
+
+	require.NoError(t, err, "should not return error")
+	require.Equal(t, &UserResponseDto{
+		Id:       23,
+		Username: "janedoe",
+		Email:    "jane@example.org",
+	}, createdUser, "should return created user response")
+
+	mockCryptoGenerateFromPassword.Unset()
+	mockRepoCreate.Unset()
+
+	if res := mockCrypto.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
+
+	if res := mockRepo.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
+}
+
+func testUserServiceCreateUserPasswordHashingError(t *testing.T, service UserService) {
+	mockCryptoGenerateFromPassword := mockCrypto.
+		On("GenerateFromPassword", []byte("foo"), 14).
+		Return([]byte(""), errors.New("password_error"))
+
+	createdUser, err := service.Create(&UserNewRequestDto{
+		Username: "janedoe",
+		Email:    "jane@example.org",
+		Password: "foo",
+	})
+
+	require.EqualError(t, err, "password_error", "should return error")
+	require.Nil(t, createdUser, "should not return user")
+
+	mockCryptoGenerateFromPassword.Unset()
+
+	if res := mockCrypto.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
+}
+
+func testUserServiceCreateUserValidationError(t *testing.T, service UserService) {
+	mockCryptoGenerateFromPassword := mockCrypto.
+		On("GenerateFromPassword", []byte(""), 14).
+		Return([]byte("hashed_password"), nil)
+
+	createdUser, err := service.Create(&UserNewRequestDto{})
+
+	require.Error(t, err, "should return error")
+	require.Nil(t, createdUser, "should not return user")
+
+	mockCryptoGenerateFromPassword.Unset()
+
+	if res := mockCrypto.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
+}
+
+func testUserServiceCreateUserRepoError(t *testing.T, service UserService) {
+	mockCryptoGenerateFromPassword := mockCrypto.
+		On("GenerateFromPassword", []byte("foo"), 14).
+		Return([]byte("hashed_password"), nil)
+
+	mockRepoCreate := mockRepo.
+		On("Create", &User{
+			Username: "janedoe",
+			Email:    "jane@example.org",
+			Password: "hashed_password",
+		}).
+		Return(&User{}, errors.New("repo_error"))
+
+	createdUser, err := service.Create(&UserNewRequestDto{
+		Username: "janedoe",
+		Email:    "jane@example.org",
+		Password: "foo",
+	})
+
+	require.EqualError(t, err, "repo_error", "should return error")
+	require.Nil(t, createdUser, "should not return user")
+
+	mockCryptoGenerateFromPassword.Unset()
+	mockRepoCreate.Unset()
+
+	if res := mockCrypto.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
+
+	if res := mockRepo.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
+}
+
+func testUserServiceUpdateUser(t *testing.T, service UserService) {
+	mockRepoUpdate := mockRepo.On("Update", &User{
+		Id:       23,
+		Username: "janedoe",
+		Email:    "jane@example.org",
+		Password: "p4ssw0rd",
+	}).Return(&User{
+		Id:       23,
+		Username: "janedoe",
+		Email:    "jane@example.org",
+	}, nil)
+
+	updatedUser, err := service.Update(&User{
+		Id:       23,
+		Username: "janedoe",
+		Email:    "jane@example.org",
+		Password: "p4ssw0rd",
+	})
+
+	require.NoError(t, err, "should not return error")
+
+	require.Equal(t, &UserResponseDto{
+		Id:       23,
+		Username: "janedoe",
+		Email:    "jane@example.org",
+	}, updatedUser, "should return updated user response")
+
+	mockRepoUpdate.Unset()
+
+	if res := mockRepo.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
+}
+
+func testUserServiceUpdateUserRepoError(t *testing.T, service UserService) {
+	mockRepoUpdate := mockRepo.On("Update", &User{
+		Id:       23,
+		Username: "janedoe",
+		Email:    "jane@example.org",
+		Password: "p4ssw0rd",
+	}).Return(&User{}, errors.New("repo_error"))
+
+	updatedUser, err := service.Update(&User{
+		Id:       23,
+		Username: "janedoe",
+		Email:    "jane@example.org",
+		Password: "p4ssw0rd",
+	})
+
+	require.EqualError(t, err, "repo_error", "should return repo error")
+
+	require.Nil(t, updatedUser, "should not return a user")
+
+	mockRepoUpdate.Unset()
+
+	if res := mockRepo.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
+}
+
+func testUserServiceUpdateUserValidationError(t *testing.T, service UserService) {
+	updatedUser, err := service.Update(&User{})
+
+	require.Error(t, err, "should return repo error")
+
+	require.Nil(t, updatedUser, "should not return a user")
+}
+
+func testUserServiceLoginUsernamePassword(t *testing.T, service UserService) {
+	mockRepoGetPasswordByUserName := mockRepo.
+		On("GetPasswordByUsername", "janedoe").
+		Return("h4shedp4ssw0rd", nil)
+
+	mockCryptoCompareHashAndPassword := mockCrypto.
+		On("CompareHashAndPassword", []byte("h4shedp4ssw0rd"), []byte("p4ssw0rd")).
+		Return(nil)
+
+	err := service.LoginWithUsernamePassword("janedoe", "p4ssw0rd")
+
+	require.NoError(t, err, "should not return error")
+
+	mockRepoGetPasswordByUserName.Unset()
+	if res := mockRepo.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
+
+	mockCryptoCompareHashAndPassword.Unset()
+	if res := mockCrypto.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
+}
+
+func testUserServiceLoginUsernamePasswordRepoError(t *testing.T, service UserService) {
+	mockRepoGetPasswordByUserName := mockRepo.
+		On("GetPasswordByUsername", "janedoe").
+		Return("", errors.New("repo_error"))
+
+	err := service.LoginWithUsernamePassword("janedoe", "p4ssw0rd")
+
+	require.EqualError(t, err, "repo_error", "should return repo error")
+
+	mockRepoGetPasswordByUserName.Unset()
+	if res := mockRepo.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
+}
+
+func testUserServiceLoginUsernamePasswordIncorrectPassword(t *testing.T, service UserService) {
+	mockRepoGetPasswordByUserName := mockRepo.
+		On("GetPasswordByUsername", "janedoe").
+		Return("h4shedp4ssw0rd", nil)
+
+	mockCryptoCompareHashAndPassword := mockCrypto.
+		On("CompareHashAndPassword", []byte("h4shedp4ssw0rd"), []byte("p4ssw0rd")).
+		Return(errors.New("incorrect_password"))
+
+	err := service.LoginWithUsernamePassword("janedoe", "p4ssw0rd")
+
+	require.EqualError(t, err, "incorrect_password", "should return crypto error")
+
+	mockRepoGetPasswordByUserName.Unset()
+	if res := mockRepo.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
+
+	mockCryptoCompareHashAndPassword.Unset()
+	if res := mockCrypto.AssertExpectations(t); !res {
 		t.Error("unmet expectations")
 	}
 }

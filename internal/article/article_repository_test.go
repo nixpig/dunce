@@ -21,6 +21,7 @@ func TestArticleRepo(t *testing.T) {
 		"test get article (error - non-implemented attr)":          testArticleRepoGetArticleByInvalidAttr,
 		"test get article (error - article db error)":              testArticleRepoGetArticleByAttrArticleDbError,
 		"test get article (error - tags db error)":                 testArticleRepoGetArticleByAttrTagsDbError,
+		"test get article (error - tags scan error)":               testArticleRepoGetArticleByAttrTagsScanError,
 		"test get many (error - by unknown attribute)":             testArticleRepoGetManyByUnknownAttr,
 		"test get many (success - single result - by tag slug)":    testArticleRepoGetManyArticlesByTagSlugSingleResult,
 		"test get many (success - multiple results - by tag slug)": testArticleRepoGetManyArticlesByTagSlugMultipleResults,
@@ -577,4 +578,57 @@ func testArticleRepoGetAllArticlesMultipleResults(t *testing.T, mock pgxmock.Pgx
 			},
 		},
 	}, got, "should return article")
+}
+
+func testArticleRepoGetArticleByAttrTagsScanError(t *testing.T, mock pgxmock.PgxPoolIface, repo ArticleRepository) {
+	articleQuery := `select a.id_, a.title_, a.subtitle_, a.slug_, a.body_, a.created_at_, a.updated_at_, array_to_string(array_agg(distinct t.tag_id_), ',', '*') from articles_ a join article_tags_ t on a.id_ = t.article_id_ where a.slug_ = $1 group by a.id_`
+
+	createdAt := time.Now()
+	updatedAt := time.Now().Add(time.Hour * 24)
+
+	mockArticleRow := mock.NewRows([]string{
+		"id_",
+		"title_",
+		"subtitle_",
+		"slug_",
+		"body_",
+		"created_at_",
+		"updated_at_",
+		"tag_ids_",
+	}).AddRow(
+		23,
+		"Article title",
+		"Article subtitle",
+		"article-slug",
+		"Lorem ipsum dolar sit amet",
+		createdAt,
+		updatedAt,
+		"42,69",
+	)
+
+	mock.
+		ExpectQuery(regexp.QuoteMeta(articleQuery)).
+		WithArgs("tag-slug").
+		WillReturnRows(mockArticleRow)
+
+	tagQuery := `select id_, name_, slug_ from tags_ where id_ = 42 or id_ = 69`
+
+	mockBadTagRows := pgxmock.
+		NewRows([]string{"id_", "name_", "slug_"}).
+		AddRow("23", false, nil)
+
+	mock.
+		ExpectQuery(regexp.QuoteMeta(tagQuery)).
+		WillReturnRows(mockBadTagRows)
+
+	got, err := repo.GetByAttribute("slug", "tag-slug")
+
+	mock.Reset()
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal("expectations not met: ", err)
+	}
+
+	require.Nil(t, got, "should not return tags")
+
+	require.Error(t, err, "should return error")
 }

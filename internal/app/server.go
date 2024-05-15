@@ -35,8 +35,9 @@ func Start(appConfig AppConfig) error {
 		appConfig.SessionManager,
 	)
 
+	crypto := pkg.NewCryptoImpl()
 	userRepo := user.NewUserPostgresRepository(appConfig.Db.Pool)
-	userService := user.NewUserService(userRepo, appConfig.Validator)
+	userService := user.NewUserService(userRepo, appConfig.Validator, crypto)
 	userController := user.NewUserController(userService, controllerConfig)
 
 	tagRepository := tag.NewTagPostgresRepository(appConfig.Db.Pool)
