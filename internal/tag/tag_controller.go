@@ -62,6 +62,7 @@ func (t *TagController) PostAdminTagsHandler(w http.ResponseWriter, r *http.Requ
 	if _, err := t.tagService.Create(&tag); err != nil {
 		t.log.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	t.session.Put(r.Context(), pkg.SESSION_KEY_MESSAGE, fmt.Sprintf("Created tag '%s'.", tag.Name))
