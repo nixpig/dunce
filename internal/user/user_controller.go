@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/alexedwards/scs/v2"
 	"github.com/justinas/nosurf"
 	"github.com/nixpig/dunce/pkg"
 )
@@ -15,7 +14,7 @@ type UserController struct {
 	service        UserService
 	log            pkg.Logger
 	templateCache  map[string]*template.Template
-	sessionManager *scs.SessionManager
+	sessionManager pkg.SessionManager
 }
 
 type UserView struct {

@@ -2,24 +2,26 @@ package pkg
 
 import (
 	"html/template"
-
-	"github.com/alexedwards/scs/v2"
+	"net/http"
 )
 
 type ControllerConfig struct {
 	Log            Logger
 	TemplateCache  map[string]*template.Template
-	SessionManager *scs.SessionManager
+	SessionManager SessionManager
+	CsrfToken      func(*http.Request) string
 }
 
 func NewControllerConfig(
 	log Logger,
 	templateCache map[string]*template.Template,
-	sessionManager *scs.SessionManager,
+	sessionManager SessionManager,
+	csrfToken func(*http.Request) string,
 ) ControllerConfig {
 	return ControllerConfig{
 		Log:            log,
 		TemplateCache:  templateCache,
 		SessionManager: sessionManager,
+		CsrfToken:      csrfToken,
 	}
 }

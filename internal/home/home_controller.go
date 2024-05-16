@@ -4,7 +4,6 @@ import (
 	"html/template"
 	"net/http"
 
-	"github.com/alexedwards/scs/v2"
 	"github.com/nixpig/dunce/internal/article"
 	"github.com/nixpig/dunce/internal/tag"
 	"github.com/nixpig/dunce/pkg"
@@ -15,7 +14,7 @@ type HomeController struct {
 	articleService article.ArticleService
 	log            pkg.Logger
 	templateCache  map[string]*template.Template
-	sessionManager *scs.SessionManager
+	sessionManager pkg.SessionManager
 }
 
 type HomeView struct {

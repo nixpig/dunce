@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/alexedwards/scs/v2"
-	"github.com/justinas/nosurf"
 	"github.com/nixpig/dunce/pkg"
 )
 
@@ -15,7 +13,8 @@ type TagController struct {
 	tagService TagService
 	log        pkg.Logger
 	templates  map[string]*template.Template
-	session    *scs.SessionManager
+	session    pkg.SessionManager
+	csrfToken  func(r *http.Request) string
 }
 
 type TagView struct {
@@ -42,7 +41,8 @@ func NewTagController(
 	config struct {
 		Log            pkg.Logger
 		TemplateCache  map[string]*template.Template
-		SessionManager *scs.SessionManager
+		SessionManager pkg.SessionManager
+		CsrfToken      func(*http.Request) string
 	},
 ) TagController {
 	return TagController{
@@ -50,6 +50,7 @@ func NewTagController(
 		log:        config.Log,
 		templates:  config.TemplateCache,
 		session:    config.SessionManager,
+		csrfToken:  config.CsrfToken,
 	}
 }
 
@@ -101,7 +102,7 @@ func (t *TagController) GetAdminTagsHandler(w http.ResponseWriter, r *http.Reque
 	tagView := TagsView{
 		Message:         message,
 		Tags:            tags,
-		CsrfToken:       nosurf.Token(r),
+		CsrfToken:       t.csrfToken(r),
 		IsAuthenticated: t.session.Exists(r.Context(), string(pkg.IS_LOGGED_IN_CONTEXT_KEY)),
 	}
 
@@ -123,7 +124,7 @@ func (t *TagController) GetAdminTagsSlugHandler(w http.ResponseWriter, r *http.R
 
 	tagView := TagView{
 		Tag:             tag,
-		CsrfToken:       nosurf.Token(r),
+		CsrfToken:       t.csrfToken(r),
 		IsAuthenticated: t.session.Exists(r.Context(), string(pkg.IS_LOGGED_IN_CONTEXT_KEY)),
 	}
 
@@ -160,7 +161,7 @@ func (t *TagController) PostAdminTagsSlugHandler(w http.ResponseWriter, r *http.
 
 func (t *TagController) GetAdminTagsNewHandler(w http.ResponseWriter, r *http.Request) {
 	tagView := TagCreateView{
-		CsrfToken:       nosurf.Token(r),
+		CsrfToken:       t.csrfToken(r),
 		IsAuthenticated: t.session.Exists(r.Context(), string(pkg.IS_LOGGED_IN_CONTEXT_KEY)),
 	}
 

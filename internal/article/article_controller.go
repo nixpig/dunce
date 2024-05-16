@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/alexedwards/scs/v2"
 	"github.com/justinas/nosurf"
 	"github.com/nixpig/dunce/internal/tag"
 	"github.com/nixpig/dunce/pkg"
@@ -19,7 +18,7 @@ type ArticleController struct {
 	tagService     tag.TagService
 	log            pkg.Logger
 	templates      map[string]*template.Template
-	session        *scs.SessionManager
+	session        pkg.SessionManager
 }
 
 type ArticleView struct {
@@ -49,13 +48,12 @@ type ArticlePublishView struct {
 func NewArticleController(
 	service ArticleService,
 	tagsService tag.TagService,
-	sessionManager *scs.SessionManager,
 	config pkg.ControllerConfig,
 ) ArticleController {
 	return ArticleController{
 		articleService: service,
 		tagService:     tagsService,
-		session:        sessionManager,
+		session:        config.SessionManager,
 		log:            config.Log,
 		templates:      config.TemplateCache,
 	}

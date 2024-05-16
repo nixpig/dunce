@@ -4,18 +4,17 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/alexedwards/scs/v2"
 	"github.com/nixpig/dunce/internal/user"
 	"github.com/nixpig/dunce/pkg"
 )
 
-func NewAuthenticatedMiddleware(userService user.UserService, sessionManager *scs.SessionManager) func(next http.HandlerFunc) http.HandlerFunc {
+func NewAuthenticatedMiddleware(userService user.UserService, sessionManager pkg.SessionManager) func(next http.HandlerFunc) http.HandlerFunc {
 	return func(next http.HandlerFunc) http.HandlerFunc {
 		return AuthenticatedMiddleware(userService, sessionManager, next)
 	}
 }
 
-func AuthenticatedMiddleware(userService user.UserService, sessionManager *scs.SessionManager, next http.HandlerFunc) http.HandlerFunc {
+func AuthenticatedMiddleware(userService user.UserService, sessionManager pkg.SessionManager, next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		username := sessionManager.GetString(r.Context(), pkg.LOGGED_IN_USERNAME)
 

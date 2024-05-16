@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/validator/v10"
 	"github.com/nixpig/dunce/db"
 	"github.com/nixpig/dunce/internal/article"
@@ -23,7 +22,8 @@ type AppConfig struct {
 	Db             *db.Dbpool
 	TemplateCache  map[string]*template.Template
 	Logger         pkg.Logger
-	SessionManager *scs.SessionManager
+	SessionManager pkg.SessionManager
+	CsrfToken      func(*http.Request) string
 }
 
 func Start(appConfig AppConfig) error {
@@ -33,6 +33,7 @@ func Start(appConfig AppConfig) error {
 		appConfig.Logger,
 		appConfig.TemplateCache,
 		appConfig.SessionManager,
+		appConfig.CsrfToken,
 	)
 
 	crypto := pkg.NewCryptoImpl()
@@ -46,7 +47,7 @@ func Start(appConfig AppConfig) error {
 
 	articleRepository := article.NewArticlePostgresRepository(appConfig.Db.Pool)
 	articleService := article.NewArticleService(articleRepository, appConfig.Validator)
-	articleController := article.NewArticleController(articleService, tagService, appConfig.SessionManager, controllerConfig)
+	articleController := article.NewArticleController(articleService, tagService, controllerConfig)
 
 	isAuthenticated := middleware.NewAuthenticatedMiddleware(userService, appConfig.SessionManager)
 	protected := middleware.NewProtectedMiddleware(appConfig.SessionManager)

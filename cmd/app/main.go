@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/justinas/nosurf"
 	"github.com/nixpig/dunce/db"
 	app "github.com/nixpig/dunce/internal/app"
 	"github.com/nixpig/dunce/internal/config"
@@ -42,9 +42,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	appConfig.SessionManager = pkg.NewSessionManager(appConfig.Db.Pool.(*pgxpool.Pool))
+	appConfig.SessionManager = pkg.NewSessionManagerImpl()
 
 	appConfig.Logger = pkg.NewLogger()
+
+	appConfig.CsrfToken = nosurf.Token
 
 	appConfig.Port = config.Get("WEB_PORT")
 
