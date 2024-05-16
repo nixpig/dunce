@@ -17,7 +17,7 @@ type ArticleController struct {
 	articleService ArticleService
 	tagService     tag.TagService
 	log            pkg.Logger
-	templates      map[string]*template.Template
+	templates      map[string]pkg.Template
 	session        pkg.SessionManager
 }
 

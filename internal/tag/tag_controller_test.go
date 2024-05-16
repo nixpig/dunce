@@ -2,19 +2,46 @@ package tag
 
 import (
 	"context"
-	"fmt"
-	"html/template"
+	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"path"
 	"testing"
 
 	"github.com/nixpig/dunce/pkg"
 	"github.com/stretchr/testify/mock"
 )
 
+var mockTemplateCache = map[string]pkg.Template{
+	"pages/admin/admin-new-tag.tmpl": mockTemplate,
+}
+
+var mockLogger = new(MockLogger)
 var mockSessionManager = new(MockSessionManager)
+
+func TestTagsControllerNewHandler(t *testing.T) {
+	scenarios := map[string]func(t *testing.T, ctrl TagController){
+		"test handle get new tag":                    testGetAdminTagsNewHandler,
+		"test handle get new tag (error - template)": testGetAdminTagsNewHandlerTemplateError,
+	}
+
+	for scenario, fn := range scenarios {
+		t.Run(scenario, func(t *testing.T) {
+			config := pkg.ControllerConfig{
+				Log:            mockLogger,
+				TemplateCache:  mockTemplateCache,
+				SessionManager: mockSessionManager,
+				CsrfToken: func(r *http.Request) string {
+					return "mock-token"
+				},
+			}
+
+			ctrl := NewTagController(mockService, config)
+
+			fn(t, ctrl)
+		})
+	}
+}
 
 type MockSessionManager struct {
 	mock.Mock
@@ -106,63 +133,53 @@ func (l *MockLogger) Error(format string, values ...any) {
 	l.Called(format, values)
 }
 
-var mockLogger = new(MockLogger)
+// func mockTemplate() pkg.Template {
+// 	pwd, err := os.Getwd()
+// 	if err != nil {
+// 		fmt.Printf("%v", err)
+// 		os.Exit(1)
+// 	}
+//
+// 	ts, err := template.ParseFiles(
+// 		// FIXME: less than ideal arbitrarily jumping up two levels 😒
+// 		path.Join(pwd, "..", "..", "test", "templates", "admin.tmpl"),
+// 	)
+// 	if err != nil {
+// 		fmt.Printf("%v", err)
+// 		os.Exit(1)
+// 	}
+//
+// 	return ts
+// }
 
-func mockTemplate() *template.Template {
-	pwd, err := os.Getwd()
-	if err != nil {
-		fmt.Printf("%v", err)
-		os.Exit(1)
-	}
+var mockTemplate = new(MockTemplate)
 
-	ts, err := template.ParseFiles(
-		// FIXME: less than ideal arbitrarily jumping up two levels 😒
-		path.Join(pwd, "..", "..", "test", "templates", "admin.tmpl"),
-	)
-	if err != nil {
-		fmt.Printf("%v", err)
-		os.Exit(1)
-	}
-
-	return ts
+type MockTemplate struct {
+	mock.Mock
 }
 
-var mockTemplateCache = map[string]*template.Template{
-	"pages/admin/admin-new-tag.tmpl": mockTemplate(),
-}
+func (t *MockTemplate) ExecuteTemplate(wr io.Writer, name string, data any) error {
+	args := t.Called(wr, name, data)
 
-func TestTagsControllerNewHandler(t *testing.T) {
-	scenarios := map[string]func(t *testing.T, ctrl TagController){
-		"test handle get new tag": testGetAdminTagsNewHandler,
-	}
-
-	for scenario, fn := range scenarios {
-		t.Run(scenario, func(t *testing.T) {
-			config := pkg.ControllerConfig{
-				Log:            mockLogger,
-				TemplateCache:  mockTemplateCache,
-				SessionManager: mockSessionManager,
-				CsrfToken: func(r *http.Request) string {
-					return ""
-				},
-			}
-
-			ctrl := NewTagController(mockService, config)
-
-			fn(t, ctrl)
-		})
-	}
+	return args.Error(0)
 }
 
 func testGetAdminTagsNewHandler(t *testing.T, ctrl TagController) {
 	req, err := http.NewRequest("GET", "/admin/tags/create", nil)
 	if err != nil {
-		t.Fatal("failed to construct request", err)
+		t.Error("failed to construct request", err)
 	}
 
 	mockSessionManagerExists := mockSessionManager.
 		On("Exists", mock.Anything, "logged_in_username").
 		Return(true)
+
+	mockTemplateExecuteTemplate := mockTemplate.
+		On("ExecuteTemplate", mock.Anything, "admin", TagCreateView{
+			CsrfToken:       "mock-token",
+			IsAuthenticated: true,
+		}).
+		Return(nil)
 
 	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(ctrl.GetAdminTagsNewHandler)
@@ -170,11 +187,58 @@ func testGetAdminTagsNewHandler(t *testing.T, ctrl TagController) {
 	handler.ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusOK {
-		t.Error("status not ok")
+		t.Error("should return ok status")
 	}
 
 	mockSessionManagerExists.Unset()
 	if res := mockSessionManager.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
+
+	mockTemplateExecuteTemplate.Unset()
+	if res := mockTemplate.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
+}
+
+func testGetAdminTagsNewHandlerTemplateError(t *testing.T, ctrl TagController) {
+	req, err := http.NewRequest("GET", "/admin/tags/create", nil)
+	if err != nil {
+		t.Error("failed to construct request", err)
+	}
+
+	mockSessionManagerExists := mockSessionManager.
+		On("Exists", mock.Anything, "logged_in_username").
+		Return(true)
+
+	mockTemplateExecuteTemplate := mockTemplate.
+		On("ExecuteTemplate", mock.Anything, mock.Anything, mock.Anything).
+		Return(errors.New("template_error"))
+
+	mockLoggerError := mockLogger.On("Error", "template_error", mock.Anything).Return()
+
+	rr := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(ctrl.GetAdminTagsNewHandler)
+
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusInternalServerError {
+		t.Error("should return internal server error")
+	}
+
+	mockSessionManagerExists.Unset()
+	if res := mockSessionManager.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
+
+	mockTemplateExecuteTemplate.Unset()
+	if res := mockTemplate.AssertExpectations(t); !res {
+		t.Error("unmet expectations")
+	}
+
+	mockLoggerError.Unset()
+	if res := mockLogger.AssertExpectations(t); !res {
 		t.Error("unmet expectations")
 	}
 }

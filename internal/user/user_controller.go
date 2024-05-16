@@ -2,7 +2,6 @@ package user
 
 import (
 	"fmt"
-	"html/template"
 	"net/http"
 	"strconv"
 
@@ -13,7 +12,7 @@ import (
 type UserController struct {
 	service        UserService
 	log            pkg.Logger
-	templateCache  map[string]*template.Template
+	templateCache  map[string]pkg.Template
 	sessionManager pkg.SessionManager
 }
 

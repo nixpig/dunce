@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"html/template"
+	"io"
 	"os"
 	"path"
 	"strings"
@@ -9,8 +10,12 @@ import (
 	"github.com/bmatcuk/doublestar/v4"
 )
 
-func newTemplateCache(templateDir, pageGlob string) (map[string]*template.Template, error) {
-	cache := map[string]*template.Template{}
+type Template interface {
+	ExecuteTemplate(wr io.Writer, name string, data any) error
+}
+
+func newTemplateCache(templateDir, pageGlob string) (map[string]Template, error) {
+	cache := map[string]Template{}
 
 	glob := path.Join(templateDir, pageGlob)
 	pages, err := doublestar.FilepathGlob(glob)
@@ -41,7 +46,7 @@ func newTemplateCache(templateDir, pageGlob string) (map[string]*template.Templa
 	return cache, nil
 }
 
-func NewTemplateCache() (map[string]*template.Template, error) {
+func NewTemplateCache() (map[string]Template, error) {
 	pwd, err := os.Getwd()
 	if err != nil {
 		return nil, err

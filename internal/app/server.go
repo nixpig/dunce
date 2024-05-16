@@ -2,7 +2,6 @@ package app
 
 import (
 	"fmt"
-	"html/template"
 	"net/http"
 	"time"
 
@@ -20,7 +19,7 @@ type AppConfig struct {
 	Port           string
 	Validator      *validator.Validate
 	Db             *db.Dbpool
-	TemplateCache  map[string]*template.Template
+	TemplateCache  map[string]pkg.Template
 	Logger         pkg.Logger
 	SessionManager pkg.SessionManager
 	CsrfToken      func(*http.Request) string

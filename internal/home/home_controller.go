@@ -1,7 +1,6 @@
 package home
 
 import (
-	"html/template"
 	"net/http"
 
 	"github.com/nixpig/dunce/internal/article"
@@ -13,7 +12,7 @@ type HomeController struct {
 	tagService     tag.TagService
 	articleService article.ArticleService
 	log            pkg.Logger
-	templateCache  map[string]*template.Template
+	templateCache  map[string]pkg.Template
 	sessionManager pkg.SessionManager
 }
 

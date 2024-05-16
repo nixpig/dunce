@@ -2,7 +2,6 @@ package tag
 
 import (
 	"fmt"
-	"html/template"
 	"net/http"
 	"strconv"
 
@@ -12,7 +11,7 @@ import (
 type TagController struct {
 	tagService TagService
 	log        pkg.Logger
-	templates  map[string]*template.Template
+	templates  map[string]pkg.Template
 	session    pkg.SessionManager
 	csrfToken  func(r *http.Request) string
 }
@@ -40,7 +39,7 @@ func NewTagController(
 	tagService TagService,
 	config struct {
 		Log            pkg.Logger
-		TemplateCache  map[string]*template.Template
+		TemplateCache  map[string]pkg.Template
 		SessionManager pkg.SessionManager
 		CsrfToken      func(*http.Request) string
 	},
