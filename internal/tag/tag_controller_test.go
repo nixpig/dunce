@@ -16,7 +16,8 @@ import (
 )
 
 var mockTemplateCache = map[string]pkg.Template{
-	"pages/admin/admin-new-tag.tmpl": mockTemplate,
+	"pages/admin/new-tag.tmpl": mockTemplate,
+	"pages/admin/tags.tmpl":    mockTemplate,
 }
 
 var mockLogger = new(MockLogger)
@@ -31,6 +32,7 @@ func TestTagsControllerNewHandler(t *testing.T) {
 		"test handle delete tag (success)":               testPostAdminTagsDeleteHandler,
 		"test handle delete tag (error - bad id)":        testPostAdminTagsDeleteHandlerErrorBadId,
 		"test handle delete tag (error - service error)": testPostAdminTagsDeleteHandlerServiceError,
+		"test get tags (success)":                        testGetAdminTagsHandler,
 	}
 
 	for scenario, fn := range scenarios {
@@ -406,5 +408,79 @@ func testPostAdminTagsDeleteHandlerServiceError(t *testing.T, ctrl TagController
 	mockLoggerError.Unset()
 	if res := mockLogger.AssertExpectations(t); !res {
 		t.Error("should log error")
+	}
+}
+
+func testGetAdminTagsHandler(t *testing.T, ctrl TagController) {
+	req, err := http.NewRequest("GET", "/admin/tags", nil)
+	if err != nil {
+		t.Error("unable to construct request")
+	}
+
+	rr := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(ctrl.GetAdminTagsHandler)
+
+	mockServiceGetAll := mockService.On("GetAll").Return(&[]TagResponseDto{
+		{
+			Id:   1,
+			Name: "tag one",
+			Slug: "tag-one",
+		},
+		{
+			Id:   2,
+			Name: "tag two",
+			Slug: "tag-two",
+		},
+	}, nil)
+
+	mockSessionManagerPopString := mockSessionManager.
+		On("PopString", mock.Anything, "message").
+		Return("session_message")
+
+	mockSessionManagerExists := mockSessionManager.
+		On(
+			"Exists",
+			mock.Anything,
+			"logged_in_username",
+		).Return(true)
+
+	mockTemplateExecuteTemplate := mockTemplate.
+		On("ExecuteTemplate", mock.Anything, "admin", TagsView{
+			Message: "session_message",
+			Tags: &[]TagResponseDto{
+				{
+					Id:   1,
+					Name: "tag one",
+					Slug: "tag-one",
+				},
+				{
+					Id:   2,
+					Name: "tag two",
+					Slug: "tag-two",
+				},
+			},
+			CsrfToken:       "mock-token",
+			IsAuthenticated: true,
+		}).Return(nil)
+
+	handler.ServeHTTP(rr, req)
+
+	require.Equal(t, http.StatusOK, rr.Result().StatusCode, "should return status code ok")
+
+	mockServiceGetAll.Unset()
+	if res := mockService.AssertExpectations(t); !res {
+		t.Error("should call tag service to get all tags")
+	}
+
+	mockSessionManagerPopString.Unset()
+	mockSessionManagerExists.Unset()
+	if res := mockSessionManager.AssertExpectations(t); !res {
+		t.Error("should call session manager")
+	}
+
+	mockTemplateExecuteTemplate.Unset()
+	if res := mockTemplate.AssertExpectations(t); !res {
+		t.Error("should execute template with tags")
 	}
 }

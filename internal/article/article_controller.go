@@ -108,7 +108,7 @@ func (a *ArticleController) GetAllHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if err := a.templates["pages/admin/admin-articles.tmpl"].ExecuteTemplate(w, "admin", ArticlesView{
+	if err := a.templates["pages/admin/articles.tmpl"].ExecuteTemplate(w, "admin", ArticlesView{
 		Articles:        articles,
 		CsrfToken:       nosurf.Token(r),
 		IsAuthenticated: a.session.Exists(r.Context(), string(pkg.IS_LOGGED_IN_CONTEXT_KEY)),
@@ -127,7 +127,7 @@ func (a *ArticleController) NewHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := a.templates["pages/admin/admin-new-article.tmpl"].ExecuteTemplate(w, "admin", ArticlePublishView{
+	if err := a.templates["pages/admin/new-article.tmpl"].ExecuteTemplate(w, "admin", ArticlePublishView{
 		Tags:            availableTags,
 		CsrfToken:       nosurf.Token(r),
 		IsAuthenticated: a.session.Exists(r.Context(), string(pkg.IS_LOGGED_IN_CONTEXT_KEY)),
@@ -155,7 +155,7 @@ func (a *ArticleController) GetBySlugHander(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	if err := a.templates["pages/admin/admin-article.tmpl"].ExecuteTemplate(
+	if err := a.templates["pages/admin/article.tmpl"].ExecuteTemplate(
 		w,
 		"admin",
 		ArticleView{
@@ -262,7 +262,7 @@ func (a ArticleController) PublicGetArticle(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	if err := a.templates["pages/public/public-article.tmpl"].ExecuteTemplate(
+	if err := a.templates["pages/public/article.tmpl"].ExecuteTemplate(
 		w,
 		"public",
 		ArticleView{

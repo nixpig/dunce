@@ -56,7 +56,7 @@ func (u *UserController) UserLoginGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := u.templateCache["pages/admin/admin-login.tmpl"].ExecuteTemplate(w, "admin", UserLoginView{
+	if err := u.templateCache["pages/admin/login.tmpl"].ExecuteTemplate(w, "admin", UserLoginView{
 		Message:         u.sessionManager.PopString(r.Context(), pkg.SESSION_KEY_MESSAGE),
 		CsrfToken:       nosurf.Token(r),
 		IsAuthenticated: u.IsAuthenticated(r),
@@ -98,7 +98,7 @@ func (u *UserController) UserLogoutPost(w http.ResponseWriter, r *http.Request) 
 }
 
 func (u *UserController) CreateUserGet(w http.ResponseWriter, r *http.Request) {
-	if err := u.templateCache["pages/admin/admin-new-user.tmpl"].ExecuteTemplate(w, "admin", UserCreateView{
+	if err := u.templateCache["pages/admin/new-user.tmpl"].ExecuteTemplate(w, "admin", UserCreateView{
 		CsrfToken:       nosurf.Token(r),
 		IsAuthenticated: u.IsAuthenticated(r),
 	}); err != nil {
@@ -137,7 +137,7 @@ func (u *UserController) UsersGet(w http.ResponseWriter, r *http.Request) {
 
 	message := u.sessionManager.PopString(r.Context(), pkg.SESSION_KEY_MESSAGE)
 
-	if err := u.templateCache["pages/admin/admin-users.tmpl"].ExecuteTemplate(w, "admin", UsersView{
+	if err := u.templateCache["pages/admin/users.tmpl"].ExecuteTemplate(w, "admin", UsersView{
 		Message:         message,
 		Users:           users,
 		CsrfToken:       nosurf.Token(r),
@@ -157,7 +157,7 @@ func (u *UserController) UserGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := u.templateCache["pages/admin/admin-user.tmpl"].ExecuteTemplate(w, "admin", UserView{
+	if err := u.templateCache["pages/admin/user.tmpl"].ExecuteTemplate(w, "admin", UserView{
 		Message:         "",
 		User:            user,
 		CsrfToken:       nosurf.Token(r),

@@ -106,7 +106,7 @@ func (t *TagController) GetAdminTagsHandler(w http.ResponseWriter, r *http.Reque
 		IsAuthenticated: t.session.Exists(r.Context(), string(pkg.IS_LOGGED_IN_CONTEXT_KEY)),
 	}
 
-	err = t.templates["pages/admin/admin-tags.tmpl"].ExecuteTemplate(w, "admin", tagView)
+	err = t.templates["pages/admin/tags.tmpl"].ExecuteTemplate(w, "admin", tagView)
 	if err != nil {
 		t.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -128,7 +128,7 @@ func (t *TagController) GetAdminTagsSlugHandler(w http.ResponseWriter, r *http.R
 		IsAuthenticated: t.session.Exists(r.Context(), string(pkg.IS_LOGGED_IN_CONTEXT_KEY)),
 	}
 
-	if err := t.templates["pages/admin/admin-tag.tmpl"].ExecuteTemplate(w, "admin", tagView); err != nil {
+	if err := t.templates["pages/admin/tag.tmpl"].ExecuteTemplate(w, "admin", tagView); err != nil {
 		t.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -165,7 +165,7 @@ func (t *TagController) GetAdminTagsNewHandler(w http.ResponseWriter, r *http.Re
 		IsAuthenticated: t.session.Exists(r.Context(), string(pkg.IS_LOGGED_IN_CONTEXT_KEY)),
 	}
 
-	if err := t.templates["pages/admin/admin-new-tag.tmpl"].ExecuteTemplate(w, "admin", tagView); err != nil {
+	if err := t.templates["pages/admin/new-tag.tmpl"].ExecuteTemplate(w, "admin", tagView); err != nil {
 		t.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return

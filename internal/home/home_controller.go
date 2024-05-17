@@ -59,14 +59,14 @@ func (h *HomeController) HomeGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *HomeController) HomeArticlesGet(w http.ResponseWriter, r *http.Request) {
-	if err := h.templateCache["pages/public/public-articles.tmpl"].ExecuteTemplate(w, "public", HomeView{}); err != nil {
+	if err := h.templateCache["pages/public/articles.tmpl"].ExecuteTemplate(w, "public", HomeView{}); err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 }
 
 func (h *HomeController) HomeTagsGet(w http.ResponseWriter, r *http.Request) {
-	if err := h.templateCache["pages/public/public-tags.tmpl"].ExecuteTemplate(w, "public", HomeView{}); err != nil {
+	if err := h.templateCache["pages/public/tags.tmpl"].ExecuteTemplate(w, "public", HomeView{}); err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
@@ -87,7 +87,7 @@ func (h *HomeController) HomeTagGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.templateCache["pages/public/public-tag.tmpl"].ExecuteTemplate(w, "public", TagView{
+	if err := h.templateCache["pages/public/tag.tmpl"].ExecuteTemplate(w, "public", TagView{
 		Tag:      tag,
 		Articles: articles,
 	}); err != nil {
