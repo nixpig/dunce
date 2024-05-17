@@ -24,10 +24,13 @@ var mockSessionManager = new(MockSessionManager)
 
 func TestTagsControllerNewHandler(t *testing.T) {
 	scenarios := map[string]func(t *testing.T, ctrl TagController){
-		"test handle get new tag (success)":            testGetAdminTagsNewHandler,
-		"test handle get new tag (error - template)":   testGetAdminTagsNewHandlerTemplateError,
-		"test handle create new tag (success)":         testPostAdminTagsHandler,
-		"test handle create new tag (error - service)": testPostAdminTagsHandlerServiceError,
+		"test handle get new tag (success)":              testGetAdminTagsNewHandler,
+		"test handle get new tag (error - template)":     testGetAdminTagsNewHandlerTemplateError,
+		"test handle create new tag (success)":           testPostAdminTagsHandler,
+		"test handle create new tag (error - service)":   testPostAdminTagsHandlerServiceError,
+		"test handle delete tag (success)":               testPostAdminTagsDeleteHandler,
+		"test handle delete tag (error - bad id)":        testPostAdminTagsDeleteHandlerErrorBadId,
+		"test handle delete tag (error - service error)": testPostAdminTagsDeleteHandlerServiceError,
 	}
 
 	for scenario, fn := range scenarios {
@@ -299,6 +302,105 @@ func testPostAdminTagsHandlerServiceError(t *testing.T, ctrl TagController) {
 	mockServiceCreate.Unset()
 	if res := mockService.AssertExpectations(t); !res {
 		t.Error("should call through to tag service to create")
+	}
+
+	mockLoggerError.Unset()
+	if res := mockLogger.AssertExpectations(t); !res {
+		t.Error("should log error")
+	}
+}
+
+func testPostAdminTagsDeleteHandler(t *testing.T, ctrl TagController) {
+	form := url.Values{}
+	form.Add("id", "23")
+	form.Add("name", "tag name")
+
+	req, err := http.NewRequest("POST", "/admin/tags/tag-slug/delete", strings.NewReader(form.Encode()))
+	if err != nil {
+		t.Error("unable to construct request")
+	}
+
+	req.Header.Add("content-type", "application/x-www-form-urlencoded")
+
+	rr := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(ctrl.DeleteAdminTagsSlugHandler)
+
+	mockServiceDeleteById := mockService.On("DeleteById", 23).Return(nil)
+
+	mockSessionManagerPut := mockSessionManager.On("Put", mock.Anything, "message", "Deleted tag 'tag name'.")
+
+	handler.ServeHTTP(rr, req)
+
+	require.Equal(t, http.StatusSeeOther, rr.Result().StatusCode, "should return status see other")
+	require.Equal(t, "/admin/tags", rr.Result().Header.Get("Location"), "should redirect to tags page")
+
+	mockServiceDeleteById.Unset()
+	if res := mockService.AssertExpectations(t); !res {
+		t.Error("should call through to delete in tag service")
+	}
+
+	mockSessionManagerPut.Unset()
+	if res := mockSessionManager.AssertExpectations(t); !res {
+		t.Error("should put message into session context")
+	}
+}
+
+func testPostAdminTagsDeleteHandlerErrorBadId(t *testing.T, ctrl TagController) {
+	form := url.Values{}
+	form.Add("id", "nonsense")
+	form.Add("name", "tag name")
+
+	req, err := http.NewRequest("POST", "/admin/tags/tag-slug/delete", strings.NewReader(form.Encode()))
+	if err != nil {
+		t.Error("unable to create request")
+	}
+
+	req.Header.Add("content-type", "application/x-www-form-urlencoded")
+
+	rr := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(ctrl.DeleteAdminTagsSlugHandler)
+
+	mockLoggerError := mockLogger.On("Error", mock.Anything, mock.Anything).Return()
+
+	handler.ServeHTTP(rr, req)
+
+	require.Equal(t, http.StatusBadRequest, rr.Result().StatusCode, "should return status code bad request")
+
+	mockLoggerError.Unset()
+	if res := mockLogger.AssertExpectations(t); !res {
+		t.Error("should log the error")
+	}
+}
+
+func testPostAdminTagsDeleteHandlerServiceError(t *testing.T, ctrl TagController) {
+	form := url.Values{}
+	form.Add("id", "23")
+	form.Add("name", "tag name")
+
+	req, err := http.NewRequest("POST", "/admin/tags/tag-slug/delete", strings.NewReader(form.Encode()))
+	if err != nil {
+		t.Error("unable to create request")
+	}
+
+	req.Header.Add("content-type", "application/x-www-form-urlencoded")
+
+	rr := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(ctrl.DeleteAdminTagsSlugHandler)
+
+	mockServiceDeleteById := mockService.On("DeleteById", 23).Return(errors.New("service_error"))
+
+	mockLoggerError := mockLogger.On("Error", "service_error", mock.Anything).Return()
+
+	handler.ServeHTTP(rr, req)
+
+	require.Equal(t, http.StatusInternalServerError, rr.Result().StatusCode, "should return status internal server error")
+
+	mockServiceDeleteById.Unset()
+	if res := mockService.AssertExpectations(t); !res {
+		t.Error("should call tag service to delete")
 	}
 
 	mockLoggerError.Unset()
