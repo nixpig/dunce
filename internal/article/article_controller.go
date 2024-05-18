@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/justinas/nosurf"
 	"github.com/nixpig/dunce/internal/tag"
 	"github.com/nixpig/dunce/pkg"
 )
@@ -19,6 +18,7 @@ type ArticleController struct {
 	log            pkg.Logger
 	templates      map[string]pkg.Template
 	session        pkg.SessionManager
+	csrfToken      func(r *http.Request) string
 }
 
 type ArticleView struct {
@@ -56,10 +56,14 @@ func NewArticleController(
 		session:        config.SessionManager,
 		log:            config.Log,
 		templates:      config.TemplateCache,
+		csrfToken:      config.CsrfToken,
 	}
 }
 
-func (a *ArticleController) CreateHandler(w http.ResponseWriter, r *http.Request) {
+func (a *ArticleController) CreateHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
 	if err := r.ParseForm(); err != nil {
 		a.log.Error(err.Error())
 		http.Error(w, "Bad Request", http.StatusBadRequest)
@@ -74,7 +78,11 @@ func (a *ArticleController) CreateHandler(w http.ResponseWriter, r *http.Request
 		tagId, err := strconv.Atoi(t)
 		if err != nil {
 			a.log.Error(err.Error())
-			http.Error(w, "Unable to parse tags to ints", http.StatusInternalServerError)
+			http.Error(
+				w,
+				"Unable to parse tags to ints",
+				http.StatusInternalServerError,
+			)
 			return
 		}
 
@@ -100,7 +108,10 @@ func (a *ArticleController) CreateHandler(w http.ResponseWriter, r *http.Request
 	http.Redirect(w, r, "/admin/articles", http.StatusSeeOther)
 }
 
-func (a *ArticleController) GetAllHandler(w http.ResponseWriter, r *http.Request) {
+func (a *ArticleController) GetAllHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
 	articles, err := a.articleService.GetAll()
 	if err != nil {
 		a.log.Error(err.Error())
@@ -110,7 +121,7 @@ func (a *ArticleController) GetAllHandler(w http.ResponseWriter, r *http.Request
 
 	if err := a.templates["pages/admin/articles.tmpl"].ExecuteTemplate(w, "admin", ArticlesView{
 		Articles:        articles,
-		CsrfToken:       nosurf.Token(r),
+		CsrfToken:       a.csrfToken(r),
 		IsAuthenticated: a.session.Exists(r.Context(), string(pkg.IS_LOGGED_IN_CONTEXT_KEY)),
 	}); err != nil {
 		a.log.Error(err.Error())
@@ -129,7 +140,7 @@ func (a *ArticleController) NewHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err := a.templates["pages/admin/new-article.tmpl"].ExecuteTemplate(w, "admin", ArticlePublishView{
 		Tags:            availableTags,
-		CsrfToken:       nosurf.Token(r),
+		CsrfToken:       a.csrfToken(r),
 		IsAuthenticated: a.session.Exists(r.Context(), string(pkg.IS_LOGGED_IN_CONTEXT_KEY)),
 	}); err != nil {
 		a.log.Error(err.Error())
@@ -138,7 +149,10 @@ func (a *ArticleController) NewHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (a *ArticleController) GetBySlugHander(w http.ResponseWriter, r *http.Request) {
+func (a *ArticleController) GetBySlugHander(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
 	slug := r.PathValue("slug")
 
 	article, err := a.articleService.GetByAttribute("slug", slug)
@@ -161,7 +175,7 @@ func (a *ArticleController) GetBySlugHander(w http.ResponseWriter, r *http.Reque
 		ArticleView{
 			Article:         article,
 			Tags:            allTags,
-			CsrfToken:       nosurf.Token(r),
+			CsrfToken:       a.csrfToken(r),
 			IsAuthenticated: a.session.Exists(r.Context(), string(pkg.IS_LOGGED_IN_CONTEXT_KEY)),
 		},
 	); err != nil {
@@ -171,7 +185,10 @@ func (a *ArticleController) GetBySlugHander(w http.ResponseWriter, r *http.Reque
 	}
 }
 
-func (a ArticleController) UpdateHandler(w http.ResponseWriter, r *http.Request) {
+func (a ArticleController) UpdateHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
 	if err := r.ParseForm(); err != nil {
 		a.log.Error(err.Error())
 		http.Error(w, "Bad Request", http.StatusBadRequest)
@@ -186,7 +203,11 @@ func (a ArticleController) UpdateHandler(w http.ResponseWriter, r *http.Request)
 		id, err := strconv.Atoi(t)
 		if err != nil {
 			a.log.Error(err.Error())
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			http.Error(
+				w,
+				"Internal Server Error",
+				http.StatusInternalServerError,
+			)
 			return
 		}
 
@@ -228,7 +249,10 @@ func (a ArticleController) UpdateHandler(w http.ResponseWriter, r *http.Request)
 	http.Redirect(w, r, "/admin/articles", http.StatusSeeOther)
 }
 
-func (a ArticleController) AdminArticlesDeleteHandler(w http.ResponseWriter, r *http.Request) {
+func (a ArticleController) AdminArticlesDeleteHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
 	id, err := strconv.Atoi(r.FormValue("id"))
 	if err != nil {
 		a.log.Error(err.Error())
@@ -245,7 +269,10 @@ func (a ArticleController) AdminArticlesDeleteHandler(w http.ResponseWriter, r *
 	http.Redirect(w, r, "/admin/articles", http.StatusSeeOther)
 }
 
-func (a ArticleController) PublicGetArticle(w http.ResponseWriter, r *http.Request) {
+func (a ArticleController) PublicGetArticle(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
 	slug := r.PathValue("slug")
 
 	article, err := a.articleService.GetByAttribute("slug", slug)

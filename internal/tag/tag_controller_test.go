@@ -40,6 +40,8 @@ func TestTagsControllerNewHandler(t *testing.T) {
 		"test get tags by slug (error - service error)":  testGetAdminTagsBySlugHandlerServiceError,
 		"test get tags by slug (error - template error)": testGetAdminTagsBySlugHandlerTemplateError,
 		"test post tag by slug (success)":                testPostTagBySlugToUpdateHandler,
+		"test post tag by slug (error - bad form id)":    testPostTagBySlugToUpdateHandlerBadFormIdError,
+		"test post tag by slug (error - service error)":  testPostTagBySlugToUpdateHandlerServiceError,
 	}
 
 	for scenario, fn := range scenarios {
@@ -942,5 +944,101 @@ func testPostTagBySlugToUpdateHandler(t *testing.T, ctrl TagController) {
 	mockSessionManagerPut.Unset()
 	if res := mockSessionManager.AssertExpectations(t); !res {
 		t.Error("should put message in session context")
+	}
+}
+
+func testPostTagBySlugToUpdateHandlerBadFormIdError(
+	t *testing.T,
+	ctrl TagController,
+) {
+	form := url.Values{}
+	form.Add("id", "nonsense")
+	form.Add("name", "tag name")
+	form.Add("slug", "tag-slug")
+
+	req, err := http.NewRequest(
+		"POST",
+		"/admin/tags/{slug}",
+		strings.NewReader(form.Encode()),
+	)
+	if err != nil {
+		t.Error("unable to construct request")
+	}
+
+	req.Header.Add("content-type", "application/x-www-form-urlencoded")
+
+	req.SetPathValue("slug", "tag-slug")
+
+	rr := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(ctrl.PostAdminTagsSlugHandler)
+
+	mockLoggerError := mockLogger.On("Error", mock.Anything, mock.Anything).
+		Return(errors.New("logger_error"))
+
+	handler.ServeHTTP(rr, req)
+
+	require.Equal(
+		t,
+		http.StatusBadRequest,
+		rr.Result().StatusCode,
+		"should return status code bad request",
+	)
+
+	mockLoggerError.Unset()
+	if res := mockLogger.AssertExpectations(t); !res {
+		t.Error("should log error")
+	}
+}
+
+func testPostTagBySlugToUpdateHandlerServiceError(
+	t *testing.T,
+	ctrl TagController,
+) {
+	form := url.Values{}
+	form.Add("id", "23")
+	form.Add("name", "tag name")
+	form.Add("slug", "tag-slug")
+	req, err := http.NewRequest(
+		"POST",
+		"/admin/tags/{slug}",
+		strings.NewReader(form.Encode()),
+	)
+	if err != nil {
+		t.Error("unable to construct request")
+	}
+
+	req.Header.Add("content-type", "application/x-www-form-urlencoded")
+
+	rr := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(ctrl.PostAdminTagsSlugHandler)
+
+	mockServiceUpdate := mockService.On("Update", &TagUpdateRequestDto{
+		Id:   23,
+		Name: "tag name",
+		Slug: "tag-slug",
+	}).Return(&TagResponseDto{}, errors.New("service_error"))
+
+	mockLoggerError := mockLogger.On("Error", mock.Anything, mock.Anything).
+		Return(errors.New("logger_error"))
+
+	handler.ServeHTTP(rr, req)
+
+	require.Equal(
+		t,
+		http.StatusInternalServerError,
+		rr.Result().StatusCode,
+		"should return status code internal server error",
+	)
+
+	mockLoggerError.Unset()
+	if res := mockLogger.AssertExpectations(t); !res {
+		t.Error("should log error")
+	}
+
+	mockServiceUpdate.Unset()
+	if res := mockService.AssertExpectations(t); !res {
+		t.Error("should call through to service")
 	}
 }

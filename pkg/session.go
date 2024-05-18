@@ -7,8 +7,10 @@ import (
 	"golang.org/x/net/context"
 )
 
-const SESSION_KEY_MESSAGE = "message"
-const LOGGED_IN_USERNAME = "logged_in_username"
+const (
+	SESSION_KEY_MESSAGE = "message"
+	LOGGED_IN_USERNAME  = "logged_in_username"
+)
 
 type SessionManager interface {
 	Exists(ctx context.Context, key string) bool
@@ -50,7 +52,11 @@ func (s SessionManagerImpl) RenewToken(ctx context.Context) error {
 	return s.scs.RenewToken(ctx)
 }
 
-func (s SessionManagerImpl) Put(ctx context.Context, key string, val interface{}) {
+func (s SessionManagerImpl) Put(
+	ctx context.Context,
+	key string,
+	val interface{},
+) {
 	s.scs.Put(ctx, key, val)
 }
 
