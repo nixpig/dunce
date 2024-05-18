@@ -53,7 +53,10 @@ func NewTagController(
 	}
 }
 
-func (t *TagController) PostAdminTagsHandler(w http.ResponseWriter, r *http.Request) {
+func (t *TagController) PostAdminTagsHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
 	tag := TagNewRequestDto{
 		Name: r.FormValue("name"),
 		Slug: r.FormValue("slug"),
@@ -65,12 +68,19 @@ func (t *TagController) PostAdminTagsHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	t.session.Put(r.Context(), pkg.SESSION_KEY_MESSAGE, fmt.Sprintf("Created tag '%s'.", tag.Name))
+	t.session.Put(
+		r.Context(),
+		pkg.SESSION_KEY_MESSAGE,
+		fmt.Sprintf("Created tag '%s'.", tag.Name),
+	)
 
 	http.Redirect(w, r, "/admin/tags", http.StatusSeeOther)
 }
 
-func (t *TagController) DeleteAdminTagsSlugHandler(w http.ResponseWriter, r *http.Request) {
+func (t *TagController) DeleteAdminTagsSlugHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
 	id, err := strconv.Atoi(r.FormValue("id"))
 	if err != nil {
 		t.log.Error(err.Error())
@@ -80,16 +90,27 @@ func (t *TagController) DeleteAdminTagsSlugHandler(w http.ResponseWriter, r *htt
 
 	if err := t.tagService.DeleteById(id); err != nil {
 		t.log.Error(err.Error())
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		http.Error(
+			w,
+			http.StatusText(http.StatusInternalServerError),
+			http.StatusInternalServerError,
+		)
 		return
 	}
 
-	t.session.Put(r.Context(), pkg.SESSION_KEY_MESSAGE, fmt.Sprintf("Deleted tag '%s'.", r.FormValue("name")))
+	t.session.Put(
+		r.Context(),
+		pkg.SESSION_KEY_MESSAGE,
+		fmt.Sprintf("Deleted tag '%s'.", r.FormValue("name")),
+	)
 
 	http.Redirect(w, r, "/admin/tags", http.StatusSeeOther)
 }
 
-func (t *TagController) GetAdminTagsHandler(w http.ResponseWriter, r *http.Request) {
+func (t *TagController) GetAdminTagsHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
 	tags, err := t.tagService.GetAll()
 	if err != nil {
 		t.log.Error(err.Error())
@@ -100,32 +121,46 @@ func (t *TagController) GetAdminTagsHandler(w http.ResponseWriter, r *http.Reque
 	message := t.session.PopString(r.Context(), pkg.SESSION_KEY_MESSAGE)
 
 	tagView := TagsView{
-		Message:         message,
-		Tags:            tags,
-		CsrfToken:       t.csrfToken(r),
-		IsAuthenticated: t.session.Exists(r.Context(), string(pkg.IS_LOGGED_IN_CONTEXT_KEY)),
+		Message:   message,
+		Tags:      tags,
+		CsrfToken: t.csrfToken(r),
+		IsAuthenticated: t.session.Exists(
+			r.Context(),
+			string(pkg.IS_LOGGED_IN_CONTEXT_KEY),
+		),
 	}
 
-	err = t.templates["pages/admin/tags.tmpl"].ExecuteTemplate(w, "admin", tagView)
+	err = t.templates["pages/admin/tags.tmpl"].ExecuteTemplate(
+		w,
+		"admin",
+		tagView,
+	)
 	if err != nil {
 		t.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
 
-func (t *TagController) GetAdminTagsSlugHandler(w http.ResponseWriter, r *http.Request) {
+func (t *TagController) GetAdminTagsSlugHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
 	slug := r.PathValue("slug")
 
 	tag, err := t.tagService.GetByAttribute("slug", slug)
 	if err != nil {
 		t.log.Error(err.Error())
-		w.Write([]byte(err.Error()))
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
 	}
 
 	tagView := TagView{
-		Tag:             tag,
-		CsrfToken:       t.csrfToken(r),
-		IsAuthenticated: t.session.Exists(r.Context(), string(pkg.IS_LOGGED_IN_CONTEXT_KEY)),
+		Tag:       tag,
+		CsrfToken: t.csrfToken(r),
+		IsAuthenticated: t.session.Exists(
+			r.Context(),
+			string(pkg.IS_LOGGED_IN_CONTEXT_KEY),
+		),
 	}
 
 	if err := t.templates["pages/admin/tag.tmpl"].ExecuteTemplate(w, "admin", tagView); err != nil {
@@ -135,11 +170,15 @@ func (t *TagController) GetAdminTagsSlugHandler(w http.ResponseWriter, r *http.R
 	}
 }
 
-func (t *TagController) PostAdminTagsSlugHandler(w http.ResponseWriter, r *http.Request) {
+func (t *TagController) PostAdminTagsSlugHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
 	id, err := strconv.Atoi(r.FormValue("id"))
 	if err != nil {
 		t.log.Error(err.Error())
 		http.Error(w, "Invalid tag ID", http.StatusBadRequest)
+		return
 	}
 
 	tag := TagUpdateRequestDto{
@@ -154,15 +193,25 @@ func (t *TagController) PostAdminTagsSlugHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	t.session.Put(r.Context(), pkg.SESSION_KEY_MESSAGE, fmt.Sprintf("Updated tag '%s'.", tag.Name))
+	t.session.Put(
+		r.Context(),
+		pkg.SESSION_KEY_MESSAGE,
+		fmt.Sprintf("Updated tag '%s'.", tag.Name),
+	)
 
 	http.Redirect(w, r, "/admin/tags", http.StatusSeeOther)
 }
 
-func (t *TagController) GetAdminTagsNewHandler(w http.ResponseWriter, r *http.Request) {
+func (t *TagController) GetAdminTagsNewHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
 	tagView := TagCreateView{
-		CsrfToken:       t.csrfToken(r),
-		IsAuthenticated: t.session.Exists(r.Context(), string(pkg.IS_LOGGED_IN_CONTEXT_KEY)),
+		CsrfToken: t.csrfToken(r),
+		IsAuthenticated: t.session.Exists(
+			r.Context(),
+			string(pkg.IS_LOGGED_IN_CONTEXT_KEY),
+		),
 	}
 
 	if err := t.templates["pages/admin/new-tag.tmpl"].ExecuteTemplate(w, "admin", tagView); err != nil {

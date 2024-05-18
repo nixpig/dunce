@@ -22,7 +22,12 @@ audit:
 .PHONY: test
 test: export APP_ENV=test
 test: 
-	go test -v -race -buildvcs ./... 
+	go run gotest.tools/gotestsum@latest ./...
+
+.PHONY: test_watch
+test_watch: export APP_ENV=test
+test_watch: 
+	go run gotest.tools/gotestsum@latest --watch ./...
 
 .PHONY: coverage
 coverage:

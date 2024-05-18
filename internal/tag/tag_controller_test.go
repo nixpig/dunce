@@ -18,6 +18,7 @@ import (
 var mockTemplateCache = map[string]pkg.Template{
 	"pages/admin/new-tag.tmpl": mockTemplate,
 	"pages/admin/tags.tmpl":    mockTemplate,
+	"pages/admin/tag.tmpl":     mockTemplate,
 }
 
 var mockLogger = new(MockLogger)
@@ -33,6 +34,12 @@ func TestTagsControllerNewHandler(t *testing.T) {
 		"test handle delete tag (error - bad id)":        testPostAdminTagsDeleteHandlerErrorBadId,
 		"test handle delete tag (error - service error)": testPostAdminTagsDeleteHandlerServiceError,
 		"test get tags (success)":                        testGetAdminTagsHandler,
+		"test get tags (error - service error)":          testGetAdminTagsHandlerServiceError,
+		"test get tags (error - template error)":         testGetAdminTagsHandlerTemplateError,
+		"test get tags by slug (success)":                testGetAdminTagsBySlugHandler,
+		"test get tags by slug (error - service error)":  testGetAdminTagsBySlugHandlerServiceError,
+		"test get tags by slug (error - template error)": testGetAdminTagsBySlugHandlerTemplateError,
+		"test post tag by slug (success)":                testPostTagBySlugToUpdateHandler,
 	}
 
 	for scenario, fn := range scenarios {
@@ -87,7 +94,11 @@ func (s *MockSessionManager) RenewToken(ctx context.Context) error {
 	return args.Error(0)
 }
 
-func (s *MockSessionManager) Put(ctx context.Context, key string, val interface{}) {
+func (s *MockSessionManager) Put(
+	ctx context.Context,
+	key string,
+	val interface{},
+) {
 	s.Called(ctx, key, val)
 }
 
@@ -99,7 +110,9 @@ type MockTagService struct {
 	mock.Mock
 }
 
-func (s *MockTagService) Create(tag *TagNewRequestDto) (*TagResponseDto, error) {
+func (s *MockTagService) Create(
+	tag *TagNewRequestDto,
+) (*TagResponseDto, error) {
 	args := s.Called(tag)
 
 	return args.Get(0).(*TagResponseDto), args.Error(1)
@@ -117,13 +130,17 @@ func (s *MockTagService) GetAll() (*[]TagResponseDto, error) {
 	return args.Get(0).(*[]TagResponseDto), args.Error(1)
 }
 
-func (s *MockTagService) GetByAttribute(attr, slug string) (*TagResponseDto, error) {
-	args := s.Called(slug)
+func (s *MockTagService) GetByAttribute(
+	attr, slug string,
+) (*TagResponseDto, error) {
+	args := s.Called(attr, slug)
 
 	return args.Get(0).(*TagResponseDto), args.Error(1)
 }
 
-func (s *MockTagService) Update(tag *TagUpdateRequestDto) (*TagResponseDto, error) {
+func (s *MockTagService) Update(
+	tag *TagUpdateRequestDto,
+) (*TagResponseDto, error) {
 	args := s.Called(tag)
 
 	return args.Get(0).(*TagResponseDto), args.Error(1)
@@ -149,7 +166,11 @@ type MockTemplate struct {
 	mock.Mock
 }
 
-func (t *MockTemplate) ExecuteTemplate(wr io.Writer, name string, data any) error {
+func (t *MockTemplate) ExecuteTemplate(
+	wr io.Writer,
+	name string,
+	data any,
+) error {
 	args := t.Called(wr, name, data)
 
 	return args.Error(0)
@@ -177,7 +198,12 @@ func testGetAdminTagsNewHandler(t *testing.T, ctrl TagController) {
 
 	handler.ServeHTTP(rr, req)
 
-	require.Equal(t, http.StatusOK, rr.Result().StatusCode, "should return status code ok")
+	require.Equal(
+		t,
+		http.StatusOK,
+		rr.Result().StatusCode,
+		"should return status code ok",
+	)
 
 	mockSessionManagerExists.Unset()
 	if res := mockSessionManager.AssertExpectations(t); !res {
@@ -204,7 +230,8 @@ func testGetAdminTagsNewHandlerTemplateError(t *testing.T, ctrl TagController) {
 		On("ExecuteTemplate", mock.Anything, mock.Anything, mock.Anything).
 		Return(errors.New("template_error"))
 
-	mockLoggerError := mockLogger.On("Error", "template_error", mock.Anything).Return()
+	mockLoggerError := mockLogger.On("Error", "template_error", mock.Anything).
+		Return()
 
 	rr := httptest.NewRecorder()
 
@@ -212,7 +239,12 @@ func testGetAdminTagsNewHandlerTemplateError(t *testing.T, ctrl TagController) {
 
 	handler.ServeHTTP(rr, req)
 
-	require.Equal(t, http.StatusInternalServerError, rr.Result().StatusCode, "should return status code internal server error")
+	require.Equal(
+		t,
+		http.StatusInternalServerError,
+		rr.Result().StatusCode,
+		"should return status code internal server error",
+	)
 
 	mockSessionManagerExists.Unset()
 	if res := mockSessionManager.AssertExpectations(t); !res {
@@ -235,7 +267,11 @@ func testPostAdminTagsHandler(t *testing.T, ctrl TagController) {
 	form.Add("name", "tag name")
 	form.Add("slug", "tag-slug")
 
-	req, err := http.NewRequest("POST", "/admin/tags", strings.NewReader(form.Encode()))
+	req, err := http.NewRequest(
+		"POST",
+		"/admin/tags",
+		strings.NewReader(form.Encode()),
+	)
 	if err != nil {
 		t.Error("unable to construct request")
 	}
@@ -260,8 +296,18 @@ func testPostAdminTagsHandler(t *testing.T, ctrl TagController) {
 
 	handler.ServeHTTP(rr, req)
 
-	require.Equal(t, http.StatusSeeOther, rr.Result().StatusCode, "should return status code see other")
-	require.Equal(t, "/admin/tags", rr.Result().Header.Get("Location"), "should set redirect location")
+	require.Equal(
+		t,
+		http.StatusSeeOther,
+		rr.Result().StatusCode,
+		"should return status code see other",
+	)
+	require.Equal(
+		t,
+		"/admin/tags",
+		rr.Result().Header.Get("Location"),
+		"should set redirect location",
+	)
 
 	mockServiceCreate.Unset()
 	if res := mockService.AssertExpectations(t); !res {
@@ -279,7 +325,11 @@ func testPostAdminTagsHandlerServiceError(t *testing.T, ctrl TagController) {
 	form.Add("name", "tag name")
 	form.Add("slug", "tag-slug")
 
-	req, err := http.NewRequest("POST", "/admin/tags", strings.NewReader(form.Encode()))
+	req, err := http.NewRequest(
+		"POST",
+		"/admin/tags",
+		strings.NewReader(form.Encode()),
+	)
 	if err != nil {
 		t.Error("unable to construct request")
 	}
@@ -295,11 +345,17 @@ func testPostAdminTagsHandlerServiceError(t *testing.T, ctrl TagController) {
 		Slug: "tag-slug",
 	}).Return(&TagResponseDto{}, errors.New("service_error"))
 
-	mockLoggerError := mockLogger.On("Error", "service_error", mock.Anything).Return()
+	mockLoggerError := mockLogger.On("Error", "service_error", mock.Anything).
+		Return()
 
 	handler.ServeHTTP(rr, req)
 
-	require.Equal(t, http.StatusInternalServerError, rr.Result().StatusCode, "should return status code internal server error")
+	require.Equal(
+		t,
+		http.StatusInternalServerError,
+		rr.Result().StatusCode,
+		"should return status code internal server error",
+	)
 
 	mockServiceCreate.Unset()
 	if res := mockService.AssertExpectations(t); !res {
@@ -317,7 +373,11 @@ func testPostAdminTagsDeleteHandler(t *testing.T, ctrl TagController) {
 	form.Add("id", "23")
 	form.Add("name", "tag name")
 
-	req, err := http.NewRequest("POST", "/admin/tags/tag-slug/delete", strings.NewReader(form.Encode()))
+	req, err := http.NewRequest(
+		"POST",
+		"/admin/tags/tag-slug/delete",
+		strings.NewReader(form.Encode()),
+	)
 	if err != nil {
 		t.Error("unable to construct request")
 	}
@@ -330,12 +390,27 @@ func testPostAdminTagsDeleteHandler(t *testing.T, ctrl TagController) {
 
 	mockServiceDeleteById := mockService.On("DeleteById", 23).Return(nil)
 
-	mockSessionManagerPut := mockSessionManager.On("Put", mock.Anything, "message", "Deleted tag 'tag name'.")
+	mockSessionManagerPut := mockSessionManager.On(
+		"Put",
+		mock.Anything,
+		"message",
+		"Deleted tag 'tag name'.",
+	)
 
 	handler.ServeHTTP(rr, req)
 
-	require.Equal(t, http.StatusSeeOther, rr.Result().StatusCode, "should return status see other")
-	require.Equal(t, "/admin/tags", rr.Result().Header.Get("Location"), "should redirect to tags page")
+	require.Equal(
+		t,
+		http.StatusSeeOther,
+		rr.Result().StatusCode,
+		"should return status see other",
+	)
+	require.Equal(
+		t,
+		"/admin/tags",
+		rr.Result().Header.Get("Location"),
+		"should redirect to tags page",
+	)
 
 	mockServiceDeleteById.Unset()
 	if res := mockService.AssertExpectations(t); !res {
@@ -348,12 +423,19 @@ func testPostAdminTagsDeleteHandler(t *testing.T, ctrl TagController) {
 	}
 }
 
-func testPostAdminTagsDeleteHandlerErrorBadId(t *testing.T, ctrl TagController) {
+func testPostAdminTagsDeleteHandlerErrorBadId(
+	t *testing.T,
+	ctrl TagController,
+) {
 	form := url.Values{}
 	form.Add("id", "nonsense")
 	form.Add("name", "tag name")
 
-	req, err := http.NewRequest("POST", "/admin/tags/tag-slug/delete", strings.NewReader(form.Encode()))
+	req, err := http.NewRequest(
+		"POST",
+		"/admin/tags/tag-slug/delete",
+		strings.NewReader(form.Encode()),
+	)
 	if err != nil {
 		t.Error("unable to create request")
 	}
@@ -364,11 +446,17 @@ func testPostAdminTagsDeleteHandlerErrorBadId(t *testing.T, ctrl TagController) 
 
 	handler := http.HandlerFunc(ctrl.DeleteAdminTagsSlugHandler)
 
-	mockLoggerError := mockLogger.On("Error", mock.Anything, mock.Anything).Return()
+	mockLoggerError := mockLogger.On("Error", mock.Anything, mock.Anything).
+		Return()
 
 	handler.ServeHTTP(rr, req)
 
-	require.Equal(t, http.StatusBadRequest, rr.Result().StatusCode, "should return status code bad request")
+	require.Equal(
+		t,
+		http.StatusBadRequest,
+		rr.Result().StatusCode,
+		"should return status code bad request",
+	)
 
 	mockLoggerError.Unset()
 	if res := mockLogger.AssertExpectations(t); !res {
@@ -376,12 +464,19 @@ func testPostAdminTagsDeleteHandlerErrorBadId(t *testing.T, ctrl TagController) 
 	}
 }
 
-func testPostAdminTagsDeleteHandlerServiceError(t *testing.T, ctrl TagController) {
+func testPostAdminTagsDeleteHandlerServiceError(
+	t *testing.T,
+	ctrl TagController,
+) {
 	form := url.Values{}
 	form.Add("id", "23")
 	form.Add("name", "tag name")
 
-	req, err := http.NewRequest("POST", "/admin/tags/tag-slug/delete", strings.NewReader(form.Encode()))
+	req, err := http.NewRequest(
+		"POST",
+		"/admin/tags/tag-slug/delete",
+		strings.NewReader(form.Encode()),
+	)
 	if err != nil {
 		t.Error("unable to create request")
 	}
@@ -392,13 +487,20 @@ func testPostAdminTagsDeleteHandlerServiceError(t *testing.T, ctrl TagController
 
 	handler := http.HandlerFunc(ctrl.DeleteAdminTagsSlugHandler)
 
-	mockServiceDeleteById := mockService.On("DeleteById", 23).Return(errors.New("service_error"))
+	mockServiceDeleteById := mockService.On("DeleteById", 23).
+		Return(errors.New("service_error"))
 
-	mockLoggerError := mockLogger.On("Error", "service_error", mock.Anything).Return()
+	mockLoggerError := mockLogger.On("Error", "service_error", mock.Anything).
+		Return()
 
 	handler.ServeHTTP(rr, req)
 
-	require.Equal(t, http.StatusInternalServerError, rr.Result().StatusCode, "should return status internal server error")
+	require.Equal(
+		t,
+		http.StatusInternalServerError,
+		rr.Result().StatusCode,
+		"should return status internal server error",
+	)
 
 	mockServiceDeleteById.Unset()
 	if res := mockService.AssertExpectations(t); !res {
@@ -466,7 +568,12 @@ func testGetAdminTagsHandler(t *testing.T, ctrl TagController) {
 
 	handler.ServeHTTP(rr, req)
 
-	require.Equal(t, http.StatusOK, rr.Result().StatusCode, "should return status code ok")
+	require.Equal(
+		t,
+		http.StatusOK,
+		rr.Result().StatusCode,
+		"should return status code ok",
+	)
 
 	mockServiceGetAll.Unset()
 	if res := mockService.AssertExpectations(t); !res {
@@ -482,5 +589,358 @@ func testGetAdminTagsHandler(t *testing.T, ctrl TagController) {
 	mockTemplateExecuteTemplate.Unset()
 	if res := mockTemplate.AssertExpectations(t); !res {
 		t.Error("should execute template with tags")
+	}
+}
+
+func testGetAdminTagsHandlerServiceError(t *testing.T, ctrl TagController) {
+	req, err := http.NewRequest("GET", "/admin/tags", nil)
+	if err != nil {
+		t.Error("unable to construct request")
+	}
+
+	rr := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(ctrl.GetAdminTagsHandler)
+
+	mockServiceGetAll := mockService.On("GetAll").
+		Return(&[]TagResponseDto{}, errors.New("service_error"))
+
+	mockLoggerError := mockLogger.On("Error", "service_error", mock.Anything).
+		Return()
+
+	handler.ServeHTTP(rr, req)
+
+	require.Equal(
+		t,
+		http.StatusInternalServerError,
+		rr.Result().StatusCode,
+		"should return status code internal server error",
+	)
+
+	mockServiceGetAll.Unset()
+	if res := mockService.AssertExpectations(t); !res {
+		t.Error("should call tag service to get all tags")
+	}
+
+	mockLoggerError.Unset()
+	if res := mockLogger.AssertExpectations(t); !res {
+		t.Error("should log errors")
+	}
+}
+
+func testGetAdminTagsHandlerTemplateError(t *testing.T, ctrl TagController) {
+	req, err := http.NewRequest("GET", "/admin/tags", nil)
+	if err != nil {
+		t.Error("unable to construct request")
+	}
+
+	rr := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(ctrl.GetAdminTagsHandler)
+
+	mockServiceGetAll := mockService.On("GetAll").Return(&[]TagResponseDto{
+		{
+			Id:   1,
+			Name: "tag one",
+			Slug: "tag-one",
+		},
+		{
+			Id:   2,
+			Name: "tag two",
+			Slug: "tag-two",
+		},
+	}, nil)
+
+	mockSessionManagerPopString := mockSessionManager.On("PopString", mock.Anything, "message").
+		Return("mock_message")
+	mockSessionManagerExists := mockSessionManager.On("Exists", mock.Anything, "logged_in_username").
+		Return(true)
+
+	mockTemplateExecuteTemplate := mockTemplate.On("ExecuteTemplate", mock.Anything, "admin", TagsView{
+		Message: "mock_message",
+		Tags: &[]TagResponseDto{
+			{
+				Id:   1,
+				Name: "tag one",
+				Slug: "tag-one",
+			},
+			{
+				Id:   2,
+				Name: "tag two",
+				Slug: "tag-two",
+			},
+		},
+		CsrfToken:       "mock-token",
+		IsAuthenticated: true,
+	}).
+		Return(errors.New("template_error"))
+
+	mockLoggerError := mockLogger.On("Error", "template_error", mock.Anything)
+
+	handler.ServeHTTP(rr, req)
+
+	require.Equal(
+		t,
+		http.StatusInternalServerError,
+		rr.Result().StatusCode,
+		"should return status code internal server error",
+	)
+
+	mockServiceGetAll.Unset()
+	if res := mockService.AssertExpectations(t); !res {
+		t.Error("should call service to get all tags")
+	}
+
+	mockSessionManagerPopString.Unset()
+	mockSessionManagerExists.Unset()
+	if res := mockSessionManager.AssertExpectations(t); !res {
+		t.Error("should call session methods")
+	}
+
+	mockTemplateExecuteTemplate.Unset()
+	if res := mockTemplate.AssertExpectations(t); !res {
+		t.Error("should execute template")
+	}
+
+	mockLoggerError.Unset()
+	if res := mockLogger.AssertExpectations(t); !res {
+		t.Error("should log error")
+	}
+}
+
+func testGetAdminTagsBySlugHandler(t *testing.T, ctrl TagController) {
+	req, err := http.NewRequest("GET", "/admin/tags/{slug}", nil)
+	if err != nil {
+		t.Error("unable to construct request")
+	}
+
+	req.SetPathValue("slug", "tag-slug")
+
+	rr := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(ctrl.GetAdminTagsSlugHandler)
+
+	mockServiceGetByAttribute := mockService.On("GetByAttribute", "slug", "tag-slug").
+		Return(&TagResponseDto{
+			Id:   23,
+			Name: "tag name",
+			Slug: "tag-slug",
+		}, nil)
+
+	mockSessionManagerExists := mockSessionManager.On("Exists", mock.Anything, "logged_in_username").
+		Return(true)
+
+	mockTemplateExecuteTemplate := mockTemplate.On(
+		"ExecuteTemplate",
+		mock.Anything,
+		"admin",
+		TagView{
+			Tag: &TagResponseDto{
+				Id:   23,
+				Name: "tag name",
+				Slug: "tag-slug",
+			},
+			CsrfToken:       "mock-token",
+			IsAuthenticated: true,
+		},
+	).Return(nil)
+
+	handler.ServeHTTP(rr, req)
+
+	require.Equal(
+		t,
+		http.StatusOK,
+		rr.Result().StatusCode,
+		"should return status code ok",
+	)
+
+	mockSessionManagerExists.Unset()
+	if res := mockSessionManager.AssertExpectations(t); !res {
+		t.Error("should check if user session exists in context")
+	}
+
+	mockTemplateExecuteTemplate.Unset()
+	if res := mockTemplate.AssertExpectations(t); !res {
+		t.Error("should execute template")
+	}
+
+	mockServiceGetByAttribute.Unset()
+	if res := mockService.AssertExpectations(t); !res {
+		t.Error("should have called through to service to get tag")
+	}
+}
+
+func testGetAdminTagsBySlugHandlerServiceError(
+	t *testing.T,
+	ctrl TagController,
+) {
+	req, err := http.NewRequest("GET", "/admin/tags/{slug}", nil)
+	if err != nil {
+		t.Error("unable to construct request")
+	}
+
+	req.SetPathValue("slug", "tag-slug")
+
+	rr := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(ctrl.GetAdminTagsSlugHandler)
+
+	mockServiceGetByAttribute := mockService.On("GetByAttribute", "slug", "tag-slug").
+		Return(&TagResponseDto{}, errors.New("service_error"))
+
+	mockLoggerError := mockLogger.On("Error", "service_error", mock.Anything).
+		Return()
+
+	handler.ServeHTTP(rr, req)
+
+	require.Equal(
+		t,
+		http.StatusInternalServerError,
+		rr.Result().StatusCode,
+		"should return status code internal server error",
+	)
+
+	mockLoggerError.Unset()
+	if res := mockLogger.AssertExpectations(t); !res {
+		t.Error("should log error")
+	}
+	mockServiceGetByAttribute.Unset()
+	if res := mockService.AssertExpectations(t); !res {
+		t.Error("should have called through to service to get tag")
+	}
+}
+
+func testGetAdminTagsBySlugHandlerTemplateError(
+	t *testing.T,
+	ctrl TagController,
+) {
+	req, err := http.NewRequest("GET", "/admin/tags/{slug}", nil)
+	if err != nil {
+		t.Error("unable to construct request")
+	}
+
+	req.SetPathValue("slug", "tag-slug")
+
+	rr := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(ctrl.GetAdminTagsSlugHandler)
+
+	mockServiceGetByAttribute := mockService.On("GetByAttribute", "slug", "tag-slug").
+		Return(&TagResponseDto{
+			Id:   23,
+			Name: "tag name",
+			Slug: "tag-slug",
+		}, nil)
+
+	mockSessionManagerExists := mockSessionManager.On("Exists", mock.Anything, "logged_in_username").
+		Return(true)
+
+	mockTemplateExecuteTemplate := mockTemplate.On(
+		"ExecuteTemplate",
+		mock.Anything,
+		"admin",
+		TagView{
+			Tag: &TagResponseDto{
+				Id:   23,
+				Name: "tag name",
+				Slug: "tag-slug",
+			},
+			CsrfToken:       "mock-token",
+			IsAuthenticated: true,
+		},
+	).Return(errors.New("template_error"))
+
+	mockLoggerError := mockLogger.On("Error", "template_error", mock.Anything).
+		Return()
+
+	handler.ServeHTTP(rr, req)
+
+	require.Equal(
+		t,
+		http.StatusInternalServerError,
+		rr.Result().StatusCode,
+		"should return status code internal server error",
+	)
+
+	mockSessionManagerExists.Unset()
+	if res := mockSessionManager.AssertExpectations(t); !res {
+		t.Error("should check if user session exists in context")
+	}
+
+	mockTemplateExecuteTemplate.Unset()
+	if res := mockTemplate.AssertExpectations(t); !res {
+		t.Error("should execute template")
+	}
+
+	mockServiceGetByAttribute.Unset()
+	if res := mockService.AssertExpectations(t); !res {
+		t.Error("should have called through to service to get tag")
+	}
+
+	mockLoggerError.Unset()
+	if res := mockLogger.AssertExpectations(t); !res {
+		t.Error("should log error")
+	}
+}
+
+func testPostTagBySlugToUpdateHandler(t *testing.T, ctrl TagController) {
+	form := url.Values{}
+	form.Add("id", "23")
+	form.Add("name", "tag name")
+	form.Add("slug", "tag-slug")
+
+	req, err := http.NewRequest(
+		"POST",
+		"/admin/tags/{slug}",
+		strings.NewReader(form.Encode()),
+	)
+	if err != nil {
+		t.Error("unable to construct request")
+	}
+
+	req.Header.Add("content-type", "application/x-www-form-urlencoded")
+
+	req.SetPathValue("slug", "tag-slug")
+
+	rr := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(ctrl.PostAdminTagsSlugHandler)
+
+	mockServiceUpdate := mockService.On("Update", &TagUpdateRequestDto{
+		Id:   23,
+		Name: "tag name",
+		Slug: "tag-slug",
+	}).Return(&TagResponseDto{}, nil)
+
+	mockSessionManagerPut := mockSessionManager.On(
+		"Put",
+		mock.Anything,
+		"message",
+		"Updated tag 'tag name'.",
+	)
+
+	handler.ServeHTTP(rr, req)
+
+	require.Equal(
+		t,
+		http.StatusSeeOther,
+		rr.Result().StatusCode,
+		"should return status code see other",
+	)
+	require.Equal(
+		t,
+		"/admin/tags",
+		rr.Result().Header.Get("Location"),
+		"should redirect to tags page",
+	)
+
+	mockServiceUpdate.Unset()
+	if res := mockService.AssertExpectations(t); !res {
+		t.Error("should call through to service")
+	}
+
+	mockSessionManagerPut.Unset()
+	if res := mockSessionManager.AssertExpectations(t); !res {
+		t.Error("should put message in session context")
 	}
 }

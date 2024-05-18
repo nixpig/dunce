@@ -7,12 +7,10 @@
   </div>
 
 
-  <h2>Recent articles</h2>
+  <h2 id="articles">Articles</h2>
+
+
   <table>
-    <thead>
-      <th>Article title</th>
-      <th style="text-align: right;">Published date</th>
-    </thead>
     <tbody>
       {{ range $article := .Articles }}
         <tr>
@@ -26,12 +24,57 @@
     </tbody>
   </table>
 
-  <h2>Tags</h2>
 
   <div>
-    {{ range $index, $tag := .Tags }}
+    <b>Tags: </b> {{ range $index, $tag := .Tags }}
       <a href="/tags/{{ $tag.Slug }}" class="tag">{{ $tag.Name }}</a>
     {{ end }}
+  </div>
+
+  <h2 id="projects">Side projects</h2>
+
+  <div class="projects__services">
+    <h3>💉 Syringe</h3>
+
+    <p>
+      <b>Web: </b> <a href="https://syringe.dev">syringe.dev</a> // <a href="https://syringe.sh">syringe.sh</a> &bull; <b>GitHub: </b><a href="https://github.com/nixpig/syringe">nixpig/syringe</a>
+    </p>
+
+    <p>
+      Distributed environment injection utility.
+    </p>
+
+    <p><span class="language language--go">Go</span></p>
+  </div>
+
+  <div class="projects__utils">
+    <div>
+      <h3>🐙 Joubini</h3>
+      <p><b>GitHub: </b> <a href="https://github.com/nixpig/joubini">nixpig/joubini</a></p>
+      <p>
+        A super-simple to configure HTTP/S reverse proxy written in Rust, with support for HTTP/1, HTTP/2, TLS/SSL and web sockets (coming soon!).
+      </p>
+      <p><span class="language language--rust">Rust</span></p>
+    </div>
+
+    <div>
+      <h3>🌀 Corkscrew</h3>
+      <p><b>GitHub: </b> <a href="https://github.com/nixpig/corkscrew">nixpig/corkscrew</a></p>
+      <p>
+        Configure HTTP requests using a convenient YAML schema and batch execute from the terminal.
+      </p>
+      <p><span class="language language--rust">Rust</span></p>
+    </div>
+  </div>
+
+  <div class="projects__plugins">
+    <div>
+      <h3>⚒️ Ansible roles</h3>
+    </div>
+
+    <div>
+      <h3>🌿 Terraform plugins</h3>
+    </div>
   </div>
 
 {{ end }}

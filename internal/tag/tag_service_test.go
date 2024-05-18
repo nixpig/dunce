@@ -93,7 +93,10 @@ func (m *MockTagRepository) Update(tag *Tag) (*Tag, error) {
 	return args.Get(0).(*Tag), args.Error(1)
 }
 
-func testTagServiceUpdateConvertSlugToLowercase(t *testing.T, service TagService) {
+func testTagServiceUpdateConvertSlugToLowercase(
+	t *testing.T,
+	service TagService,
+) {
 	mockRepoUpdate := mockData.On("Update", &Tag{
 		Id:   42,
 		Name: "tag name",
@@ -169,7 +172,8 @@ func testTagServiceDeleteTagWithoutError(t *testing.T, service TagService) {
 }
 
 func testTagServiceDeleteTagWithError(t *testing.T, service TagService) {
-	mockRepoDeleteById := mockData.On("DeleteById", 42).Return(errors.New("data_error"))
+	mockRepoDeleteById := mockData.On("DeleteById", 42).
+		Return(errors.New("data_error"))
 
 	got := service.DeleteById(42)
 
@@ -178,10 +182,18 @@ func testTagServiceDeleteTagWithError(t *testing.T, service TagService) {
 		t.Error("unmet expectations")
 	}
 
-	require.EqualError(t, got, "data_error", "should return error from data layer")
+	require.EqualError(
+		t,
+		got,
+		"data_error",
+		"should return error from data layer",
+	)
 }
 
-func testTagServiceCreateConvertSlugToLowercase(t *testing.T, service TagService) {
+func testTagServiceCreateConvertSlugToLowercase(
+	t *testing.T,
+	service TagService,
+) {
 	mockRepoCreate := mockData.On("Create", &Tag{
 		Name: "tag name",
 		Slug: "tag-slug",
@@ -440,11 +452,12 @@ func testTagServiceGetAllTagsSingleResult(t *testing.T, service TagService) {
 }
 
 func testTagServiceGetBySlugTagExists(t *testing.T, service TagService) {
-	mockRepoGetByAttribute := mockData.On("GetByAttribute", "slug", "tag-slug").Return(&Tag{
-		Id:   69,
-		Name: "tag name",
-		Slug: "tag-slug",
-	}, nil)
+	mockRepoGetByAttribute := mockData.On("GetByAttribute", "slug", "tag-slug").
+		Return(&Tag{
+			Id:   69,
+			Name: "tag name",
+			Slug: "tag-slug",
+		}, nil)
 
 	got, err := service.GetByAttribute("slug", "tag-slug")
 
@@ -462,7 +475,8 @@ func testTagServiceGetBySlugTagExists(t *testing.T, service TagService) {
 }
 
 func testTagServiceGetBySlugTagDoesNotExist(t *testing.T, service TagService) {
-	mockRepoGetByAttribute := mockData.On("GetByAttribute", "slug", "tag-slug").Return(nil, errors.New("data_error"))
+	mockRepoGetByAttribute := mockData.On("GetByAttribute", "slug", "tag-slug").
+		Return(nil, errors.New("data_error"))
 
 	got, err := service.GetByAttribute("slug", "tag-slug")
 
@@ -471,12 +485,18 @@ func testTagServiceGetBySlugTagDoesNotExist(t *testing.T, service TagService) {
 		t.Error("unmet expectations")
 	}
 
-	require.EqualError(t, err, "data_error", "should return error from data layer")
+	require.EqualError(
+		t,
+		err,
+		"data_error",
+		"should return error from data layer",
+	)
 	require.Nil(t, got, "should not return tag")
 }
 
 func testTagServiceGetAllTagsRepoError(t *testing.T, service TagService) {
-	mockRepoGetAll := mockData.On("GetAll").Return(&[]Tag{}, errors.New("getall_repo_error"))
+	mockRepoGetAll := mockData.On("GetAll").
+		Return(&[]Tag{}, errors.New("getall_repo_error"))
 
 	got, err := service.GetAll()
 
@@ -485,7 +505,12 @@ func testTagServiceGetAllTagsRepoError(t *testing.T, service TagService) {
 		t.Error("unmet expectations")
 	}
 
-	require.EqualError(t, err, "getall_repo_error", "should return error from repo method call")
+	require.EqualError(
+		t,
+		err,
+		"getall_repo_error",
+		"should return error from repo method call",
+	)
 	require.Nil(t, got, "should not return any tags")
 }
 
