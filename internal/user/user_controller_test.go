@@ -18,6 +18,8 @@ import (
 var mockTemplateCache = map[string]pkg.Template{
 	"pages/admin/login.tmpl":    mockTemplate,
 	"pages/admin/new-user.tmpl": mockTemplate,
+	"pages/admin/users.tmpl":    mockTemplate,
+	"pages/admin/user.tmpl":     mockTemplate,
 }
 
 var mockLogger = new(MockLogger)
@@ -26,14 +28,27 @@ var mockService = new(MockUserService)
 
 func TestUserController(t *testing.T) {
 	scenarios := map[string]func(t *testing.T, ctrl UserController){
+		"is authenticated helper":                            testIsAuthenticatedHelper,
 		"get user login screen (already logged in)":          testGetUserLoginScreenHandlerIsLoggedIn,
 		"get user login screen (not logged in)":              testGetUserLoginScreenHandlerNotLoggedIn,
 		"get user login screen (error - template rendering)": testGetUserLoginScreenHandlerTemplateError,
 		"post user login (success)":                          testPostUserLogin,
 		"post user login (error - login failed)":             testPostUserLoginUsernamePasswordFailed,
 		"post user login (error - renew token failed)":       testPostUserLoginRenewTokenFailed,
-		"post user logout":                                   testPostUserLogout,
+		"post user logout (success)":                         testPostUserLogout,
 		"get create user page (success)":                     testGetCreateUserPage,
+		"get create user page (error - template)":            testGetCreateUserPageTemplateError,
+		"post create user (success)":                         testPostCreateUser,
+		"post create user (error - service error)":           testPostCreateUserServiceError,
+		"get all users (success)":                            testGetAllUsers,
+		"get all users (error - service error)":              testGetAllUsersServiceError,
+		"get all users (error - template error)":             testGetAllUsersTemplateError,
+		"get user by username (success)":                     testGetUserByUsername,
+		"get user by username (error - service error)":       testGetUserByUsernameServiceError,
+		"get user by username (error - template error)":      testGetUserByUsernameTemplateError,
+		"post delete user (success)":                         testPostDeleteUser,
+		"post delete user (error - form error)":              testPostDeleteUserFormError,
+		"post delete user (error - service error)":           testPostDeleteUserServiceError,
 	}
 
 	for scenario, fn := range scenarios {
@@ -588,5 +603,667 @@ func testGetCreateUserPage(t *testing.T, ctrl UserController) {
 	mockTemplateExecuteTemplate.Unset()
 	if res := mockTemplate.AssertExpectations(t); !res {
 		t.Error("should execute template with view struct")
+	}
+}
+
+func testIsAuthenticatedHelper(t *testing.T, ctrl UserController) {
+	var res bool
+
+	req, err := http.NewRequest("GET", "/admin", nil)
+	if err != nil {
+		t.Error("failed to construct request")
+	}
+
+	ctx := context.WithValue(req.Context(), pkg.IS_LOGGED_IN_CONTEXT_KEY, true)
+	res = ctrl.IsAuthenticated(req.WithContext(ctx))
+	require.True(t, res, "should be authenticated")
+
+	ctx = context.WithValue(req.Context(), pkg.IS_LOGGED_IN_CONTEXT_KEY, false)
+	res = ctrl.IsAuthenticated(req.WithContext(ctx))
+	require.False(t, res, "should not be authenticated")
+
+	ctx = context.WithValue(
+		req.Context(),
+		pkg.IS_LOGGED_IN_CONTEXT_KEY,
+		"nonsense",
+	)
+	res = ctrl.IsAuthenticated(req.WithContext(ctx))
+	require.False(t, res, "should not be authenticated")
+}
+
+func testGetCreateUserPageTemplateError(t *testing.T, ctrl UserController) {
+	req, err := http.NewRequest("GET", "/admin/users/new", nil)
+	if err != nil {
+		t.Error("unable to construct request")
+	}
+
+	rr := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(ctrl.CreateUserGet)
+
+	mockTemplateExecuteTemplate := mockTemplate.On(
+		"ExecuteTemplate",
+		mock.Anything,
+		"admin",
+		UserCreateView{
+			CsrfToken:       "mock-token",
+			IsAuthenticated: true,
+		},
+	).Return(errors.New("template_error"))
+
+	mockLoggerError := mockLogger.On("Error", "template_error", mock.Anything)
+
+	ctx := context.WithValue(req.Context(), pkg.IS_LOGGED_IN_CONTEXT_KEY, true)
+
+	handler.ServeHTTP(rr, req.WithContext(ctx))
+
+	require.Equal(
+		t,
+		http.StatusInternalServerError,
+		rr.Result().StatusCode,
+		"should return status code internal server error",
+	)
+
+	mockTemplateExecuteTemplate.Unset()
+	if res := mockTemplate.AssertExpectations(t); !res {
+		t.Error("should execute template with view struct")
+	}
+
+	mockLoggerError.Unset()
+	if res := mockLogger.AssertExpectations(t); !res {
+		t.Error("should log error")
+	}
+}
+
+func testPostCreateUser(t *testing.T, ctrl UserController) {
+	form := url.Values{}
+	form.Add("username", "janedoe")
+	form.Add("password", "p4ssw0rd")
+	form.Add("email", "jane@example.org")
+
+	req, err := http.NewRequest(
+		"POST",
+		"/admin/users",
+		strings.NewReader(form.Encode()),
+	)
+	if err != nil {
+		t.Error("failed to construct request")
+	}
+
+	req.Header.Add("content-type", "application/x-www-form-urlencoded")
+
+	rr := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(ctrl.CreateUserPost)
+
+	mockServiceCreate := mockService.On("Create", &UserNewRequestDto{
+		Username: "janedoe",
+		Password: "p4ssw0rd",
+		Email:    "jane@example.org",
+	}).Return(&UserResponseDto{
+		Id:       23,
+		Username: "janedoe",
+		Email:    "jane@example.org",
+	}, nil)
+
+	mockSessionManagerPut := mockSessionManager.On(
+		"Put",
+		req.Context(),
+		pkg.SESSION_KEY_MESSAGE,
+		"Created user 'janedoe'.",
+	)
+
+	handler.ServeHTTP(rr, req)
+
+	require.Equal(
+		t,
+		http.StatusSeeOther,
+		rr.Result().StatusCode,
+		"should return status code see other",
+	)
+	require.Equal(
+		t,
+		"/admin/users",
+		rr.Result().Header.Get("Location"),
+		"should redirect to users admin page",
+	)
+
+	mockServiceCreate.Unset()
+	if res := mockService.AssertExpectations(t); !res {
+		t.Error("should call user create service")
+	}
+
+	mockSessionManagerPut.Unset()
+	if res := mockSessionManager.AssertExpectations(t); !res {
+		t.Error("should put user created message in session context")
+	}
+}
+
+func testPostCreateUserServiceError(t *testing.T, ctrl UserController) {
+	form := url.Values{}
+	form.Add("username", "janedoe")
+	form.Add("password", "p4ssw0rd")
+	form.Add("email", "jane@example.org")
+
+	req, err := http.NewRequest(
+		"POST",
+		"/admin/users",
+		strings.NewReader(form.Encode()),
+	)
+	if err != nil {
+		t.Error("failed to construct request")
+	}
+
+	req.Header.Add("content-type", "application/x-www-form-urlencoded")
+
+	rr := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(ctrl.CreateUserPost)
+
+	mockServiceCreate := mockService.On("Create", &UserNewRequestDto{
+		Username: "janedoe",
+		Password: "p4ssw0rd",
+		Email:    "jane@example.org",
+	}).Return(&UserResponseDto{}, errors.New("service_error"))
+
+	mockLoggerError := mockLogger.On("Error", "service_error", mock.Anything)
+
+	handler.ServeHTTP(rr, req)
+
+	require.Equal(
+		t,
+		http.StatusInternalServerError,
+		rr.Result().StatusCode,
+		"should return status code internal server error",
+	)
+
+	mockServiceCreate.Unset()
+	if res := mockService.AssertExpectations(t); !res {
+		t.Error("should call user create service")
+	}
+
+	mockLoggerError.Unset()
+	if res := mockLogger.AssertExpectations(t); !res {
+		t.Error("should log error")
+	}
+}
+
+func testGetAllUsers(t *testing.T, ctrl UserController) {
+	req, err := http.NewRequest("GET", "/admin/users", nil)
+	if err != nil {
+		t.Error("unable to construct request")
+	}
+
+	rr := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(ctrl.UsersGet)
+
+	mockServiceGetAll := mockService.On("GetAll").Return(&[]UserResponseDto{
+		{
+			Id:       23,
+			Username: "janedoe",
+		},
+		{
+			Id:       42,
+			Username: "johndoe",
+		},
+	}, nil)
+
+	mockSessionManagerPopString := mockSessionManager.
+		On("PopString", req.Context(), pkg.SESSION_KEY_MESSAGE).
+		Return("msg")
+
+	users := mockServiceGetAll.ReturnArguments[0].(*[]UserResponseDto)
+
+	mockTemplateExecuteTemplate := mockTemplate.On(
+		"ExecuteTemplate",
+		mock.Anything,
+		"admin",
+		UsersView{
+			Users:           users,
+			Message:         "msg",
+			CsrfToken:       "mock-token",
+			IsAuthenticated: false,
+		},
+	).Return(nil)
+
+	handler.ServeHTTP(rr, req)
+
+	require.Equal(
+		t,
+		http.StatusOK,
+		rr.Result().StatusCode,
+		"should return status code ok",
+	)
+
+	mockSessionManagerPopString.Unset()
+	if res := mockSessionManager.AssertExpectations(t); !res {
+		t.Error("should get message from session context")
+	}
+
+	mockTemplateExecuteTemplate.Unset()
+	if res := mockTemplate.AssertExpectations(t); !res {
+		t.Error("should execute template")
+	}
+
+	mockServiceGetAll.Unset()
+	if res := mockService.AssertExpectations(t); !res {
+		t.Error("should call service to get users")
+	}
+}
+
+func testGetAllUsersServiceError(t *testing.T, ctrl UserController) {
+	req, err := http.NewRequest("GET", "/admin/users", nil)
+	if err != nil {
+		t.Error("unable to construct request")
+	}
+
+	rr := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(ctrl.UsersGet)
+
+	mockServiceGetAll := mockService.On("GetAll").
+		Return(&[]UserResponseDto{}, errors.New("service_error"))
+
+	mockLoggerError := mockLogger.On("Error", "service_error", mock.Anything)
+
+	handler.ServeHTTP(rr, req)
+
+	require.Equal(
+		t,
+		http.StatusInternalServerError,
+		rr.Result().StatusCode,
+		"should return status code internal server error",
+	)
+
+	mockServiceGetAll.Unset()
+	if res := mockService.AssertExpectations(t); !res {
+		t.Error("should call service to get users")
+	}
+
+	mockLoggerError.Unset()
+	if res := mockLogger.AssertExpectations(t); !res {
+		t.Error("should log error")
+	}
+}
+
+func testGetAllUsersTemplateError(t *testing.T, ctrl UserController) {
+	req, err := http.NewRequest("GET", "/admin/users", nil)
+	if err != nil {
+		t.Error("unable to construct request")
+	}
+
+	rr := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(ctrl.UsersGet)
+
+	mockServiceGetAll := mockService.On("GetAll").Return(&[]UserResponseDto{
+		{
+			Id:       23,
+			Username: "janedoe",
+		},
+		{
+			Id:       42,
+			Username: "johndoe",
+		},
+	}, nil)
+
+	mockSessionManagerPopString := mockSessionManager.
+		On("PopString", req.Context(), pkg.SESSION_KEY_MESSAGE).
+		Return("msg")
+
+	users := mockServiceGetAll.ReturnArguments[0].(*[]UserResponseDto)
+
+	mockTemplateExecuteTemplate := mockTemplate.On(
+		"ExecuteTemplate",
+		mock.Anything,
+		"admin",
+		UsersView{
+			Users:           users,
+			Message:         "msg",
+			CsrfToken:       "mock-token",
+			IsAuthenticated: false,
+		},
+	).Return(errors.New("template_error"))
+
+	mockLoggerError := mockLogger.On("Error", "template_error", mock.Anything)
+
+	handler.ServeHTTP(rr, req)
+
+	require.Equal(
+		t,
+		http.StatusInternalServerError,
+		rr.Result().StatusCode,
+		"should return status code internal server error",
+	)
+
+	mockSessionManagerPopString.Unset()
+	if res := mockSessionManager.AssertExpectations(t); !res {
+		t.Error("should get message from session context")
+	}
+
+	mockTemplateExecuteTemplate.Unset()
+	if res := mockTemplate.AssertExpectations(t); !res {
+		t.Error("should execute template")
+	}
+
+	mockServiceGetAll.Unset()
+	if res := mockService.AssertExpectations(t); !res {
+		t.Error("should call service to get users")
+	}
+
+	mockLoggerError.Unset()
+	if res := mockLogger.AssertExpectations(t); !res {
+		t.Error("should log error")
+	}
+}
+
+func testGetUserByUsername(t *testing.T, ctrl UserController) {
+	req, err := http.NewRequest("GET", "/admin/users/{slug}", nil)
+	if err != nil {
+		t.Error("unable to construct request")
+	}
+
+	req.SetPathValue("slug", "janedoe")
+
+	rr := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(ctrl.UserGet)
+
+	mockServiceGetByAttribute := mockService.On("GetByAttribute", "username", "janedoe").
+		Return(&UserResponseDto{
+			Id:       23,
+			Username: "janedoe",
+		}, nil)
+
+	mockSessionManagerPopString := mockSessionManager.
+		On("PopString", req.Context(), pkg.SESSION_KEY_MESSAGE).
+		Return("msg")
+
+	user := mockServiceGetByAttribute.ReturnArguments[0].(*UserResponseDto)
+
+	mockTemplateExecuteTemplate := mockTemplate.On(
+		"ExecuteTemplate",
+		mock.Anything,
+		"admin",
+		UserView{
+			User:            user,
+			Message:         "",
+			CsrfToken:       "mock-token",
+			IsAuthenticated: false,
+		},
+	).Return(nil)
+
+	handler.ServeHTTP(rr, req)
+
+	require.Equal(
+		t,
+		http.StatusOK,
+		rr.Result().StatusCode,
+		"should return status code ok",
+	)
+
+	mockSessionManagerPopString.Unset()
+	if res := mockSessionManager.AssertExpectations(t); !res {
+		t.Error("should get message from session context")
+	}
+
+	mockTemplateExecuteTemplate.Unset()
+	if res := mockTemplate.AssertExpectations(t); !res {
+		t.Error("should execute template")
+	}
+
+	mockServiceGetByAttribute.Unset()
+	if res := mockService.AssertExpectations(t); !res {
+		t.Error("should call service to get users")
+	}
+}
+
+func testGetUserByUsernameServiceError(t *testing.T, ctrl UserController) {
+	req, err := http.NewRequest("GET", "/admin/users/{slug}", nil)
+	if err != nil {
+		t.Error("unable to construct request")
+	}
+
+	req.SetPathValue("slug", "janedoe")
+
+	rr := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(ctrl.UserGet)
+
+	mockServiceGetByAttribute := mockService.On("GetByAttribute", "username", "janedoe").
+		Return(&UserResponseDto{}, errors.New("service_error"))
+
+	mockLoggerError := mockLogger.On("Error", "service_error", mock.Anything)
+
+	handler.ServeHTTP(rr, req)
+
+	require.Equal(
+		t,
+		http.StatusInternalServerError,
+		rr.Result().StatusCode,
+		"should return status code internal server error",
+	)
+
+	mockServiceGetByAttribute.Unset()
+	if res := mockService.AssertExpectations(t); !res {
+		t.Error("should call service to get users")
+	}
+
+	mockLoggerError.Unset()
+	if res := mockLogger.AssertExpectations(t); !res {
+		t.Error("should log error")
+	}
+}
+
+func testGetUserByUsernameTemplateError(t *testing.T, ctrl UserController) {
+	req, err := http.NewRequest("GET", "/admin/users/{slug}", nil)
+	if err != nil {
+		t.Error("unable to construct request")
+	}
+
+	req.SetPathValue("slug", "janedoe")
+
+	rr := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(ctrl.UserGet)
+
+	mockServiceGetByAttribute := mockService.On("GetByAttribute", "username", "janedoe").
+		Return(&UserResponseDto{
+			Id:       23,
+			Username: "janedoe",
+		}, nil)
+
+	mockSessionManagerPopString := mockSessionManager.
+		On("PopString", req.Context(), pkg.SESSION_KEY_MESSAGE).
+		Return("msg")
+
+	user := mockServiceGetByAttribute.ReturnArguments[0].(*UserResponseDto)
+
+	mockTemplateExecuteTemplate := mockTemplate.On(
+		"ExecuteTemplate",
+		mock.Anything,
+		"admin",
+		UserView{
+			User:            user,
+			Message:         "",
+			CsrfToken:       "mock-token",
+			IsAuthenticated: false,
+		},
+	).Return(errors.New("template_error"))
+
+	mockLoggerError := mockLogger.On("Error", "template_error", mock.Anything)
+
+	handler.ServeHTTP(rr, req)
+
+	require.Equal(
+		t,
+		http.StatusInternalServerError,
+		rr.Result().StatusCode,
+		"should return status code internal server error",
+	)
+
+	mockSessionManagerPopString.Unset()
+	if res := mockSessionManager.AssertExpectations(t); !res {
+		t.Error("should get message from session context")
+	}
+
+	mockTemplateExecuteTemplate.Unset()
+	if res := mockTemplate.AssertExpectations(t); !res {
+		t.Error("should execute template")
+	}
+
+	mockServiceGetByAttribute.Unset()
+	if res := mockService.AssertExpectations(t); !res {
+		t.Error("should call service to get users")
+	}
+
+	mockLoggerError.Unset()
+	if res := mockLogger.AssertExpectations(t); !res {
+		t.Error("should log error")
+	}
+}
+
+func testPostDeleteUser(t *testing.T, ctrl UserController) {
+	form := url.Values{}
+	form.Add("id", "23")
+	form.Add("username", "janedoe")
+
+	req, err := http.NewRequest(
+		"POST",
+		"/admin/users/{username}/delete",
+		strings.NewReader(form.Encode()),
+	)
+	if err != nil {
+		t.Error("unable to construct request")
+	}
+
+	req.SetPathValue("username", "janedoe")
+
+	req.Header.Add("content-type", "application/x-www-form-urlencoded")
+
+	rr := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(ctrl.DeleteUserPost)
+
+	mockServiceDeleteById := mockService.On("DeleteById", uint(23)).Return(nil)
+
+	mockSessionManagerPut := mockSessionManager.On(
+		"Put",
+		req.Context(),
+		pkg.SESSION_KEY_MESSAGE,
+		"Deleted user 'janedoe'.",
+	)
+
+	handler.ServeHTTP(rr, req)
+
+	require.Equal(
+		t,
+		http.StatusSeeOther,
+		rr.Result().StatusCode,
+		"should return status code see other",
+	)
+
+	require.Equal(
+		t,
+		"/admin/users",
+		rr.Result().Header.Get("Location"),
+		"should redirect to users admin page",
+	)
+
+	mockServiceDeleteById.Unset()
+	if res := mockService.AssertExpectations(t); !res {
+		t.Error("should call service to delete user")
+	}
+
+	mockSessionManagerPut.Unset()
+	if res := mockSessionManager.AssertExpectations(t); !res {
+		t.Error("should put deleted message in session context")
+	}
+}
+
+func testPostDeleteUserFormError(t *testing.T, ctrl UserController) {
+	form := url.Values{}
+	form.Add("id", "nonsense")
+	form.Add("username", "janedoe")
+
+	req, err := http.NewRequest(
+		"POST",
+		"/admin/users/{username}/delete",
+		strings.NewReader(form.Encode()),
+	)
+	if err != nil {
+		t.Error("unable to construct request")
+	}
+
+	req.SetPathValue("username", "janedoe")
+
+	req.Header.Add("content-type", "application/x-www-form-urlencoded")
+
+	rr := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(ctrl.DeleteUserPost)
+
+	mockLoggerError := mockLogger.On("Error", mock.Anything, mock.Anything)
+
+	handler.ServeHTTP(rr, req)
+
+	require.Equal(
+		t,
+		http.StatusInternalServerError,
+		rr.Result().StatusCode,
+		"should return status code internal server error",
+	)
+
+	mockLoggerError.Unset()
+	if res := mockLogger.AssertExpectations(t); !res {
+		t.Error("should log error")
+	}
+}
+
+func testPostDeleteUserServiceError(t *testing.T, ctrl UserController) {
+	form := url.Values{}
+	form.Add("id", "23")
+	form.Add("username", "janedoe")
+
+	req, err := http.NewRequest(
+		"POST",
+		"/admin/users/{username}/delete",
+		strings.NewReader(form.Encode()),
+	)
+	if err != nil {
+		t.Error("unable to construct request")
+	}
+
+	req.SetPathValue("username", "janedoe")
+
+	req.Header.Add("content-type", "application/x-www-form-urlencoded")
+
+	rr := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(ctrl.DeleteUserPost)
+
+	mockServiceDeleteById := mockService.On("DeleteById", uint(23)).
+		Return(errors.New("service_error"))
+
+	mockLoggerError := mockLogger.On("Error", "service_error", mock.Anything)
+
+	handler.ServeHTTP(rr, req)
+
+	require.Equal(
+		t,
+		http.StatusInternalServerError,
+		rr.Result().StatusCode,
+		"should return status code internal server error",
+	)
+
+	mockServiceDeleteById.Unset()
+	if res := mockService.AssertExpectations(t); !res {
+		t.Error("should call service to delete user")
+	}
+
+	mockLoggerError.Unset()
+	if res := mockLogger.AssertExpectations(t); !res {
+		t.Error("should log error")
 	}
 }
