@@ -11,7 +11,7 @@ import (
 type UserController struct {
 	service        UserService
 	log            pkg.Logger
-	templateCache  map[string]pkg.Template
+	templateCache  pkg.TemplateCache
 	sessionManager pkg.SessionManager
 	csrfToken      func(r *http.Request) string
 }

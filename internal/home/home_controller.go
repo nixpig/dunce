@@ -12,7 +12,7 @@ type HomeController struct {
 	tagService     tag.TagService
 	articleService article.ArticleService
 	log            pkg.Logger
-	templateCache  map[string]pkg.Template
+	templateCache  pkg.TemplateCache
 	sessionManager pkg.SessionManager
 }
 
@@ -26,7 +26,11 @@ type TagView struct {
 	Articles *[]article.ArticleResponseDto
 }
 
-func NewHomeController(tagService tag.TagService, articleService article.ArticleService, config pkg.ControllerConfig) HomeController {
+func NewHomeController(
+	tagService tag.TagService,
+	articleService article.ArticleService,
+	config pkg.ControllerConfig,
+) HomeController {
 	return HomeController{
 		tagService:     tagService,
 		articleService: articleService,
@@ -58,7 +62,10 @@ func (h *HomeController) HomeGet(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *HomeController) HomeArticlesGet(w http.ResponseWriter, r *http.Request) {
+func (h *HomeController) HomeArticlesGet(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
 	if err := h.templateCache["pages/public/articles.tmpl"].ExecuteTemplate(w, "public", HomeView{}); err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return

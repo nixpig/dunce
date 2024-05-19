@@ -11,7 +11,7 @@ import (
 type TagController struct {
 	tagService TagService
 	log        pkg.Logger
-	templates  map[string]pkg.Template
+	templates  pkg.TemplateCache
 	session    pkg.SessionManager
 	csrfToken  func(r *http.Request) string
 }
@@ -39,7 +39,7 @@ func NewTagController(
 	tagService TagService,
 	config struct {
 		Log            pkg.Logger
-		TemplateCache  map[string]pkg.Template
+		TemplateCache  pkg.TemplateCache
 		SessionManager pkg.SessionManager
 		CsrfToken      func(*http.Request) string
 	},

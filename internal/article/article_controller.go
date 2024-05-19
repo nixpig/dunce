@@ -16,7 +16,7 @@ type ArticleController struct {
 	articleService ArticleService
 	tagService     tag.TagService
 	log            pkg.Logger
-	templates      map[string]pkg.Template
+	templates      pkg.TemplateCache
 	session        pkg.SessionManager
 	csrfToken      func(r *http.Request) string
 }

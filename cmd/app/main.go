@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/alexedwards/scs/v2"
 	"github.com/justinas/nosurf"
 	"github.com/nixpig/dunce/db"
 	app "github.com/nixpig/dunce/internal/app"
@@ -17,11 +18,17 @@ func main() {
 	appConfig := app.AppConfig{}
 
 	if err := config.Init(); err != nil {
-		log.Printf("unable to load config from env due to '%v' which may not be fatal; continuing...", err)
+		log.Printf(
+			"unable to load config from env due to '%v' which may not be fatal; continuing...",
+			err,
+		)
 	}
 
 	if err := db.MigrateUp(); err != nil {
-		log.Printf("did not run database migration due to '%v' which may not be fatal; continuing...", err)
+		log.Printf(
+			"did not run database migration due to '%v' which may not be fatal; continuing...",
+			err,
+		)
 	}
 
 	appConfig.Db, err = db.Connect()
@@ -42,7 +49,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	appConfig.SessionManager = pkg.NewSessionManagerImpl()
+	appConfig.SessionManager = pkg.NewSessionManagerImpl(scs.New())
 
 	appConfig.Logger = pkg.NewLogger()
 

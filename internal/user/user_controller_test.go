@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var mockTemplateCache = map[string]pkg.Template{
+var mockTemplateCache = pkg.TemplateCache{
 	"pages/admin/login.tmpl":    mockTemplate,
 	"pages/admin/new-user.tmpl": mockTemplate,
 	"pages/admin/users.tmpl":    mockTemplate,

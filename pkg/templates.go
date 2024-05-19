@@ -14,8 +14,10 @@ type Template interface {
 	ExecuteTemplate(wr io.Writer, name string, data any) error
 }
 
-func newTemplateCache(templateDir, pageGlob string) (map[string]Template, error) {
-	cache := map[string]Template{}
+type TemplateCache map[string]Template
+
+func newTemplateCache(templateDir, pageGlob string) (TemplateCache, error) {
+	cache := TemplateCache{}
 
 	glob := path.Join(templateDir, pageGlob)
 	pages, err := doublestar.FilepathGlob(glob)
@@ -38,7 +40,11 @@ func newTemplateCache(templateDir, pageGlob string) (map[string]Template, error)
 			return nil, err
 		}
 
-		name := strings.ReplaceAll(page, strings.Join([]string{templateDir, "/"}, ""), "")
+		name := strings.ReplaceAll(
+			page,
+			strings.Join([]string{templateDir, "/"}, ""),
+			"",
+		)
 
 		cache[name] = ts
 	}
@@ -46,7 +52,7 @@ func newTemplateCache(templateDir, pageGlob string) (map[string]Template, error)
 	return cache, nil
 }
 
-func NewTemplateCache() (map[string]Template, error) {
+func NewTemplateCache() (TemplateCache, error) {
 	pwd, err := os.Getwd()
 	if err != nil {
 		return nil, err

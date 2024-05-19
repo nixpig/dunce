@@ -26,10 +26,8 @@ type SessionManagerImpl struct {
 	scs *scs.SessionManager
 }
 
-func NewSessionManagerImpl() SessionManagerImpl {
-	return SessionManagerImpl{
-		scs: scs.New(),
-	}
+func NewSessionManagerImpl(scs *scs.SessionManager) SessionManagerImpl {
+	return SessionManagerImpl{scs}
 }
 
 func (s SessionManagerImpl) Exists(ctx context.Context, key string) bool {

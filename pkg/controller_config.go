@@ -6,14 +6,14 @@ import (
 
 type ControllerConfig struct {
 	Log            Logger
-	TemplateCache  map[string]Template
+	TemplateCache  TemplateCache
 	SessionManager SessionManager
 	CsrfToken      func(*http.Request) string
 }
 
 func NewControllerConfig(
 	log Logger,
-	templateCache map[string]Template,
+	templateCache TemplateCache,
 	sessionManager SessionManager,
 	csrfToken func(*http.Request) string,
 ) ControllerConfig {
