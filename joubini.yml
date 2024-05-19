@@ -1,7 +1,0 @@
-host: localhost
-port: 443
-tls: true
-pem: /tmp/localhost.crt
-key: /tmp/localhost.key
-proxies:
-  - ":3000"
