@@ -2,7 +2,7 @@ package user
 
 import (
 	"github.com/go-playground/validator/v10"
-	"github.com/nixpig/dunce/pkg"
+	"github.com/nixpig/dunce/pkg/crypto"
 )
 
 type UserService interface {
@@ -18,13 +18,13 @@ type UserService interface {
 type UserServiceImpl struct {
 	repo     UserRepository
 	validate *validator.Validate
-	crypto   pkg.Crypto
+	crypto   crypto.Crypto
 }
 
 func NewUserService(
 	repo UserRepository,
 	validate *validator.Validate,
-	crypto pkg.Crypto,
+	crypto crypto.Crypto,
 ) UserServiceImpl {
 	return UserServiceImpl{
 		repo:     repo,

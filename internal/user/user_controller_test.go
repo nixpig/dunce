@@ -10,12 +10,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/nixpig/dunce/pkg"
+	"github.com/nixpig/dunce/pkg/session"
+	"github.com/nixpig/dunce/pkg/templates"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
-var mockTemplateCache = pkg.TemplateCache{
+var mockTemplateCache = templates.TemplateCache{
 	"pages/admin/login.tmpl":    mockTemplate,
 	"pages/admin/new-user.tmpl": mockTemplate,
 	"pages/admin/users.tmpl":    mockTemplate,
@@ -53,14 +54,14 @@ func TestUserController(t *testing.T) {
 
 	for scenario, fn := range scenarios {
 		t.Run(scenario, func(t *testing.T) {
-			config := pkg.NewControllerConfig(
-				mockLogger,
-				mockTemplateCache,
-				mockSessionManager,
-				func(r *http.Request) string {
+			config := UserControllerConfig{
+				Log:            mockLogger,
+				TemplateCache:  mockTemplateCache,
+				SessionManager: mockSessionManager,
+				CsrfToken: func(r *http.Request) string {
 					return "mock-token"
 				},
-			)
+			}
 
 			ctrl := NewUserController(mockService, config)
 			fn(t, ctrl)
@@ -211,7 +212,7 @@ func testGetUserLoginScreenHandlerIsLoggedIn(
 
 	handler := http.HandlerFunc(ctrl.UserLoginGet)
 
-	ctx := context.WithValue(req.Context(), pkg.IS_LOGGED_IN_CONTEXT_KEY, true)
+	ctx := context.WithValue(req.Context(), session.IS_LOGGED_IN_CONTEXT_KEY, true)
 
 	handler.ServeHTTP(
 		rr,
@@ -246,10 +247,10 @@ func testGetUserLoginScreenHandlerNotLoggedIn(
 
 	handler := http.HandlerFunc(ctrl.UserLoginGet)
 
-	ctx := context.WithValue(req.Context(), pkg.IS_LOGGED_IN_CONTEXT_KEY, false)
+	ctx := context.WithValue(req.Context(), session.IS_LOGGED_IN_CONTEXT_KEY, false)
 
 	mockSessionManagerPopString := mockSessionManager.
-		On("PopString", ctx, pkg.SESSION_KEY_MESSAGE).
+		On("PopString", ctx, session.SESSION_KEY_MESSAGE).
 		Return("msg")
 
 	mockTemplateExecuteTemplate := mockTemplate.On(
@@ -299,10 +300,10 @@ func testGetUserLoginScreenHandlerTemplateError(
 
 	handler := http.HandlerFunc(ctrl.UserLoginGet)
 
-	ctx := context.WithValue(req.Context(), pkg.IS_LOGGED_IN_CONTEXT_KEY, false)
+	ctx := context.WithValue(req.Context(), session.IS_LOGGED_IN_CONTEXT_KEY, false)
 
 	mockSessionManagerPopString := mockSessionManager.
-		On("PopString", ctx, pkg.SESSION_KEY_MESSAGE).
+		On("PopString", ctx, session.SESSION_KEY_MESSAGE).
 		Return("msg")
 
 	mockTemplateExecuteTemplate := mockTemplate.On(
@@ -375,7 +376,7 @@ func testPostUserLogin(t *testing.T, ctrl UserController) {
 	mockSessionManagerPut := mockSessionManager.On(
 		"Put",
 		req.Context(),
-		pkg.LOGGED_IN_USERNAME,
+		session.LOGGED_IN_USERNAME,
 		"janedoe",
 	)
 
@@ -531,13 +532,13 @@ func testPostUserLogout(t *testing.T, ctrl UserController) {
 	mockSessionManagerRemove := mockSessionManager.On(
 		"Remove",
 		req.Context(),
-		pkg.LOGGED_IN_USERNAME,
+		session.LOGGED_IN_USERNAME,
 	)
 
 	mockSessionManagerPut := mockSessionManager.On(
 		"Put",
 		req.Context(),
-		pkg.SESSION_KEY_MESSAGE,
+		session.SESSION_KEY_MESSAGE,
 		"You've been logged out.",
 	)
 
@@ -560,11 +561,11 @@ func testPostUserLogout(t *testing.T, ctrl UserController) {
 	mockSessionManagerRemove.Unset()
 	mockSessionManagerPut.Unset()
 
-	if res := mockSessionManager.AssertCalled(t, "Remove", req.Context(), pkg.LOGGED_IN_USERNAME); !res {
+	if res := mockSessionManager.AssertCalled(t, "Remove", req.Context(), session.LOGGED_IN_USERNAME); !res {
 		t.Error("should remove logged in user from session context")
 	}
 
-	if res := mockSessionManager.AssertCalled(t, "Put", req.Context(), pkg.SESSION_KEY_MESSAGE, "You've been logged out."); !res {
+	if res := mockSessionManager.AssertCalled(t, "Put", req.Context(), session.SESSION_KEY_MESSAGE, "You've been logged out."); !res {
 		t.Error("should put message in session context")
 	}
 }
@@ -589,7 +590,7 @@ func testGetCreateUserPage(t *testing.T, ctrl UserController) {
 		},
 	).Return(nil)
 
-	ctx := context.WithValue(req.Context(), pkg.IS_LOGGED_IN_CONTEXT_KEY, true)
+	ctx := context.WithValue(req.Context(), session.IS_LOGGED_IN_CONTEXT_KEY, true)
 
 	handler.ServeHTTP(rr, req.WithContext(ctx))
 
@@ -614,17 +615,17 @@ func testIsAuthenticatedHelper(t *testing.T, ctrl UserController) {
 		t.Error("failed to construct request")
 	}
 
-	ctx := context.WithValue(req.Context(), pkg.IS_LOGGED_IN_CONTEXT_KEY, true)
+	ctx := context.WithValue(req.Context(), session.IS_LOGGED_IN_CONTEXT_KEY, true)
 	res = ctrl.IsAuthenticated(req.WithContext(ctx))
 	require.True(t, res, "should be authenticated")
 
-	ctx = context.WithValue(req.Context(), pkg.IS_LOGGED_IN_CONTEXT_KEY, false)
+	ctx = context.WithValue(req.Context(), session.IS_LOGGED_IN_CONTEXT_KEY, false)
 	res = ctrl.IsAuthenticated(req.WithContext(ctx))
 	require.False(t, res, "should not be authenticated")
 
 	ctx = context.WithValue(
 		req.Context(),
-		pkg.IS_LOGGED_IN_CONTEXT_KEY,
+		session.IS_LOGGED_IN_CONTEXT_KEY,
 		"nonsense",
 	)
 	res = ctrl.IsAuthenticated(req.WithContext(ctx))
@@ -653,7 +654,7 @@ func testGetCreateUserPageTemplateError(t *testing.T, ctrl UserController) {
 
 	mockLoggerError := mockLogger.On("Error", "template_error", mock.Anything)
 
-	ctx := context.WithValue(req.Context(), pkg.IS_LOGGED_IN_CONTEXT_KEY, true)
+	ctx := context.WithValue(req.Context(), session.IS_LOGGED_IN_CONTEXT_KEY, true)
 
 	handler.ServeHTTP(rr, req.WithContext(ctx))
 
@@ -709,7 +710,7 @@ func testPostCreateUser(t *testing.T, ctrl UserController) {
 	mockSessionManagerPut := mockSessionManager.On(
 		"Put",
 		req.Context(),
-		pkg.SESSION_KEY_MESSAGE,
+		session.SESSION_KEY_MESSAGE,
 		"Created user 'janedoe'.",
 	)
 
@@ -810,7 +811,7 @@ func testGetAllUsers(t *testing.T, ctrl UserController) {
 	}, nil)
 
 	mockSessionManagerPopString := mockSessionManager.
-		On("PopString", req.Context(), pkg.SESSION_KEY_MESSAGE).
+		On("PopString", req.Context(), session.SESSION_KEY_MESSAGE).
 		Return("msg")
 
 	users := mockServiceGetAll.ReturnArguments[0].(*[]UserResponseDto)
@@ -909,7 +910,7 @@ func testGetAllUsersTemplateError(t *testing.T, ctrl UserController) {
 	}, nil)
 
 	mockSessionManagerPopString := mockSessionManager.
-		On("PopString", req.Context(), pkg.SESSION_KEY_MESSAGE).
+		On("PopString", req.Context(), session.SESSION_KEY_MESSAGE).
 		Return("msg")
 
 	users := mockServiceGetAll.ReturnArguments[0].(*[]UserResponseDto)
@@ -977,7 +978,7 @@ func testGetUserByUsername(t *testing.T, ctrl UserController) {
 		}, nil)
 
 	mockSessionManagerPopString := mockSessionManager.
-		On("PopString", req.Context(), pkg.SESSION_KEY_MESSAGE).
+		On("PopString", req.Context(), session.SESSION_KEY_MESSAGE).
 		Return("msg")
 
 	user := mockServiceGetByAttribute.ReturnArguments[0].(*UserResponseDto)
@@ -1075,7 +1076,7 @@ func testGetUserByUsernameTemplateError(t *testing.T, ctrl UserController) {
 		}, nil)
 
 	mockSessionManagerPopString := mockSessionManager.
-		On("PopString", req.Context(), pkg.SESSION_KEY_MESSAGE).
+		On("PopString", req.Context(), session.SESSION_KEY_MESSAGE).
 		Return("msg")
 
 	user := mockServiceGetByAttribute.ReturnArguments[0].(*UserResponseDto)
@@ -1151,7 +1152,7 @@ func testPostDeleteUser(t *testing.T, ctrl UserController) {
 	mockSessionManagerPut := mockSessionManager.On(
 		"Put",
 		req.Context(),
-		pkg.SESSION_KEY_MESSAGE,
+		session.SESSION_KEY_MESSAGE,
 		"Deleted user 'janedoe'.",
 	)
 

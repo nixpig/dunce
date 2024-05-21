@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/nixpig/dunce/pkg"
+	"github.com/nixpig/dunce/pkg/validation"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -39,7 +39,7 @@ func TestUserService(t *testing.T) {
 
 	for scenario, fn := range scenarios {
 		t.Run(scenario, func(t *testing.T) {
-			validator, err := pkg.NewValidator()
+			validator, err := validation.NewValidator()
 			if err != nil {
 				t.Fatal("unable to construct validator")
 			}

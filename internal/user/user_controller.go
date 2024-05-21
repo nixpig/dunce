@@ -5,15 +5,24 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/nixpig/dunce/pkg"
+	"github.com/nixpig/dunce/pkg/logging"
+	"github.com/nixpig/dunce/pkg/session"
+	"github.com/nixpig/dunce/pkg/templates"
 )
 
 type UserController struct {
 	service        UserService
-	log            pkg.Logger
-	templateCache  pkg.TemplateCache
-	sessionManager pkg.SessionManager
+	log            logging.Logger
+	templateCache  templates.TemplateCache
+	sessionManager session.SessionManager
 	csrfToken      func(r *http.Request) string
+}
+
+type UserControllerConfig struct {
+	Log            logging.Logger
+	TemplateCache  templates.TemplateCache
+	SessionManager session.SessionManager
+	CsrfToken      func(*http.Request) string
 }
 
 type UserView struct {
@@ -43,7 +52,7 @@ type UserCreateView struct {
 
 func NewUserController(
 	service UserService,
-	config pkg.ControllerConfig,
+	config UserControllerConfig,
 ) UserController {
 	return UserController{
 		service:        service,
@@ -61,7 +70,7 @@ func (u *UserController) UserLoginGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := u.templateCache["pages/admin/login.tmpl"].ExecuteTemplate(w, "admin", UserLoginView{
-		Message:         u.sessionManager.PopString(r.Context(), pkg.SESSION_KEY_MESSAGE),
+		Message:         u.sessionManager.PopString(r.Context(), session.SESSION_KEY_MESSAGE),
 		CsrfToken:       u.csrfToken(r),
 		IsAuthenticated: u.IsAuthenticated(r),
 	}); err != nil {
@@ -89,7 +98,7 @@ func (u *UserController) UserLoginPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	u.sessionManager.Put(r.Context(), pkg.LOGGED_IN_USERNAME, username)
+	u.sessionManager.Put(r.Context(), session.LOGGED_IN_USERNAME, username)
 
 	http.Redirect(w, r, "/admin/articles", http.StatusSeeOther)
 }
@@ -98,10 +107,10 @@ func (u *UserController) UserLogoutPost(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
-	u.sessionManager.Remove(r.Context(), pkg.LOGGED_IN_USERNAME)
+	u.sessionManager.Remove(r.Context(), session.LOGGED_IN_USERNAME)
 	u.sessionManager.Put(
 		r.Context(),
-		pkg.SESSION_KEY_MESSAGE,
+		session.SESSION_KEY_MESSAGE,
 		"You've been logged out.",
 	)
 
@@ -138,7 +147,7 @@ func (u *UserController) CreateUserPost(
 
 	u.sessionManager.Put(
 		r.Context(),
-		pkg.SESSION_KEY_MESSAGE,
+		session.SESSION_KEY_MESSAGE,
 		fmt.Sprintf("Created user '%s'.", createdUser.Username),
 	)
 
@@ -153,7 +162,7 @@ func (u *UserController) UsersGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	message := u.sessionManager.PopString(r.Context(), pkg.SESSION_KEY_MESSAGE)
+	message := u.sessionManager.PopString(r.Context(), session.SESSION_KEY_MESSAGE)
 
 	if err := u.templateCache["pages/admin/users.tmpl"].ExecuteTemplate(w, "admin", UsersView{
 		Message:         message,
@@ -207,7 +216,7 @@ func (u *UserController) DeleteUserPost(
 
 	u.sessionManager.Put(
 		r.Context(),
-		pkg.SESSION_KEY_MESSAGE,
+		session.SESSION_KEY_MESSAGE,
 		fmt.Sprintf("Deleted user '%s'.", username),
 	)
 
@@ -215,7 +224,7 @@ func (u *UserController) DeleteUserPost(
 }
 
 func (u *UserController) IsAuthenticated(r *http.Request) bool {
-	isAuthenticated, ok := r.Context().Value(pkg.IS_LOGGED_IN_CONTEXT_KEY).(bool)
+	isAuthenticated, ok := r.Context().Value(session.IS_LOGGED_IN_CONTEXT_KEY).(bool)
 	if !ok {
 		return false
 	}

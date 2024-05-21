@@ -1,4 +1,4 @@
-package pkg
+package crypto
 
 type PasswordGenerator func(password []byte, cost int) ([]byte, error)
 type HashAndPasswordComparer func(hashedPassword []byte, password []byte) error

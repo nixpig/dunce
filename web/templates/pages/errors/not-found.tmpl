@@ -1,0 +1,11 @@
+{{ define "title" }}404 Not Found{{ end }}
+
+{{ define "main" }}
+  <div class="hero">
+    <h1>{{ template "title" . }}</h1>
+  </div>
+
+  <div class="message message--error">
+    Unable to find the requested resource.
+  </div>
+{{ end }}

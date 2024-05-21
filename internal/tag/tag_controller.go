@@ -5,15 +5,24 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/nixpig/dunce/pkg"
+	"github.com/nixpig/dunce/pkg/logging"
+	"github.com/nixpig/dunce/pkg/session"
+	"github.com/nixpig/dunce/pkg/templates"
 )
 
 type TagController struct {
 	tagService TagService
-	log        pkg.Logger
-	templates  pkg.TemplateCache
-	session    pkg.SessionManager
+	log        logging.Logger
+	templates  templates.TemplateCache
+	session    session.SessionManager
 	csrfToken  func(r *http.Request) string
+}
+
+type TagControllerConfig struct {
+	Log            logging.Logger
+	TemplateCache  templates.TemplateCache
+	SessionManager session.SessionManager
+	CsrfToken      func(*http.Request) string
 }
 
 type TagView struct {
@@ -37,12 +46,7 @@ type TagCreateView struct {
 
 func NewTagController(
 	tagService TagService,
-	config struct {
-		Log            pkg.Logger
-		TemplateCache  pkg.TemplateCache
-		SessionManager pkg.SessionManager
-		CsrfToken      func(*http.Request) string
-	},
+	config TagControllerConfig,
 ) TagController {
 	return TagController{
 		tagService: tagService,
@@ -70,7 +74,7 @@ func (t *TagController) PostAdminTagsHandler(
 
 	t.session.Put(
 		r.Context(),
-		pkg.SESSION_KEY_MESSAGE,
+		session.SESSION_KEY_MESSAGE,
 		fmt.Sprintf("Created tag '%s'.", tag.Name),
 	)
 
@@ -100,7 +104,7 @@ func (t *TagController) DeleteAdminTagsSlugHandler(
 
 	t.session.Put(
 		r.Context(),
-		pkg.SESSION_KEY_MESSAGE,
+		session.SESSION_KEY_MESSAGE,
 		fmt.Sprintf("Deleted tag '%s'.", r.FormValue("name")),
 	)
 
@@ -118,7 +122,7 @@ func (t *TagController) GetAdminTagsHandler(
 		return
 	}
 
-	message := t.session.PopString(r.Context(), pkg.SESSION_KEY_MESSAGE)
+	message := t.session.PopString(r.Context(), session.SESSION_KEY_MESSAGE)
 
 	tagView := TagsView{
 		Message:   message,
@@ -126,7 +130,7 @@ func (t *TagController) GetAdminTagsHandler(
 		CsrfToken: t.csrfToken(r),
 		IsAuthenticated: t.session.Exists(
 			r.Context(),
-			string(pkg.IS_LOGGED_IN_CONTEXT_KEY),
+			string(session.IS_LOGGED_IN_CONTEXT_KEY),
 		),
 	}
 
@@ -159,7 +163,7 @@ func (t *TagController) GetAdminTagsSlugHandler(
 		CsrfToken: t.csrfToken(r),
 		IsAuthenticated: t.session.Exists(
 			r.Context(),
-			string(pkg.IS_LOGGED_IN_CONTEXT_KEY),
+			string(session.IS_LOGGED_IN_CONTEXT_KEY),
 		),
 	}
 
@@ -195,7 +199,7 @@ func (t *TagController) PostAdminTagsSlugHandler(
 
 	t.session.Put(
 		r.Context(),
-		pkg.SESSION_KEY_MESSAGE,
+		session.SESSION_KEY_MESSAGE,
 		fmt.Sprintf("Updated tag '%s'.", tag.Name),
 	)
 
@@ -210,7 +214,7 @@ func (t *TagController) GetAdminTagsNewHandler(
 		CsrfToken: t.csrfToken(r),
 		IsAuthenticated: t.session.Exists(
 			r.Context(),
-			string(pkg.IS_LOGGED_IN_CONTEXT_KEY),
+			string(session.IS_LOGGED_IN_CONTEXT_KEY),
 		),
 	}
 

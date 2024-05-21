@@ -10,12 +10,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/nixpig/dunce/pkg"
+	"github.com/nixpig/dunce/pkg/templates"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
-var mockTemplateCache = pkg.TemplateCache{
+var mockTemplateCache = templates.TemplateCache{
 	"pages/admin/new-tag.tmpl": mockTemplate,
 	"pages/admin/tags.tmpl":    mockTemplate,
 	"pages/admin/tag.tmpl":     mockTemplate,
@@ -46,7 +46,7 @@ func TestTagsControllerNewHandler(t *testing.T) {
 
 	for scenario, fn := range scenarios {
 		t.Run(scenario, func(t *testing.T) {
-			config := pkg.ControllerConfig{
+			config := TagControllerConfig{
 				Log:            mockLogger,
 				TemplateCache:  mockTemplateCache,
 				SessionManager: mockSessionManager,

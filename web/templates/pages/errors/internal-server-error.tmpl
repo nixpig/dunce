@@ -1,0 +1,11 @@
+{{ define "title" }}Internal Server Error{{ end }}
+
+{{ define "main" }}
+  <div class="hero">
+    <h1>{{ template "title" . }}</h1>
+  </div>
+
+  <div class="message message--error">
+    Something went wrong. Please try again.
+  </div>
+{{ end }}

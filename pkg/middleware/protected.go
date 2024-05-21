@@ -3,19 +3,19 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/nixpig/dunce/pkg"
+	"github.com/nixpig/dunce/pkg/session"
 )
 
-func NewProtectedMiddleware(sessionManager pkg.SessionManager) func(next http.HandlerFunc) http.HandlerFunc {
+func NewProtectedMiddleware(sessionManager session.SessionManager) func(next http.HandlerFunc) http.HandlerFunc {
 	return func(next http.HandlerFunc) http.HandlerFunc {
 		return ProtectedMiddleware(sessionManager, next)
 	}
 }
 
-func ProtectedMiddleware(sessionManager pkg.SessionManager, next http.HandlerFunc) http.HandlerFunc {
+func ProtectedMiddleware(sessionManager session.SessionManager, next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !sessionManager.Exists(r.Context(), pkg.LOGGED_IN_USERNAME) {
-			sessionManager.Put(r.Context(), pkg.SESSION_KEY_MESSAGE, "You are not logged in.")
+		if !sessionManager.Exists(r.Context(), session.LOGGED_IN_USERNAME) {
+			sessionManager.Put(r.Context(), session.SESSION_KEY_MESSAGE, "You are not logged in.")
 			http.Redirect(w, r, "/admin/login", http.StatusSeeOther)
 			return
 		}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -12,7 +13,6 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/nixpig/dunce/internal/config"
 )
 
 func MigrateUp() error {
@@ -74,11 +74,11 @@ func Connect() (*Dbpool, error) {
 }
 
 func loadDatabaseEnvironment() (*databaseEnvironment, error) {
-	host := config.Get("DATABASE_HOST")
-	port := config.Get("DATABASE_PORT")
-	name := config.Get("POSTGRES_DB")
-	username := config.Get("POSTGRES_USER")
-	password := config.Get("POSTGRES_PASSWORD")
+	host := os.Getenv("DATABASE_HOST")
+	port := os.Getenv("DATABASE_PORT")
+	name := os.Getenv("POSTGRES_DB")
+	username := os.Getenv("POSTGRES_USER")
+	password := os.Getenv("POSTGRES_PASSWORD")
 
 	portNumber, err := strconv.ParseUint(port, 10, 16)
 	if err != nil {

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/nixpig/dunce/pkg"
+	"github.com/nixpig/dunce/pkg/validation"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -31,7 +31,7 @@ func TestTagService(t *testing.T) {
 		"delete (fail to delete tag by non-existent id)":    testTagServiceDeleteTagWithError,
 	}
 
-	var validate, err = pkg.NewValidator()
+	var validate, err = validation.NewValidator()
 	if err != nil {
 		t.Fatal("could not create validator", err.Error())
 	}

@@ -7,14 +7,14 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/nixpig/dunce/internal/tag"
-	"github.com/nixpig/dunce/pkg"
+	"github.com/nixpig/dunce/pkg/validation"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
 var mockData = new(MockArticleRepository)
 
-var validate, _ = pkg.NewValidator()
+var validate, _ = validation.NewValidator()
 
 func TestArticleService(t *testing.T) {
 	scenarios := map[string]func(t *testing.T, service ArticleService){

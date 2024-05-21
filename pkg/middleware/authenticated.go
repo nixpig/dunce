@@ -5,18 +5,18 @@ import (
 	"net/http"
 
 	"github.com/nixpig/dunce/internal/user"
-	"github.com/nixpig/dunce/pkg"
+	"github.com/nixpig/dunce/pkg/session"
 )
 
-func NewAuthenticatedMiddleware(userService user.UserService, sessionManager pkg.SessionManager) func(next http.HandlerFunc) http.HandlerFunc {
+func NewAuthenticatedMiddleware(userService user.UserService, sessionManager session.SessionManager, sessionKey string) func(next http.HandlerFunc) http.HandlerFunc {
 	return func(next http.HandlerFunc) http.HandlerFunc {
-		return AuthenticatedMiddleware(userService, sessionManager, next)
+		return AuthenticatedMiddleware(userService, sessionManager, sessionKey, next)
 	}
 }
 
-func AuthenticatedMiddleware(userService user.UserService, sessionManager pkg.SessionManager, next http.HandlerFunc) http.HandlerFunc {
+func AuthenticatedMiddleware(userService user.UserService, sessionManager session.SessionManager, sessionKey string, next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		username := sessionManager.GetString(r.Context(), pkg.LOGGED_IN_USERNAME)
+		username := sessionManager.GetString(r.Context(), sessionKey)
 
 		if len(username) == 0 {
 			next.ServeHTTP(w, r)
@@ -30,7 +30,7 @@ func AuthenticatedMiddleware(userService user.UserService, sessionManager pkg.Se
 		}
 
 		if exists {
-			ctx := context.WithValue(r.Context(), pkg.IS_LOGGED_IN_CONTEXT_KEY, true)
+			ctx := context.WithValue(r.Context(), session.IS_LOGGED_IN_CONTEXT_KEY, true)
 
 			r = r.WithContext(ctx)
 

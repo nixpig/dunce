@@ -3,17 +3,29 @@ package home
 import (
 	"net/http"
 
+	"github.com/nixpig/dunce/internal/app/errors"
 	"github.com/nixpig/dunce/internal/article"
 	"github.com/nixpig/dunce/internal/tag"
-	"github.com/nixpig/dunce/pkg"
+	"github.com/nixpig/dunce/pkg/logging"
+	"github.com/nixpig/dunce/pkg/session"
+	"github.com/nixpig/dunce/pkg/templates"
 )
 
 type HomeController struct {
 	tagService     tag.TagService
 	articleService article.ArticleService
-	log            pkg.Logger
-	templateCache  pkg.TemplateCache
-	sessionManager pkg.SessionManager
+	log            logging.Logger
+	templateCache  templates.TemplateCache
+	sessionManager session.SessionManager
+	errorHandlers  errors.ErrorHandlers
+}
+
+type HomeControllerConfig struct {
+	Log            logging.Logger
+	TemplateCache  templates.TemplateCache
+	SessionManager session.SessionManager
+	CsrfToken      func(*http.Request) string
+	ErrorHandlers  errors.ErrorHandlers
 }
 
 type HomeView struct {
@@ -29,7 +41,7 @@ type TagView struct {
 func NewHomeController(
 	tagService tag.TagService,
 	articleService article.ArticleService,
-	config pkg.ControllerConfig,
+	config HomeControllerConfig,
 ) HomeController {
 	return HomeController{
 		tagService:     tagService,
@@ -37,19 +49,20 @@ func NewHomeController(
 		log:            config.Log,
 		templateCache:  config.TemplateCache,
 		sessionManager: config.SessionManager,
+		errorHandlers:  config.ErrorHandlers,
 	}
 }
 
 func (h *HomeController) HomeGet(w http.ResponseWriter, r *http.Request) {
 	articles, err := h.articleService.GetAll()
 	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		h.errorHandlers.InternalServerError(w, r)
 		return
 	}
 
 	tags, err := h.tagService.GetAll()
 	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		h.errorHandlers.InternalServerError(w, r)
 		return
 	}
 
@@ -57,7 +70,7 @@ func (h *HomeController) HomeGet(w http.ResponseWriter, r *http.Request) {
 		Articles: articles,
 		Tags:     tags,
 	}); err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		h.errorHandlers.InternalServerError(w, r)
 		return
 	}
 }
@@ -67,14 +80,14 @@ func (h *HomeController) HomeArticlesGet(
 	r *http.Request,
 ) {
 	if err := h.templateCache["pages/public/articles.tmpl"].ExecuteTemplate(w, "public", HomeView{}); err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		h.errorHandlers.InternalServerError(w, r)
 		return
 	}
 }
 
 func (h *HomeController) HomeTagsGet(w http.ResponseWriter, r *http.Request) {
 	if err := h.templateCache["pages/public/tags.tmpl"].ExecuteTemplate(w, "public", HomeView{}); err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		h.errorHandlers.InternalServerError(w, r)
 		return
 	}
 }
@@ -84,13 +97,13 @@ func (h *HomeController) HomeTagGet(w http.ResponseWriter, r *http.Request) {
 
 	tag, err := h.tagService.GetByAttribute("slug", slug)
 	if err != nil {
-		http.Error(w, "Not Found", http.StatusNotFound)
+		h.errorHandlers.NotFound(w, r)
 		return
 	}
 
 	articles, err := h.articleService.GetManyByAttribute("tagSlug", slug)
 	if err != nil {
-		http.Error(w, "Not Found", http.StatusNotFound)
+		h.errorHandlers.NotFound(w, r)
 		return
 	}
 
@@ -98,7 +111,7 @@ func (h *HomeController) HomeTagGet(w http.ResponseWriter, r *http.Request) {
 		Tag:      tag,
 		Articles: articles,
 	}); err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		h.errorHandlers.InternalServerError(w, r)
 		return
 	}
 }

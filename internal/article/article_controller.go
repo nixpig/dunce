@@ -7,7 +7,10 @@ import (
 	"time"
 
 	"github.com/nixpig/dunce/internal/tag"
-	"github.com/nixpig/dunce/pkg"
+	"github.com/nixpig/dunce/pkg/logging"
+	"github.com/nixpig/dunce/pkg/markdown"
+	"github.com/nixpig/dunce/pkg/session"
+	"github.com/nixpig/dunce/pkg/templates"
 )
 
 const longFormat = "2006-01-02 15:04:05.999999999 -0700 MST"
@@ -15,10 +18,17 @@ const longFormat = "2006-01-02 15:04:05.999999999 -0700 MST"
 type ArticleController struct {
 	articleService ArticleService
 	tagService     tag.TagService
-	log            pkg.Logger
-	templates      pkg.TemplateCache
-	session        pkg.SessionManager
+	log            logging.Logger
+	templates      templates.TemplateCache
+	session        session.SessionManager
 	csrfToken      func(r *http.Request) string
+}
+
+type ArticleControllerConfig struct {
+	Log            logging.Logger
+	TemplateCache  templates.TemplateCache
+	SessionManager session.SessionManager
+	CsrfToken      func(*http.Request) string
 }
 
 type ArticleView struct {
@@ -48,7 +58,7 @@ type ArticlePublishView struct {
 func NewArticleController(
 	service ArticleService,
 	tagsService tag.TagService,
-	config pkg.ControllerConfig,
+	config ArticleControllerConfig,
 ) ArticleController {
 	return ArticleController{
 		articleService: service,
@@ -122,7 +132,7 @@ func (a *ArticleController) GetAllHandler(
 	if err := a.templates["pages/admin/articles.tmpl"].ExecuteTemplate(w, "admin", ArticlesView{
 		Articles:        articles,
 		CsrfToken:       a.csrfToken(r),
-		IsAuthenticated: a.session.Exists(r.Context(), string(pkg.IS_LOGGED_IN_CONTEXT_KEY)),
+		IsAuthenticated: a.session.Exists(r.Context(), string(session.IS_LOGGED_IN_CONTEXT_KEY)),
 	}); err != nil {
 		a.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -141,7 +151,7 @@ func (a *ArticleController) NewHandler(w http.ResponseWriter, r *http.Request) {
 	if err := a.templates["pages/admin/new-article.tmpl"].ExecuteTemplate(w, "admin", ArticlePublishView{
 		Tags:            availableTags,
 		CsrfToken:       a.csrfToken(r),
-		IsAuthenticated: a.session.Exists(r.Context(), string(pkg.IS_LOGGED_IN_CONTEXT_KEY)),
+		IsAuthenticated: a.session.Exists(r.Context(), string(session.IS_LOGGED_IN_CONTEXT_KEY)),
 	}); err != nil {
 		a.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -176,7 +186,7 @@ func (a *ArticleController) GetBySlugHander(
 			Article:         article,
 			Tags:            allTags,
 			CsrfToken:       a.csrfToken(r),
-			IsAuthenticated: a.session.Exists(r.Context(), string(pkg.IS_LOGGED_IN_CONTEXT_KEY)),
+			IsAuthenticated: a.session.Exists(r.Context(), string(session.IS_LOGGED_IN_CONTEXT_KEY)),
 		},
 	); err != nil {
 		a.log.Error(err.Error())
@@ -282,7 +292,7 @@ func (a ArticleController) PublicGetArticle(
 		return
 	}
 
-	content, err := pkg.MdToHtml([]byte(article.Body))
+	content, err := markdown.MdToHtml([]byte(article.Body))
 	if err != nil {
 		a.log.Error(err.Error())
 		http.Error(w, "Not Found", http.StatusNotFound)

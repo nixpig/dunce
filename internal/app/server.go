@@ -7,12 +7,16 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/nixpig/dunce/db"
+	"github.com/nixpig/dunce/internal/app/errors"
 	"github.com/nixpig/dunce/internal/article"
 	"github.com/nixpig/dunce/internal/home"
 	"github.com/nixpig/dunce/internal/tag"
 	"github.com/nixpig/dunce/internal/user"
-	"github.com/nixpig/dunce/pkg"
+	"github.com/nixpig/dunce/pkg/crypto"
+	"github.com/nixpig/dunce/pkg/logging"
 	"github.com/nixpig/dunce/pkg/middleware"
+	"github.com/nixpig/dunce/pkg/session"
+	"github.com/nixpig/dunce/pkg/templates"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -20,33 +24,38 @@ type AppConfig struct {
 	Port           string
 	Validator      *validator.Validate
 	Db             *db.Dbpool
-	TemplateCache  pkg.TemplateCache
-	Logger         pkg.Logger
-	SessionManager pkg.SessionManager
+	TemplateCache  templates.TemplateCache
+	Logger         logging.Logger
+	SessionManager session.SessionManager
 	CsrfToken      func(*http.Request) string
+	ErrorHandlers  errors.ErrorHandlers
 }
 
 func Start(appConfig AppConfig) error {
 	mux := http.NewServeMux()
 
-	controllerConfig := pkg.NewControllerConfig(
-		appConfig.Logger,
-		appConfig.TemplateCache,
-		appConfig.SessionManager,
-		appConfig.CsrfToken,
-	)
-
-	crypto := pkg.NewCryptoImpl(
+	crypt := crypto.NewCryptoImpl(
 		bcrypt.GenerateFromPassword,
 		bcrypt.CompareHashAndPassword,
 	)
+
 	userRepo := user.NewUserPostgresRepository(appConfig.Db.Pool)
-	userService := user.NewUserService(userRepo, appConfig.Validator, crypto)
-	userController := user.NewUserController(userService, controllerConfig)
+	userService := user.NewUserService(userRepo, appConfig.Validator, crypt)
+	userController := user.NewUserController(userService, user.UserControllerConfig{
+		Log:            appConfig.Logger,
+		TemplateCache:  appConfig.TemplateCache,
+		SessionManager: appConfig.SessionManager,
+		CsrfToken:      appConfig.CsrfToken,
+	})
 
 	tagRepository := tag.NewTagPostgresRepository(appConfig.Db.Pool)
 	tagService := tag.NewTagService(tagRepository, appConfig.Validator)
-	tagController := tag.NewTagController(tagService, controllerConfig)
+	tagController := tag.NewTagController(tagService, tag.TagControllerConfig{
+		Log:            appConfig.Logger,
+		TemplateCache:  appConfig.TemplateCache,
+		SessionManager: appConfig.SessionManager,
+		CsrfToken:      appConfig.CsrfToken,
+	})
 
 	articleRepository := article.NewArticlePostgresRepository(appConfig.Db.Pool)
 	articleService := article.NewArticleService(
@@ -56,12 +65,18 @@ func Start(appConfig AppConfig) error {
 	articleController := article.NewArticleController(
 		articleService,
 		tagService,
-		controllerConfig,
+		article.ArticleControllerConfig{
+			Log:            appConfig.Logger,
+			TemplateCache:  appConfig.TemplateCache,
+			SessionManager: appConfig.SessionManager,
+			CsrfToken:      appConfig.CsrfToken,
+		},
 	)
 
 	isAuthenticated := middleware.NewAuthenticatedMiddleware(
 		userService,
 		appConfig.SessionManager,
+		session.LOGGED_IN_USERNAME,
 	)
 	protected := middleware.NewProtectedMiddleware(appConfig.SessionManager)
 	noSurf := middleware.NewNoSurfMiddleware()
@@ -159,7 +174,13 @@ func Start(appConfig AppConfig) error {
 	homeController := home.NewHomeController(
 		tagService,
 		articleService,
-		controllerConfig,
+		home.HomeControllerConfig{
+			Log:            appConfig.Logger,
+			TemplateCache:  appConfig.TemplateCache,
+			SessionManager: appConfig.SessionManager,
+			CsrfToken:      appConfig.CsrfToken,
+			ErrorHandlers:  appConfig.ErrorHandlers,
+		},
 	)
 
 	mux.HandleFunc("GET /articles", homeController.HomeArticlesGet)
@@ -204,7 +225,7 @@ func adminRootHandler(appConfig AppConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if appConfig.SessionManager.Exists(
 			r.Context(),
-			string(pkg.IS_LOGGED_IN_CONTEXT_KEY),
+			string(session.IS_LOGGED_IN_CONTEXT_KEY),
 		) {
 			http.Redirect(w, r, "/admin/articles", http.StatusSeeOther)
 		} else {

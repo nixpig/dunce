@@ -5,11 +5,15 @@ import (
 	"os"
 
 	"github.com/alexedwards/scs/v2"
+	"github.com/joho/godotenv"
 	"github.com/justinas/nosurf"
 	"github.com/nixpig/dunce/db"
 	app "github.com/nixpig/dunce/internal/app"
-	"github.com/nixpig/dunce/internal/config"
-	"github.com/nixpig/dunce/pkg"
+	"github.com/nixpig/dunce/internal/app/errors"
+	"github.com/nixpig/dunce/pkg/logging"
+	"github.com/nixpig/dunce/pkg/session"
+	"github.com/nixpig/dunce/pkg/templates"
+	"github.com/nixpig/dunce/pkg/validation"
 )
 
 func main() {
@@ -17,7 +21,7 @@ func main() {
 
 	appConfig := app.AppConfig{}
 
-	if err := config.Init(); err != nil {
+	if err := godotenv.Load(".env"); err != nil {
 		log.Printf(
 			"unable to load config from env due to '%v' which may not be fatal; continuing...",
 			err,
@@ -37,25 +41,27 @@ func main() {
 		os.Exit(1)
 	}
 
-	appConfig.Validator, err = pkg.NewValidator()
+	appConfig.Validator, err = validation.NewValidator()
 	if err != nil {
 		log.Fatalf("unable to create validator: %v", err)
 		os.Exit(1)
 	}
 
-	appConfig.TemplateCache, err = pkg.NewTemplateCache()
+	appConfig.TemplateCache, err = templates.NewTemplateCache()
 	if err != nil {
 		log.Fatalf("unable to build template cache: %v", err)
 		os.Exit(1)
 	}
 
-	appConfig.SessionManager = pkg.NewSessionManagerImpl(scs.New())
+	appConfig.SessionManager = session.NewSessionManagerImpl(scs.New())
 
-	appConfig.Logger = pkg.NewLogger()
+	appConfig.Logger = logging.NewLogger()
 
 	appConfig.CsrfToken = nosurf.Token
 
-	appConfig.Port = config.Get("WEB_PORT")
+	appConfig.ErrorHandlers = errors.NewErrorHandlersImpl(appConfig.TemplateCache)
+
+	appConfig.Port = os.Getenv("WEB_PORT")
 
 	if err := app.Start(appConfig); err != nil {
 		log.Fatalf("unable to start app: %v", err)
