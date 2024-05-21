@@ -272,7 +272,7 @@ func testGetUserLoginScreenHandlerNotLoggedIn(
 
 	mockTemplateExecuteTemplate := mockTemplate.On(
 		"ExecuteTemplate",
-		mock.Anything,
+		rr,
 		"admin",
 		UserLoginView{
 			Message:         "msg",
@@ -326,7 +326,7 @@ func testGetUserLoginScreenHandlerTemplateError(
 
 	mockTemplateExecuteTemplate := mockTemplate.On(
 		"ExecuteTemplate",
-		mock.Anything,
+		rr,
 		"admin",
 		UserLoginView{
 			Message:         "msg",
@@ -614,7 +614,7 @@ func testGetCreateUserPage(t *testing.T, ctrl UserController) {
 
 	mockTemplateExecuteTemplate := mockTemplate.On(
 		"ExecuteTemplate",
-		mock.Anything,
+		rr,
 		"admin",
 		UserCreateView{
 			CsrfToken:       "mock-token",
@@ -677,7 +677,7 @@ func testGetCreateUserPageTemplateError(t *testing.T, ctrl UserController) {
 
 	mockTemplateExecuteTemplate := mockTemplate.On(
 		"ExecuteTemplate",
-		mock.Anything,
+		rr,
 		"admin",
 		UserCreateView{
 			CsrfToken:       "mock-token",
@@ -862,7 +862,7 @@ func testGetAllUsers(t *testing.T, ctrl UserController) {
 
 	mockTemplateExecuteTemplate := mockTemplate.On(
 		"ExecuteTemplate",
-		mock.Anything,
+		rr,
 		"admin",
 		UsersView{
 			Users:           users,
@@ -967,7 +967,7 @@ func testGetAllUsersTemplateError(t *testing.T, ctrl UserController) {
 
 	mockTemplateExecuteTemplate := mockTemplate.On(
 		"ExecuteTemplate",
-		mock.Anything,
+		rr,
 		"admin",
 		UsersView{
 			Users:           users,
@@ -1040,7 +1040,7 @@ func testGetUserByUsername(t *testing.T, ctrl UserController) {
 
 	mockTemplateExecuteTemplate := mockTemplate.On(
 		"ExecuteTemplate",
-		mock.Anything,
+		rr,
 		"admin",
 		UserView{
 			User:            user,
@@ -1144,7 +1144,7 @@ func testGetUserByUsernameTemplateError(t *testing.T, ctrl UserController) {
 
 	mockTemplateExecuteTemplate := mockTemplate.On(
 		"ExecuteTemplate",
-		mock.Anything,
+		rr,
 		"admin",
 		UserView{
 			User:            user,

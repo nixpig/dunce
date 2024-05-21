@@ -1,4 +1,4 @@
-{{ define "title" }}400 Bad Request{{ end }}
+{{ define "title" }}{{ .Title }}{{ end }}
 
 {{ define "main" }}
   <div class="hero">
@@ -6,6 +6,6 @@
   </div>
 
   <div class="message message--error">
-    There was something wrong with your request. Please check and try again.
+    {{ .Message }}
   </div>
 {{ end }}

@@ -139,7 +139,7 @@ func Start(appConfig AppConfig) error {
 		isAuthenticated,
 	))
 	mux.HandleFunc("GET /admin/tags/new", applyMiddlewares(
-		tagController.GetAdminTagsHandler,
+		tagController.GetAdminTagsNewHandler,
 		protected,
 		noSurf,
 		isAuthenticated,

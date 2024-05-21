@@ -203,19 +203,19 @@ func testGetAdminTagsNewHandler(t *testing.T, ctrl TagController) {
 		t.Error("failed to construct request", err)
 	}
 
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(ctrl.GetAdminTagsNewHandler)
+
 	mockSessionManagerExists := mockSessionManager.
-		On("Exists", mock.Anything, "logged_in_username").
+		On("Exists", req.Context(), "logged_in_username").
 		Return(true)
 
 	mockTemplateExecuteTemplate := mockTemplate.
-		On("ExecuteTemplate", mock.Anything, "admin", TagCreateView{
+		On("ExecuteTemplate", rr, "admin", TagCreateView{
 			CsrfToken:       "mock-token",
 			IsAuthenticated: true,
 		}).
 		Return(nil)
-
-	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(ctrl.GetAdminTagsNewHandler)
 
 	handler.ServeHTTP(rr, req)
 
@@ -249,11 +249,11 @@ func testGetAdminTagsNewHandlerTemplateError(t *testing.T, ctrl TagController) {
 	handler := http.HandlerFunc(ctrl.GetAdminTagsNewHandler)
 
 	mockSessionManagerExists := mockSessionManager.
-		On("Exists", mock.Anything, session.LOGGED_IN_USERNAME).
+		On("Exists", req.Context(), session.LOGGED_IN_USERNAME).
 		Return(true)
 
 	mockTemplateExecuteTemplate := mockTemplate.
-		On("ExecuteTemplate", mock.Anything, mock.Anything, mock.Anything).
+		On("ExecuteTemplate", rr, "admin", mock.Anything).
 		Return(errors.New("template_error"))
 
 	mockErrorHandlersInternalServerError := mockErrorHandlers.
@@ -314,7 +314,7 @@ func testPostAdminTagsHandler(t *testing.T, ctrl TagController) {
 	}, nil)
 
 	mockSessionManagerPut := mockSessionManager.
-		On("Put", mock.Anything, "message", "Created tag 'tag name'.")
+		On("Put", req.Context(), "message", "Created tag 'tag name'.")
 
 	rr := httptest.NewRecorder()
 
@@ -423,7 +423,7 @@ func testPostAdminTagsDeleteHandler(t *testing.T, ctrl TagController) {
 
 	mockSessionManagerPut := mockSessionManager.On(
 		"Put",
-		mock.Anything,
+		req.Context(),
 		"message",
 		"Deleted tag 'tag name'.",
 	)
@@ -577,18 +577,18 @@ func testGetAdminTagsHandler(t *testing.T, ctrl TagController) {
 	}, nil)
 
 	mockSessionManagerPopString := mockSessionManager.
-		On("PopString", mock.Anything, "message").
+		On("PopString", req.Context(), "message").
 		Return("session_message")
 
 	mockSessionManagerExists := mockSessionManager.
 		On(
 			"Exists",
-			mock.Anything,
+			req.Context(),
 			"logged_in_username",
 		).Return(true)
 
 	mockTemplateExecuteTemplate := mockTemplate.
-		On("ExecuteTemplate", mock.Anything, "admin", TagsView{
+		On("ExecuteTemplate", rr, "admin", TagsView{
 			Message: "session_message",
 			Tags: &[]TagResponseDto{
 				{
@@ -696,12 +696,12 @@ func testGetAdminTagsHandlerTemplateError(t *testing.T, ctrl TagController) {
 		},
 	}, nil)
 
-	mockSessionManagerPopString := mockSessionManager.On("PopString", mock.Anything, "message").
+	mockSessionManagerPopString := mockSessionManager.On("PopString", req.Context(), "message").
 		Return("mock_message")
-	mockSessionManagerExists := mockSessionManager.On("Exists", mock.Anything, "logged_in_username").
+	mockSessionManagerExists := mockSessionManager.On("Exists", req.Context(), "logged_in_username").
 		Return(true)
 
-	mockTemplateExecuteTemplate := mockTemplate.On("ExecuteTemplate", mock.Anything, "admin", TagsView{
+	mockTemplateExecuteTemplate := mockTemplate.On("ExecuteTemplate", rr, "admin", TagsView{
 		Message: "mock_message",
 		Tags: &[]TagResponseDto{
 			{
@@ -777,12 +777,12 @@ func testGetAdminTagsBySlugHandler(t *testing.T, ctrl TagController) {
 			Slug: "tag-slug",
 		}, nil)
 
-	mockSessionManagerExists := mockSessionManager.On("Exists", mock.Anything, "logged_in_username").
+	mockSessionManagerExists := mockSessionManager.On("Exists", req.Context(), "logged_in_username").
 		Return(true)
 
 	mockTemplateExecuteTemplate := mockTemplate.On(
 		"ExecuteTemplate",
-		mock.Anything,
+		rr,
 		"admin",
 		TagView{
 			Tag: &TagResponseDto{
@@ -888,7 +888,7 @@ func testGetAdminTagsBySlugHandlerTemplateError(
 			Slug: "tag-slug",
 		}, nil)
 
-	mockSessionManagerExists := mockSessionManager.On("Exists", mock.Anything, "logged_in_username").
+	mockSessionManagerExists := mockSessionManager.On("Exists", req.Context(), "logged_in_username").
 		Return(true)
 
 	mockErrorHandlersInternalServerError := mockErrorHandlers.
@@ -899,7 +899,7 @@ func testGetAdminTagsBySlugHandlerTemplateError(
 
 	mockTemplateExecuteTemplate := mockTemplate.On(
 		"ExecuteTemplate",
-		mock.Anything,
+		rr,
 		"admin",
 		TagView{
 			Tag: &TagResponseDto{
@@ -974,7 +974,7 @@ func testPostTagBySlugToUpdateHandler(t *testing.T, ctrl TagController) {
 
 	mockSessionManagerPut := mockSessionManager.On(
 		"Put",
-		mock.Anything,
+		req.Context(),
 		"message",
 		"Updated tag 'tag name'.",
 	)
