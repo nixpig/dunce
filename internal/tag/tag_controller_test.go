@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/nixpig/dunce/pkg/session"
 	"github.com/nixpig/dunce/pkg/templates"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -23,6 +24,7 @@ var mockTemplateCache = templates.TemplateCache{
 
 var mockLogger = new(MockLogger)
 var mockSessionManager = new(MockSessionManager)
+var mockErrorHandlers = new(MockErrorHandlers)
 
 func TestTagsControllerNewHandler(t *testing.T) {
 	scenarios := map[string]func(t *testing.T, ctrl TagController){
@@ -53,6 +55,7 @@ func TestTagsControllerNewHandler(t *testing.T) {
 				CsrfToken: func(r *http.Request) string {
 					return "mock-token"
 				},
+				ErrorHandlers: mockErrorHandlers,
 			}
 
 			ctrl := NewTagController(mockService, config)
@@ -60,6 +63,18 @@ func TestTagsControllerNewHandler(t *testing.T) {
 			fn(t, ctrl)
 		})
 	}
+}
+
+type MockErrorHandlers struct {
+	mock.Mock
+}
+
+func (e *MockErrorHandlers) NotFound(w http.ResponseWriter, r *http.Request) {
+	e.Called(w, r)
+}
+
+func (e *MockErrorHandlers) InternalServerError(w http.ResponseWriter, r *http.Request) {
+	e.Called(w, r)
 }
 
 type MockSessionManager struct {
@@ -207,15 +222,16 @@ func testGetAdminTagsNewHandler(t *testing.T, ctrl TagController) {
 		"should return status code ok",
 	)
 
-	mockSessionManagerExists.Unset()
 	if res := mockSessionManager.AssertExpectations(t); !res {
 		t.Error("should evaluate if session exists")
 	}
 
-	mockTemplateExecuteTemplate.Unset()
 	if res := mockTemplate.AssertExpectations(t); !res {
 		t.Error("should execute template")
 	}
+
+	mockTemplateExecuteTemplate.Unset()
+	mockSessionManagerExists.Unset()
 }
 
 func testGetAdminTagsNewHandlerTemplateError(t *testing.T, ctrl TagController) {
@@ -224,20 +240,23 @@ func testGetAdminTagsNewHandlerTemplateError(t *testing.T, ctrl TagController) {
 		t.Error("failed to construct request", err)
 	}
 
+	rr := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(ctrl.GetAdminTagsNewHandler)
+
 	mockSessionManagerExists := mockSessionManager.
-		On("Exists", mock.Anything, "logged_in_username").
+		On("Exists", mock.Anything, session.LOGGED_IN_USERNAME).
 		Return(true)
 
 	mockTemplateExecuteTemplate := mockTemplate.
 		On("ExecuteTemplate", mock.Anything, mock.Anything, mock.Anything).
 		Return(errors.New("template_error"))
 
-	mockLoggerError := mockLogger.On("Error", "template_error", mock.Anything).
-		Return()
-
-	rr := httptest.NewRecorder()
-
-	handler := http.HandlerFunc(ctrl.GetAdminTagsNewHandler)
+	mockErrorHandlersInternalServerError := mockErrorHandlers.
+		On("InternalServerError", rr, req).
+		Run(func(args mock.Arguments) {
+			rr.WriteHeader(http.StatusInternalServerError)
+		})
 
 	handler.ServeHTTP(rr, req)
 
@@ -248,20 +267,21 @@ func testGetAdminTagsNewHandlerTemplateError(t *testing.T, ctrl TagController) {
 		"should return status code internal server error",
 	)
 
-	mockSessionManagerExists.Unset()
+	if res := mockErrorHandlers.AssertExpectations(t); !res {
+		t.Error("should call error handler")
+	}
+
 	if res := mockSessionManager.AssertExpectations(t); !res {
 		t.Error("should evaluate session exists")
 	}
 
-	mockTemplateExecuteTemplate.Unset()
 	if res := mockTemplate.AssertExpectations(t); !res {
 		t.Error("should execute template")
 	}
 
-	mockLoggerError.Unset()
-	if res := mockLogger.AssertExpectations(t); !res {
-		t.Error("should log error")
-	}
+	mockTemplateExecuteTemplate.Unset()
+	mockSessionManagerExists.Unset()
+	mockErrorHandlersInternalServerError.Unset()
 }
 
 func testPostAdminTagsHandler(t *testing.T, ctrl TagController) {
@@ -311,15 +331,16 @@ func testPostAdminTagsHandler(t *testing.T, ctrl TagController) {
 		"should set redirect location",
 	)
 
-	mockServiceCreate.Unset()
 	if res := mockService.AssertExpectations(t); !res {
 		t.Error("should call through to tag service to create tag")
 	}
 
-	mockSessionManagerPut.Unset()
 	if res := mockSessionManager.AssertExpectations(t); !res {
 		t.Error("should put response message in session")
 	}
+
+	mockSessionManagerPut.Unset()
+	mockServiceCreate.Unset()
 }
 
 func testPostAdminTagsHandlerServiceError(t *testing.T, ctrl TagController) {
@@ -347,8 +368,10 @@ func testPostAdminTagsHandlerServiceError(t *testing.T, ctrl TagController) {
 		Slug: "tag-slug",
 	}).Return(&TagResponseDto{}, errors.New("service_error"))
 
-	mockLoggerError := mockLogger.On("Error", "service_error", mock.Anything).
-		Return()
+	mockErrorHandlersInternalServerError := mockErrorHandlers.
+		On("InternalServerError", rr, req).Run(func(args mock.Arguments) {
+		rr.WriteHeader(http.StatusInternalServerError)
+	})
 
 	handler.ServeHTTP(rr, req)
 
@@ -359,15 +382,16 @@ func testPostAdminTagsHandlerServiceError(t *testing.T, ctrl TagController) {
 		"should return status code internal server error",
 	)
 
-	mockServiceCreate.Unset()
 	if res := mockService.AssertExpectations(t); !res {
 		t.Error("should call through to tag service to create")
 	}
 
-	mockLoggerError.Unset()
-	if res := mockLogger.AssertExpectations(t); !res {
-		t.Error("should log error")
+	if res := mockErrorHandlers.AssertExpectations(t); !res {
+		t.Error("should call error handler")
 	}
+
+	mockServiceCreate.Unset()
+	mockErrorHandlersInternalServerError.Unset()
 }
 
 func testPostAdminTagsDeleteHandler(t *testing.T, ctrl TagController) {
@@ -414,15 +438,16 @@ func testPostAdminTagsDeleteHandler(t *testing.T, ctrl TagController) {
 		"should redirect to tags page",
 	)
 
-	mockServiceDeleteById.Unset()
 	if res := mockService.AssertExpectations(t); !res {
 		t.Error("should call through to delete in tag service")
 	}
 
-	mockSessionManagerPut.Unset()
 	if res := mockSessionManager.AssertExpectations(t); !res {
 		t.Error("should put message into session context")
 	}
+
+	mockSessionManagerPut.Unset()
+	mockServiceDeleteById.Unset()
 }
 
 func testPostAdminTagsDeleteHandlerErrorBadId(
@@ -460,10 +485,11 @@ func testPostAdminTagsDeleteHandlerErrorBadId(
 		"should return status code bad request",
 	)
 
-	mockLoggerError.Unset()
 	if res := mockLogger.AssertExpectations(t); !res {
 		t.Error("should log the error")
 	}
+
+	mockLoggerError.Unset()
 }
 
 func testPostAdminTagsDeleteHandlerServiceError(
@@ -504,15 +530,16 @@ func testPostAdminTagsDeleteHandlerServiceError(
 		"should return status internal server error",
 	)
 
-	mockServiceDeleteById.Unset()
 	if res := mockService.AssertExpectations(t); !res {
 		t.Error("should call tag service to delete")
 	}
 
-	mockLoggerError.Unset()
 	if res := mockLogger.AssertExpectations(t); !res {
 		t.Error("should log error")
 	}
+
+	mockServiceDeleteById.Unset()
+	mockLoggerError.Unset()
 }
 
 func testGetAdminTagsHandler(t *testing.T, ctrl TagController) {
@@ -577,21 +604,22 @@ func testGetAdminTagsHandler(t *testing.T, ctrl TagController) {
 		"should return status code ok",
 	)
 
-	mockServiceGetAll.Unset()
 	if res := mockService.AssertExpectations(t); !res {
 		t.Error("should call tag service to get all tags")
 	}
 
-	mockSessionManagerPopString.Unset()
-	mockSessionManagerExists.Unset()
 	if res := mockSessionManager.AssertExpectations(t); !res {
 		t.Error("should call session manager")
 	}
 
-	mockTemplateExecuteTemplate.Unset()
 	if res := mockTemplate.AssertExpectations(t); !res {
 		t.Error("should execute template with tags")
 	}
+
+	mockServiceGetAll.Unset()
+	mockSessionManagerPopString.Unset()
+	mockSessionManagerExists.Unset()
+	mockTemplateExecuteTemplate.Unset()
 }
 
 func testGetAdminTagsHandlerServiceError(t *testing.T, ctrl TagController) {
@@ -619,15 +647,16 @@ func testGetAdminTagsHandlerServiceError(t *testing.T, ctrl TagController) {
 		"should return status code internal server error",
 	)
 
-	mockServiceGetAll.Unset()
 	if res := mockService.AssertExpectations(t); !res {
 		t.Error("should call tag service to get all tags")
 	}
 
-	mockLoggerError.Unset()
 	if res := mockLogger.AssertExpectations(t); !res {
 		t.Error("should log errors")
 	}
+
+	mockServiceGetAll.Unset()
+	mockLoggerError.Unset()
 }
 
 func testGetAdminTagsHandlerTemplateError(t *testing.T, ctrl TagController) {
@@ -688,26 +717,27 @@ func testGetAdminTagsHandlerTemplateError(t *testing.T, ctrl TagController) {
 		"should return status code internal server error",
 	)
 
-	mockServiceGetAll.Unset()
 	if res := mockService.AssertExpectations(t); !res {
 		t.Error("should call service to get all tags")
 	}
 
-	mockSessionManagerPopString.Unset()
-	mockSessionManagerExists.Unset()
 	if res := mockSessionManager.AssertExpectations(t); !res {
 		t.Error("should call session methods")
 	}
 
-	mockTemplateExecuteTemplate.Unset()
 	if res := mockTemplate.AssertExpectations(t); !res {
 		t.Error("should execute template")
 	}
 
-	mockLoggerError.Unset()
 	if res := mockLogger.AssertExpectations(t); !res {
 		t.Error("should log error")
 	}
+
+	mockServiceGetAll.Unset()
+	mockSessionManagerPopString.Unset()
+	mockSessionManagerExists.Unset()
+	mockTemplateExecuteTemplate.Unset()
+	mockLoggerError.Unset()
 }
 
 func testGetAdminTagsBySlugHandler(t *testing.T, ctrl TagController) {
@@ -756,20 +786,21 @@ func testGetAdminTagsBySlugHandler(t *testing.T, ctrl TagController) {
 		"should return status code ok",
 	)
 
-	mockSessionManagerExists.Unset()
 	if res := mockSessionManager.AssertExpectations(t); !res {
 		t.Error("should check if user session exists in context")
 	}
 
-	mockTemplateExecuteTemplate.Unset()
 	if res := mockTemplate.AssertExpectations(t); !res {
 		t.Error("should execute template")
 	}
 
-	mockServiceGetByAttribute.Unset()
 	if res := mockService.AssertExpectations(t); !res {
 		t.Error("should have called through to service to get tag")
 	}
+
+	mockSessionManagerExists.Unset()
+	mockTemplateExecuteTemplate.Unset()
+	mockServiceGetByAttribute.Unset()
 }
 
 func testGetAdminTagsBySlugHandlerServiceError(
@@ -802,14 +833,16 @@ func testGetAdminTagsBySlugHandlerServiceError(
 		"should return status code internal server error",
 	)
 
-	mockLoggerError.Unset()
 	if res := mockLogger.AssertExpectations(t); !res {
 		t.Error("should log error")
 	}
-	mockServiceGetByAttribute.Unset()
+
 	if res := mockService.AssertExpectations(t); !res {
 		t.Error("should have called through to service to get tag")
 	}
+
+	mockLoggerError.Unset()
+	mockServiceGetByAttribute.Unset()
 }
 
 func testGetAdminTagsBySlugHandlerTemplateError(
@@ -864,25 +897,26 @@ func testGetAdminTagsBySlugHandlerTemplateError(
 		"should return status code internal server error",
 	)
 
-	mockSessionManagerExists.Unset()
 	if res := mockSessionManager.AssertExpectations(t); !res {
 		t.Error("should check if user session exists in context")
 	}
 
-	mockTemplateExecuteTemplate.Unset()
 	if res := mockTemplate.AssertExpectations(t); !res {
 		t.Error("should execute template")
 	}
 
-	mockServiceGetByAttribute.Unset()
 	if res := mockService.AssertExpectations(t); !res {
 		t.Error("should have called through to service to get tag")
 	}
 
-	mockLoggerError.Unset()
 	if res := mockLogger.AssertExpectations(t); !res {
 		t.Error("should log error")
 	}
+
+	mockSessionManagerExists.Unset()
+	mockTemplateExecuteTemplate.Unset()
+	mockServiceGetByAttribute.Unset()
+	mockLoggerError.Unset()
 }
 
 func testPostTagBySlugToUpdateHandler(t *testing.T, ctrl TagController) {
@@ -936,15 +970,16 @@ func testPostTagBySlugToUpdateHandler(t *testing.T, ctrl TagController) {
 		"should redirect to tags page",
 	)
 
-	mockServiceUpdate.Unset()
 	if res := mockService.AssertExpectations(t); !res {
 		t.Error("should call through to service")
 	}
 
-	mockSessionManagerPut.Unset()
 	if res := mockSessionManager.AssertExpectations(t); !res {
 		t.Error("should put message in session context")
 	}
+
+	mockServiceUpdate.Unset()
+	mockSessionManagerPut.Unset()
 }
 
 func testPostTagBySlugToUpdateHandlerBadFormIdError(
@@ -985,10 +1020,11 @@ func testPostTagBySlugToUpdateHandlerBadFormIdError(
 		"should return status code bad request",
 	)
 
-	mockLoggerError.Unset()
 	if res := mockLogger.AssertExpectations(t); !res {
 		t.Error("should log error")
 	}
+
+	mockLoggerError.Unset()
 }
 
 func testPostTagBySlugToUpdateHandlerServiceError(
@@ -1032,13 +1068,14 @@ func testPostTagBySlugToUpdateHandlerServiceError(
 		"should return status code internal server error",
 	)
 
-	mockLoggerError.Unset()
 	if res := mockLogger.AssertExpectations(t); !res {
 		t.Error("should log error")
 	}
 
-	mockServiceUpdate.Unset()
 	if res := mockService.AssertExpectations(t); !res {
 		t.Error("should call through to service")
 	}
+
+	mockLoggerError.Unset()
+	mockServiceUpdate.Unset()
 }

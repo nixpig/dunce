@@ -276,15 +276,16 @@ func testGetUserLoginScreenHandlerNotLoggedIn(
 		"should return status code ok",
 	)
 
-	mockTemplateExecuteTemplate.Unset()
 	if res := mockTemplate.AssertExpectations(t); !res {
 		t.Error("should execute template with view struct")
 	}
 
-	mockSessionManagerPopString.Unset()
 	if res := mockSessionManager.AssertExpectations(t); !res {
 		t.Error("should pop message from session context")
 	}
+
+	mockTemplateExecuteTemplate.Unset()
+	mockSessionManagerPopString.Unset()
 }
 
 func testGetUserLoginScreenHandlerTemplateError(
@@ -331,20 +332,21 @@ func testGetUserLoginScreenHandlerTemplateError(
 		"should return status code internal server error",
 	)
 
-	mockTemplateExecuteTemplate.Unset()
 	if res := mockTemplate.AssertExpectations(t); !res {
 		t.Error("should execute template with view struct")
 	}
 
-	mockSessionManagerPopString.Unset()
 	if res := mockSessionManager.AssertExpectations(t); !res {
 		t.Error("should pop message from session context")
 	}
 
-	mockLoggerError.Unset()
 	if res := mockLogger.AssertExpectations(t); !res {
 		t.Error("should log error")
 	}
+
+	mockTemplateExecuteTemplate.Unset()
+	mockSessionManagerPopString.Unset()
+	mockLoggerError.Unset()
 }
 
 func testPostUserLogin(t *testing.T, ctrl UserController) {
@@ -396,16 +398,17 @@ func testPostUserLogin(t *testing.T, ctrl UserController) {
 		"should redirect to articles page",
 	)
 
-	mockServiceLoginUsernamePassword.Unset()
 	if res := mockService.AssertExpectations(t); !res {
 		t.Error("should call login service")
 	}
 
-	mockSessionManagerRenewToken.Unset()
-	mockSessionManagerPut.Unset()
 	if res := mockSessionManager.AssertExpectations(t); !res {
 		t.Error("should call session manager")
 	}
+
+	mockServiceLoginUsernamePassword.Unset()
+	mockSessionManagerRenewToken.Unset()
+	mockSessionManagerPut.Unset()
 }
 
 func testPostUserLoginUsernamePasswordFailed(
@@ -449,17 +452,18 @@ func testPostUserLoginUsernamePasswordFailed(
 		"should return status code unauthorised",
 	)
 
-	mockServiceLoginUsernamePassword.Unset()
 	if res := mockService.AssertExpectations(t); !res {
 		t.Error("should call login service")
 	}
 
-	mockLoggerError.Unset()
 	if res := mockLogger.AssertExpectations(t); !res {
 		t.Error("should log error")
 	}
 
 	mockSessionManager.AssertNotCalled(t, "RenewToken")
+
+	mockServiceLoginUsernamePassword.Unset()
+	mockLoggerError.Unset()
 }
 
 func testPostUserLoginRenewTokenFailed(t *testing.T, ctrl UserController) {
@@ -503,20 +507,21 @@ func testPostUserLoginRenewTokenFailed(t *testing.T, ctrl UserController) {
 		"should return status code unauthorised",
 	)
 
-	mockServiceLoginUsernamePassword.Unset()
 	if res := mockService.AssertExpectations(t); !res {
 		t.Error("should call login service")
 	}
 
-	mockSessionManagerRenewToken.Unset()
 	if res := mockSessionManager.AssertExpectations(t); !res {
 		t.Error("should call session manager")
 	}
 
-	mockLoggerError.Unset()
 	if res := mockLogger.AssertExpectations(t); !res {
 		t.Error("should log error")
 	}
+
+	mockServiceLoginUsernamePassword.Unset()
+	mockSessionManagerRenewToken.Unset()
+	mockLoggerError.Unset()
 }
 
 func testPostUserLogout(t *testing.T, ctrl UserController) {
@@ -558,9 +563,6 @@ func testPostUserLogout(t *testing.T, ctrl UserController) {
 		"should redirect to main admin page",
 	)
 
-	mockSessionManagerRemove.Unset()
-	mockSessionManagerPut.Unset()
-
 	if res := mockSessionManager.AssertCalled(t, "Remove", req.Context(), session.LOGGED_IN_USERNAME); !res {
 		t.Error("should remove logged in user from session context")
 	}
@@ -568,6 +570,9 @@ func testPostUserLogout(t *testing.T, ctrl UserController) {
 	if res := mockSessionManager.AssertCalled(t, "Put", req.Context(), session.SESSION_KEY_MESSAGE, "You've been logged out."); !res {
 		t.Error("should put message in session context")
 	}
+
+	mockSessionManagerRemove.Unset()
+	mockSessionManagerPut.Unset()
 }
 
 func testGetCreateUserPage(t *testing.T, ctrl UserController) {
@@ -601,10 +606,11 @@ func testGetCreateUserPage(t *testing.T, ctrl UserController) {
 		"should return status code ok",
 	)
 
-	mockTemplateExecuteTemplate.Unset()
 	if res := mockTemplate.AssertExpectations(t); !res {
 		t.Error("should execute template with view struct")
 	}
+
+	mockTemplateExecuteTemplate.Unset()
 }
 
 func testIsAuthenticatedHelper(t *testing.T, ctrl UserController) {
@@ -665,15 +671,16 @@ func testGetCreateUserPageTemplateError(t *testing.T, ctrl UserController) {
 		"should return status code internal server error",
 	)
 
-	mockTemplateExecuteTemplate.Unset()
 	if res := mockTemplate.AssertExpectations(t); !res {
 		t.Error("should execute template with view struct")
 	}
 
-	mockLoggerError.Unset()
 	if res := mockLogger.AssertExpectations(t); !res {
 		t.Error("should log error")
 	}
+
+	mockTemplateExecuteTemplate.Unset()
+	mockLoggerError.Unset()
 }
 
 func testPostCreateUser(t *testing.T, ctrl UserController) {
@@ -729,15 +736,16 @@ func testPostCreateUser(t *testing.T, ctrl UserController) {
 		"should redirect to users admin page",
 	)
 
-	mockServiceCreate.Unset()
 	if res := mockService.AssertExpectations(t); !res {
 		t.Error("should call user create service")
 	}
 
-	mockSessionManagerPut.Unset()
 	if res := mockSessionManager.AssertExpectations(t); !res {
 		t.Error("should put user created message in session context")
 	}
+
+	mockServiceCreate.Unset()
+	mockSessionManagerPut.Unset()
 }
 
 func testPostCreateUserServiceError(t *testing.T, ctrl UserController) {
@@ -778,15 +786,16 @@ func testPostCreateUserServiceError(t *testing.T, ctrl UserController) {
 		"should return status code internal server error",
 	)
 
-	mockServiceCreate.Unset()
 	if res := mockService.AssertExpectations(t); !res {
 		t.Error("should call user create service")
 	}
 
-	mockLoggerError.Unset()
 	if res := mockLogger.AssertExpectations(t); !res {
 		t.Error("should log error")
 	}
+
+	mockServiceCreate.Unset()
+	mockLoggerError.Unset()
 }
 
 func testGetAllUsers(t *testing.T, ctrl UserController) {
@@ -837,20 +846,21 @@ func testGetAllUsers(t *testing.T, ctrl UserController) {
 		"should return status code ok",
 	)
 
-	mockSessionManagerPopString.Unset()
 	if res := mockSessionManager.AssertExpectations(t); !res {
 		t.Error("should get message from session context")
 	}
 
-	mockTemplateExecuteTemplate.Unset()
 	if res := mockTemplate.AssertExpectations(t); !res {
 		t.Error("should execute template")
 	}
 
-	mockServiceGetAll.Unset()
 	if res := mockService.AssertExpectations(t); !res {
 		t.Error("should call service to get users")
 	}
+
+	mockSessionManagerPopString.Unset()
+	mockTemplateExecuteTemplate.Unset()
+	mockServiceGetAll.Unset()
 }
 
 func testGetAllUsersServiceError(t *testing.T, ctrl UserController) {
@@ -877,15 +887,16 @@ func testGetAllUsersServiceError(t *testing.T, ctrl UserController) {
 		"should return status code internal server error",
 	)
 
-	mockServiceGetAll.Unset()
 	if res := mockService.AssertExpectations(t); !res {
 		t.Error("should call service to get users")
 	}
 
-	mockLoggerError.Unset()
 	if res := mockLogger.AssertExpectations(t); !res {
 		t.Error("should log error")
 	}
+
+	mockServiceGetAll.Unset()
+	mockLoggerError.Unset()
 }
 
 func testGetAllUsersTemplateError(t *testing.T, ctrl UserController) {
@@ -938,25 +949,26 @@ func testGetAllUsersTemplateError(t *testing.T, ctrl UserController) {
 		"should return status code internal server error",
 	)
 
-	mockSessionManagerPopString.Unset()
 	if res := mockSessionManager.AssertExpectations(t); !res {
 		t.Error("should get message from session context")
 	}
 
-	mockTemplateExecuteTemplate.Unset()
 	if res := mockTemplate.AssertExpectations(t); !res {
 		t.Error("should execute template")
 	}
 
-	mockServiceGetAll.Unset()
 	if res := mockService.AssertExpectations(t); !res {
 		t.Error("should call service to get users")
 	}
 
-	mockLoggerError.Unset()
 	if res := mockLogger.AssertExpectations(t); !res {
 		t.Error("should log error")
 	}
+
+	mockSessionManagerPopString.Unset()
+	mockTemplateExecuteTemplate.Unset()
+	mockServiceGetAll.Unset()
+	mockLoggerError.Unset()
 }
 
 func testGetUserByUsername(t *testing.T, ctrl UserController) {
@@ -1004,20 +1016,21 @@ func testGetUserByUsername(t *testing.T, ctrl UserController) {
 		"should return status code ok",
 	)
 
-	mockSessionManagerPopString.Unset()
 	if res := mockSessionManager.AssertExpectations(t); !res {
 		t.Error("should get message from session context")
 	}
 
-	mockTemplateExecuteTemplate.Unset()
 	if res := mockTemplate.AssertExpectations(t); !res {
 		t.Error("should execute template")
 	}
 
-	mockServiceGetByAttribute.Unset()
 	if res := mockService.AssertExpectations(t); !res {
 		t.Error("should call service to get users")
 	}
+
+	mockSessionManagerPopString.Unset()
+	mockTemplateExecuteTemplate.Unset()
+	mockServiceGetByAttribute.Unset()
 }
 
 func testGetUserByUsernameServiceError(t *testing.T, ctrl UserController) {
@@ -1046,15 +1059,16 @@ func testGetUserByUsernameServiceError(t *testing.T, ctrl UserController) {
 		"should return status code internal server error",
 	)
 
-	mockServiceGetByAttribute.Unset()
 	if res := mockService.AssertExpectations(t); !res {
 		t.Error("should call service to get users")
 	}
 
-	mockLoggerError.Unset()
 	if res := mockLogger.AssertExpectations(t); !res {
 		t.Error("should log error")
 	}
+
+	mockServiceGetByAttribute.Unset()
+	mockLoggerError.Unset()
 }
 
 func testGetUserByUsernameTemplateError(t *testing.T, ctrl UserController) {
@@ -1104,25 +1118,26 @@ func testGetUserByUsernameTemplateError(t *testing.T, ctrl UserController) {
 		"should return status code internal server error",
 	)
 
-	mockSessionManagerPopString.Unset()
 	if res := mockSessionManager.AssertExpectations(t); !res {
 		t.Error("should get message from session context")
 	}
 
-	mockTemplateExecuteTemplate.Unset()
 	if res := mockTemplate.AssertExpectations(t); !res {
 		t.Error("should execute template")
 	}
 
-	mockServiceGetByAttribute.Unset()
 	if res := mockService.AssertExpectations(t); !res {
 		t.Error("should call service to get users")
 	}
 
-	mockLoggerError.Unset()
 	if res := mockLogger.AssertExpectations(t); !res {
 		t.Error("should log error")
 	}
+
+	mockSessionManagerPopString.Unset()
+	mockTemplateExecuteTemplate.Unset()
+	mockServiceGetByAttribute.Unset()
+	mockLoggerError.Unset()
 }
 
 func testPostDeleteUser(t *testing.T, ctrl UserController) {
@@ -1172,15 +1187,16 @@ func testPostDeleteUser(t *testing.T, ctrl UserController) {
 		"should redirect to users admin page",
 	)
 
-	mockServiceDeleteById.Unset()
 	if res := mockService.AssertExpectations(t); !res {
 		t.Error("should call service to delete user")
 	}
 
-	mockSessionManagerPut.Unset()
 	if res := mockSessionManager.AssertExpectations(t); !res {
 		t.Error("should put deleted message in session context")
 	}
+
+	mockServiceDeleteById.Unset()
+	mockSessionManagerPut.Unset()
 }
 
 func testPostDeleteUserFormError(t *testing.T, ctrl UserController) {
@@ -1216,10 +1232,11 @@ func testPostDeleteUserFormError(t *testing.T, ctrl UserController) {
 		"should return status code internal server error",
 	)
 
-	mockLoggerError.Unset()
 	if res := mockLogger.AssertExpectations(t); !res {
 		t.Error("should log error")
 	}
+
+	mockLoggerError.Unset()
 }
 
 func testPostDeleteUserServiceError(t *testing.T, ctrl UserController) {
@@ -1258,13 +1275,14 @@ func testPostDeleteUserServiceError(t *testing.T, ctrl UserController) {
 		"should return status code internal server error",
 	)
 
-	mockServiceDeleteById.Unset()
 	if res := mockService.AssertExpectations(t); !res {
 		t.Error("should call service to delete user")
 	}
 
-	mockLoggerError.Unset()
 	if res := mockLogger.AssertExpectations(t); !res {
 		t.Error("should log error")
 	}
+
+	mockServiceDeleteById.Unset()
+	mockLoggerError.Unset()
 }

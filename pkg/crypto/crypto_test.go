@@ -66,10 +66,11 @@ func testGenerateFromPasswordSuccess(t *testing.T, crypto Crypto) {
 		"should return value from generator",
 	)
 
-	mockCryptoPasswordGenerator.Unset()
 	if res := mockCrypto.AssertExpectations(t); !res {
 		t.Error("should call the password generator")
 	}
+
+	mockCryptoPasswordGenerator.Unset()
 }
 
 func testGenerateFromPasswordError(t *testing.T, crypto Crypto) {
@@ -86,10 +87,11 @@ func testGenerateFromPasswordError(t *testing.T, crypto Crypto) {
 		"should return error from generator",
 	)
 
-	mockCryptoPasswordGenerator.Unset()
 	if res := mockCrypto.AssertExpectations(t); !res {
 		t.Error("should call password generator")
 	}
+
+	mockCryptoPasswordGenerator.Unset()
 }
 
 func testCompareHashAndPasswordSuccess(t *testing.T, crypto Crypto) {
@@ -103,10 +105,11 @@ func testCompareHashAndPasswordSuccess(t *testing.T, crypto Crypto) {
 
 	require.NoError(t, err, "should not return error")
 
-	mockCryptoHashAndPasswordComparer.Unset()
 	if res := mockCrypto.AssertExpectations(t); !res {
 		t.Error("should call hash and password comparer")
 	}
+
+	mockCryptoHashAndPasswordComparer.Unset()
 }
 
 func testCompareHashAndPasswordError(t *testing.T, crypto Crypto) {
@@ -120,8 +123,9 @@ func testCompareHashAndPasswordError(t *testing.T, crypto Crypto) {
 
 	require.EqualError(t, err, "comparer_error", "should return error")
 
-	mockCryptoHashAndPasswordComparer.Unset()
 	if res := mockCrypto.AssertExpectations(t); !res {
 		t.Error("should call hash and password comparer")
 	}
+
+	mockCryptoHashAndPasswordComparer.Unset()
 }

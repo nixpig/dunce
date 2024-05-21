@@ -167,7 +167,6 @@ func testArticleServiceCreateArticle(t *testing.T, service ArticleService) {
 
 	createdArticle, err := service.Create(&newArticle)
 
-	mockCallCreate.Unset()
 	if res := mockData.AssertExpectations(t); !res {
 		t.Error("unmet expectations")
 	}
@@ -180,6 +179,8 @@ func testArticleServiceCreateArticle(t *testing.T, service ArticleService) {
 		createdArticle,
 		"should return created article",
 	)
+
+	mockCallCreate.Unset()
 }
 
 func testArticleServiceCreateArticleNoTags(t *testing.T, service ArticleService) {
@@ -226,13 +227,14 @@ func testArticleServiceCreateArticleRepoError(t *testing.T, service ArticleServi
 	}
 	article, err := service.Create(&newArticle)
 
-	mockCall.Unset()
 	if res := mockData.AssertExpectations(t); !res {
 		t.Error("unmet expectations")
 	}
 
 	require.Nil(t, article, "should not return article")
 	require.EqualError(t, err, "repo_error", "should return error")
+
+	mockCall.Unset()
 }
 
 func testArticleServiceDeleteArticleByIdError(t *testing.T, service ArticleService) {
@@ -240,12 +242,13 @@ func testArticleServiceDeleteArticleByIdError(t *testing.T, service ArticleServi
 
 	err := service.DeleteById(23)
 
-	mockCall.Unset()
 	if res := mockData.AssertExpectations(t); !res {
 		t.Error("unmet expectations")
 	}
 
 	require.EqualError(t, err, "repo_error", "should bubble up error from repo")
+
+	mockCall.Unset()
 }
 
 func testArticleServiceDeleteArticleById(t *testing.T, service ArticleService) {
@@ -253,12 +256,13 @@ func testArticleServiceDeleteArticleById(t *testing.T, service ArticleService) {
 
 	err := service.DeleteById(23)
 
-	mockCall.Unset()
 	if res := mockData.AssertExpectations(t); !res {
 		t.Error("unmet expectations")
 	}
 
 	require.Nil(t, err, "should not return error")
+
+	mockCall.Unset()
 }
 
 func testArticleServiceGetAllArticles(t *testing.T, service ArticleService) {
@@ -335,7 +339,6 @@ func testArticleServiceGetAllArticles(t *testing.T, service ArticleService) {
 
 	articles, err := service.GetAll()
 
-	mockCall.Unset()
 	if res := mockData.AssertExpectations(t); !res {
 		t.Error("unmet expectations")
 	}
@@ -343,6 +346,8 @@ func testArticleServiceGetAllArticles(t *testing.T, service ArticleService) {
 	require.Nil(t, err, "should not return error")
 
 	require.Equal(t, articles, &allArticles, "should return all articles")
+
+	mockCall.Unset()
 }
 
 func testArticleServiceGetAllArticlesError(t *testing.T, service ArticleService) {
@@ -350,13 +355,14 @@ func testArticleServiceGetAllArticlesError(t *testing.T, service ArticleService)
 
 	articles, err := service.GetAll()
 
-	mockCall.Unset()
 	if res := mockData.AssertExpectations(t); !res {
 		t.Error("unmet expectations")
 	}
 
 	require.EqualError(t, err, "repo_error", "should return error from repo")
 	require.Empty(t, articles, "should return empty articles")
+
+	mockCall.Unset()
 }
 
 func testArticleServiceGetArticleBySlug(t *testing.T, service ArticleService) {
@@ -385,7 +391,6 @@ func testArticleServiceGetArticleBySlug(t *testing.T, service ArticleService) {
 
 	gotArticle, err := service.GetByAttribute("slug", "article-slug")
 
-	mockCall.Unset()
 	if res := mockData.AssertExpectations(t); !res {
 		t.Error("unmet expectations")
 	}
@@ -406,6 +411,8 @@ func testArticleServiceGetArticleBySlug(t *testing.T, service ArticleService) {
 			},
 		},
 	}, gotArticle, "should return article by slug")
+
+	mockCall.Unset()
 }
 
 func testArticleServiceGetArticleBySlugError(t *testing.T, service ArticleService) {
@@ -415,13 +422,14 @@ func testArticleServiceGetArticleBySlugError(t *testing.T, service ArticleServic
 
 	gotArticle, err := service.GetByAttribute("slug", "article-slug")
 
-	mockCall.Unset()
 	if res := mockData.AssertExpectations(t); !res {
 		t.Error("unmet expectations")
 	}
 
 	require.EqualError(t, err, "repo_error", "should return error")
 	require.Nil(t, gotArticle, "should not return an article")
+
+	mockCall.Unset()
 }
 
 func testArticleServiceUpdateArticle(t *testing.T, service ArticleService) {
@@ -470,7 +478,6 @@ func testArticleServiceUpdateArticle(t *testing.T, service ArticleService) {
 
 	updated, err := service.Update(&articleUpdate)
 
-	mockCall.Unset()
 	if res := mockData.AssertExpectations(t); !res {
 		t.Error("unmet expectations")
 	}
@@ -491,6 +498,8 @@ func testArticleServiceUpdateArticle(t *testing.T, service ArticleService) {
 			},
 		},
 	}, updated, "should return updated article")
+
+	mockCall.Unset()
 }
 
 func testArticleServiceUpdateArticleError(t *testing.T, service ArticleService) {
@@ -523,7 +532,6 @@ func testArticleServiceUpdateArticleError(t *testing.T, service ArticleService) 
 
 	updated, err := service.Update(&articleUpdate)
 
-	mockCall.Unset()
 	if res := mockData.AssertExpectations(t); !res {
 		t.Error("unmet expectations")
 	}
@@ -531,6 +539,7 @@ func testArticleServiceUpdateArticleError(t *testing.T, service ArticleService) 
 	require.EqualError(t, err, "repo_error", "should return error")
 	require.Empty(t, updated, "should not return non-updated article")
 
+	mockCall.Unset()
 }
 
 func testArticleServiceCreateFailsValidation(t *testing.T, service ArticleService) {
@@ -704,7 +713,6 @@ func testArticleServiceGetManyArticlesByTagSlug(t *testing.T, service ArticleSer
 
 	gotArticle, err := service.GetManyByAttribute("tagSlug", "tag-one")
 
-	mockCall.Unset()
 	if res := mockData.AssertExpectations(t); !res {
 		t.Error("unmet expectations")
 	}
@@ -742,6 +750,8 @@ func testArticleServiceGetManyArticlesByTagSlug(t *testing.T, service ArticleSer
 			},
 		},
 	}, gotArticle, "should return article by slug")
+
+	mockCall.Unset()
 }
 
 func testArticleServiceGetManyArticlesByTagSlugError(t *testing.T, service ArticleService) {
@@ -751,11 +761,12 @@ func testArticleServiceGetManyArticlesByTagSlugError(t *testing.T, service Artic
 
 	got, err := service.GetManyByAttribute("tagSlug", "tag-one")
 
-	mockCall.Unset()
 	if res := mockData.AssertExpectations(t); !res {
 		t.Error("unmet expectations")
 	}
 
 	require.Empty(t, got, "should not return article(s)")
 	require.EqualError(t, err, "repo_error", "should return repo error")
+
+	mockCall.Unset()
 }

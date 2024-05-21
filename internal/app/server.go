@@ -55,6 +55,7 @@ func Start(appConfig AppConfig) error {
 		TemplateCache:  appConfig.TemplateCache,
 		SessionManager: appConfig.SessionManager,
 		CsrfToken:      appConfig.CsrfToken,
+		ErrorHandlers:  appConfig.ErrorHandlers,
 	})
 
 	articleRepository := article.NewArticlePostgresRepository(appConfig.Db.Pool)

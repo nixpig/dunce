@@ -5,17 +5,19 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/nixpig/dunce/internal/app/errors"
 	"github.com/nixpig/dunce/pkg/logging"
 	"github.com/nixpig/dunce/pkg/session"
 	"github.com/nixpig/dunce/pkg/templates"
 )
 
 type TagController struct {
-	tagService TagService
-	log        logging.Logger
-	templates  templates.TemplateCache
-	session    session.SessionManager
-	csrfToken  func(r *http.Request) string
+	tagService    TagService
+	log           logging.Logger
+	templates     templates.TemplateCache
+	session       session.SessionManager
+	csrfToken     func(r *http.Request) string
+	errorHandlers errors.ErrorHandlers
 }
 
 type TagControllerConfig struct {
@@ -23,6 +25,7 @@ type TagControllerConfig struct {
 	TemplateCache  templates.TemplateCache
 	SessionManager session.SessionManager
 	CsrfToken      func(*http.Request) string
+	ErrorHandlers  errors.ErrorHandlers
 }
 
 type TagView struct {
@@ -49,11 +52,12 @@ func NewTagController(
 	config TagControllerConfig,
 ) TagController {
 	return TagController{
-		tagService: tagService,
-		log:        config.Log,
-		templates:  config.TemplateCache,
-		session:    config.SessionManager,
-		csrfToken:  config.CsrfToken,
+		tagService:    tagService,
+		log:           config.Log,
+		templates:     config.TemplateCache,
+		session:       config.SessionManager,
+		csrfToken:     config.CsrfToken,
+		errorHandlers: config.ErrorHandlers,
 	}
 }
 
@@ -67,8 +71,7 @@ func (t *TagController) PostAdminTagsHandler(
 	}
 
 	if _, err := t.tagService.Create(&tag); err != nil {
-		t.log.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		t.errorHandlers.InternalServerError(w, r)
 		return
 	}
 
@@ -219,8 +222,7 @@ func (t *TagController) GetAdminTagsNewHandler(
 	}
 
 	if err := t.templates["pages/admin/new-tag.tmpl"].ExecuteTemplate(w, "admin", tagView); err != nil {
-		t.log.Error(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		t.errorHandlers.InternalServerError(w, r)
 		return
 	}
 }

@@ -144,11 +144,11 @@ func testUserServiceGetAllMultiple(t *testing.T, service UserService) {
 		},
 	}, users, "should return users response")
 
-	mockRepoGetAll.Unset()
-
 	if res := mockRepo.AssertExpectations(t); !res {
 		t.Error("expectations not met")
 	}
+
+	mockRepoGetAll.Unset()
 }
 
 func testUserServiceRepoError(t *testing.T, service UserService) {
@@ -160,11 +160,11 @@ func testUserServiceRepoError(t *testing.T, service UserService) {
 
 	require.EqualError(t, err, "repo_error", "should return the repo error")
 
-	mockRepoGetAll.Unset()
-
 	if res := mockRepo.AssertExpectations(t); !res {
 		t.Error("unmet expectations")
 	}
+
+	mockRepoGetAll.Unset()
 }
 
 func testUserServiceGetAllSingle(t *testing.T, service UserService) {
@@ -188,11 +188,11 @@ func testUserServiceGetAllSingle(t *testing.T, service UserService) {
 		},
 	}, users, "should return users response")
 
-	mockRepoGetAll.Unset()
-
 	if res := mockRepo.AssertExpectations(t); !res {
 		t.Error("expectations not met")
 	}
+
+	mockRepoGetAll.Unset()
 }
 
 func testUserServiceGetAllZero(t *testing.T, service UserService) {
@@ -204,11 +204,11 @@ func testUserServiceGetAllZero(t *testing.T, service UserService) {
 
 	require.Equal(t, &[]UserResponseDto{}, users, "should return users response")
 
-	mockRepoGetAll.Unset()
-
 	if res := mockRepo.AssertExpectations(t); !res {
 		t.Error("expectations not met")
 	}
+
+	mockRepoGetAll.Unset()
 }
 
 func testUserServiceGetByAttr(t *testing.T, service UserService) {
@@ -229,11 +229,11 @@ func testUserServiceGetByAttr(t *testing.T, service UserService) {
 		Email:    "jane@example.org",
 	}, user, "should return matching user")
 
-	mockRepoGetByAttribute.Unset()
-
 	if res := mockRepo.AssertExpectations(t); !res {
 		t.Error("unmet expectations")
 	}
+
+	mockRepoGetByAttribute.Unset()
 }
 
 func testUserServiceGetByAttrRepoError(t *testing.T, service UserService) {
@@ -246,11 +246,11 @@ func testUserServiceGetByAttrRepoError(t *testing.T, service UserService) {
 	require.EqualError(t, err, "repo_error", "should not return error")
 	require.Nil(t, user, "should not return user")
 
-	mockRepoGetByAttribute.Unset()
-
 	if res := mockRepo.AssertExpectations(t); !res {
 		t.Error("unmet expectations")
 	}
+
+	mockRepoGetByAttribute.Unset()
 }
 
 func testUserServiceUserExistsTrue(t *testing.T, service UserService) {
@@ -261,11 +261,11 @@ func testUserServiceUserExistsTrue(t *testing.T, service UserService) {
 	require.NoError(t, err, "should not return error")
 	require.True(t, exists, "should return true")
 
-	mockRepoUserExists.Unset()
-
 	if res := mockRepo.AssertExpectations(t); !res {
 		t.Error("unmet expectations")
 	}
+
+	mockRepoUserExists.Unset()
 }
 
 func testUserServiceUserExistsFalse(t *testing.T, service UserService) {
@@ -276,12 +276,11 @@ func testUserServiceUserExistsFalse(t *testing.T, service UserService) {
 	require.NoError(t, err, "should not return error")
 	require.False(t, exists, "should return false")
 
-	mockRepoUserExists.Unset()
-
 	if res := mockRepo.AssertExpectations(t); !res {
 		t.Error("unmet expectations")
 	}
 
+	mockRepoUserExists.Unset()
 }
 
 func testUserServiceUserExistsError(t *testing.T, service UserService) {
@@ -294,11 +293,11 @@ func testUserServiceUserExistsError(t *testing.T, service UserService) {
 	require.EqualError(t, err, "repo_error", "should return error")
 	require.False(t, exists, "should return false")
 
-	mockRepoUserExists.Unset()
-
 	if res := mockRepo.AssertExpectations(t); !res {
 		t.Error("unmet expectations")
 	}
+
+	mockRepoUserExists.Unset()
 }
 
 func testUserServiceDeleteById(t *testing.T, service UserService) {
@@ -308,11 +307,11 @@ func testUserServiceDeleteById(t *testing.T, service UserService) {
 
 	require.NoError(t, err, "should not return error")
 
-	mockRepoDeleteById.Unset()
-
 	if res := mockRepo.AssertExpectations(t); !res {
 		t.Error("unmet expectations")
 	}
+
+	mockRepoDeleteById.Unset()
 }
 
 func testUserServiceDeleteByIdError(t *testing.T, service UserService) {
@@ -322,11 +321,11 @@ func testUserServiceDeleteByIdError(t *testing.T, service UserService) {
 
 	require.EqualError(t, err, "repo_error", "should return error")
 
-	mockRepoDeleteById.Unset()
-
 	if res := mockRepo.AssertExpectations(t); !res {
 		t.Error("unmet expectations")
 	}
+
+	mockRepoDeleteById.Unset()
 }
 
 func testUserServiceCreateUser(t *testing.T, service UserService) {
@@ -359,9 +358,6 @@ func testUserServiceCreateUser(t *testing.T, service UserService) {
 		Email:    "jane@example.org",
 	}, createdUser, "should return created user response")
 
-	mockCryptoGenerateFromPassword.Unset()
-	mockRepoCreate.Unset()
-
 	if res := mockCrypto.AssertExpectations(t); !res {
 		t.Error("unmet expectations")
 	}
@@ -369,6 +365,9 @@ func testUserServiceCreateUser(t *testing.T, service UserService) {
 	if res := mockRepo.AssertExpectations(t); !res {
 		t.Error("unmet expectations")
 	}
+
+	mockCryptoGenerateFromPassword.Unset()
+	mockRepoCreate.Unset()
 }
 
 func testUserServiceCreateUserPasswordHashingError(t *testing.T, service UserService) {
@@ -385,11 +384,11 @@ func testUserServiceCreateUserPasswordHashingError(t *testing.T, service UserSer
 	require.EqualError(t, err, "password_error", "should return error")
 	require.Nil(t, createdUser, "should not return user")
 
-	mockCryptoGenerateFromPassword.Unset()
-
 	if res := mockCrypto.AssertExpectations(t); !res {
 		t.Error("unmet expectations")
 	}
+
+	mockCryptoGenerateFromPassword.Unset()
 }
 
 func testUserServiceCreateUserValidationError(t *testing.T, service UserService) {
@@ -402,11 +401,11 @@ func testUserServiceCreateUserValidationError(t *testing.T, service UserService)
 	require.Error(t, err, "should return error")
 	require.Nil(t, createdUser, "should not return user")
 
-	mockCryptoGenerateFromPassword.Unset()
-
 	if res := mockCrypto.AssertExpectations(t); !res {
 		t.Error("unmet expectations")
 	}
+
+	mockCryptoGenerateFromPassword.Unset()
 }
 
 func testUserServiceCreateUserRepoError(t *testing.T, service UserService) {
@@ -431,9 +430,6 @@ func testUserServiceCreateUserRepoError(t *testing.T, service UserService) {
 	require.EqualError(t, err, "repo_error", "should return error")
 	require.Nil(t, createdUser, "should not return user")
 
-	mockCryptoGenerateFromPassword.Unset()
-	mockRepoCreate.Unset()
-
 	if res := mockCrypto.AssertExpectations(t); !res {
 		t.Error("unmet expectations")
 	}
@@ -441,6 +437,9 @@ func testUserServiceCreateUserRepoError(t *testing.T, service UserService) {
 	if res := mockRepo.AssertExpectations(t); !res {
 		t.Error("unmet expectations")
 	}
+
+	mockCryptoGenerateFromPassword.Unset()
+	mockRepoCreate.Unset()
 }
 
 func testUserServiceUpdateUser(t *testing.T, service UserService) {
@@ -470,11 +469,11 @@ func testUserServiceUpdateUser(t *testing.T, service UserService) {
 		Email:    "jane@example.org",
 	}, updatedUser, "should return updated user response")
 
-	mockRepoUpdate.Unset()
-
 	if res := mockRepo.AssertExpectations(t); !res {
 		t.Error("unmet expectations")
 	}
+
+	mockRepoUpdate.Unset()
 }
 
 func testUserServiceUpdateUserRepoError(t *testing.T, service UserService) {
@@ -496,11 +495,11 @@ func testUserServiceUpdateUserRepoError(t *testing.T, service UserService) {
 
 	require.Nil(t, updatedUser, "should not return a user")
 
-	mockRepoUpdate.Unset()
-
 	if res := mockRepo.AssertExpectations(t); !res {
 		t.Error("unmet expectations")
 	}
+
+	mockRepoUpdate.Unset()
 }
 
 func testUserServiceUpdateUserValidationError(t *testing.T, service UserService) {
@@ -524,15 +523,16 @@ func testUserServiceLoginUsernamePassword(t *testing.T, service UserService) {
 
 	require.NoError(t, err, "should not return error")
 
-	mockRepoGetPasswordByUserName.Unset()
 	if res := mockRepo.AssertExpectations(t); !res {
 		t.Error("unmet expectations")
 	}
 
-	mockCryptoCompareHashAndPassword.Unset()
 	if res := mockCrypto.AssertExpectations(t); !res {
 		t.Error("unmet expectations")
 	}
+
+	mockRepoGetPasswordByUserName.Unset()
+	mockCryptoCompareHashAndPassword.Unset()
 }
 
 func testUserServiceLoginUsernamePasswordRepoError(t *testing.T, service UserService) {
@@ -544,10 +544,11 @@ func testUserServiceLoginUsernamePasswordRepoError(t *testing.T, service UserSer
 
 	require.EqualError(t, err, "repo_error", "should return repo error")
 
-	mockRepoGetPasswordByUserName.Unset()
 	if res := mockRepo.AssertExpectations(t); !res {
 		t.Error("unmet expectations")
 	}
+
+	mockRepoGetPasswordByUserName.Unset()
 }
 
 func testUserServiceLoginUsernamePasswordIncorrectPassword(t *testing.T, service UserService) {
@@ -563,13 +564,14 @@ func testUserServiceLoginUsernamePasswordIncorrectPassword(t *testing.T, service
 
 	require.EqualError(t, err, "incorrect_password", "should return crypto error")
 
-	mockRepoGetPasswordByUserName.Unset()
 	if res := mockRepo.AssertExpectations(t); !res {
 		t.Error("unmet expectations")
 	}
 
-	mockCryptoCompareHashAndPassword.Unset()
 	if res := mockCrypto.AssertExpectations(t); !res {
 		t.Error("unmet expectations")
 	}
+
+	mockRepoGetPasswordByUserName.Unset()
+	mockCryptoCompareHashAndPassword.Unset()
 }
