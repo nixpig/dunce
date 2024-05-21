@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/nixpig/dunce/internal/app/errors"
 	"github.com/nixpig/dunce/pkg/logging"
 	"github.com/nixpig/dunce/pkg/session"
 	"github.com/nixpig/dunce/pkg/templates"
@@ -16,6 +17,7 @@ type UserController struct {
 	templateCache  templates.TemplateCache
 	sessionManager session.SessionManager
 	csrfToken      func(r *http.Request) string
+	errorHandlers  errors.ErrorHandlers
 }
 
 type UserControllerConfig struct {
@@ -23,6 +25,7 @@ type UserControllerConfig struct {
 	TemplateCache  templates.TemplateCache
 	SessionManager session.SessionManager
 	CsrfToken      func(*http.Request) string
+	ErrorHandlers  errors.ErrorHandlers
 }
 
 type UserView struct {
@@ -60,6 +63,7 @@ func NewUserController(
 		templateCache:  config.TemplateCache,
 		sessionManager: config.SessionManager,
 		csrfToken:      config.CsrfToken,
+		errorHandlers:  config.ErrorHandlers,
 	}
 }
 
@@ -74,8 +78,7 @@ func (u *UserController) UserLoginGet(w http.ResponseWriter, r *http.Request) {
 		CsrfToken:       u.csrfToken(r),
 		IsAuthenticated: u.IsAuthenticated(r),
 	}); err != nil {
-		u.log.Error(err.Error())
-		http.Error(w, http.StatusText(500), http.StatusInternalServerError)
+		u.errorHandlers.InternalServerError(w, r)
 	}
 }
 
@@ -88,13 +91,14 @@ func (u *UserController) UserLoginPost(w http.ResponseWriter, r *http.Request) {
 		password,
 	); err != nil {
 		u.log.Error(err.Error())
-		http.Error(w, http.StatusText(401), http.StatusUnauthorized)
+		u.sessionManager.Put(r.Context(), session.SESSION_KEY_MESSAGE, "Login failed.")
+		http.Redirect(w, r, "/admin/login", http.StatusSeeOther)
 		return
 	}
 
 	if err := u.sessionManager.RenewToken(r.Context()); err != nil {
 		u.log.Error(err.Error())
-		http.Error(w, http.StatusText(401), http.StatusUnauthorized)
+		http.Redirect(w, r, "/admin/login", http.StatusSeeOther)
 		return
 	}
 
@@ -122,8 +126,7 @@ func (u *UserController) CreateUserGet(w http.ResponseWriter, r *http.Request) {
 		CsrfToken:       u.csrfToken(r),
 		IsAuthenticated: u.IsAuthenticated(r),
 	}); err != nil {
-		u.log.Error(err.Error())
-		http.Error(w, http.StatusText(500), http.StatusInternalServerError)
+		u.errorHandlers.InternalServerError(w, r)
 		return
 	}
 }
@@ -140,8 +143,7 @@ func (u *UserController) CreateUserPost(
 
 	createdUser, err := u.service.Create(&user)
 	if err != nil {
-		u.log.Error(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		u.errorHandlers.InternalServerError(w, r)
 		return
 	}
 
@@ -157,8 +159,7 @@ func (u *UserController) CreateUserPost(
 func (u *UserController) UsersGet(w http.ResponseWriter, r *http.Request) {
 	users, err := u.service.GetAll()
 	if err != nil {
-		u.log.Error(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		u.errorHandlers.InternalServerError(w, r)
 		return
 	}
 
@@ -170,8 +171,7 @@ func (u *UserController) UsersGet(w http.ResponseWriter, r *http.Request) {
 		CsrfToken:       u.csrfToken(r),
 		IsAuthenticated: u.IsAuthenticated(r),
 	}); err != nil {
-		u.log.Error(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		u.errorHandlers.InternalServerError(w, r)
 		return
 	}
 }
@@ -179,8 +179,7 @@ func (u *UserController) UsersGet(w http.ResponseWriter, r *http.Request) {
 func (u *UserController) UserGet(w http.ResponseWriter, r *http.Request) {
 	user, err := u.service.GetByAttribute("username", r.PathValue("slug"))
 	if err != nil {
-		u.log.Error(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		u.errorHandlers.InternalServerError(w, r)
 		return
 	}
 
@@ -190,8 +189,7 @@ func (u *UserController) UserGet(w http.ResponseWriter, r *http.Request) {
 		CsrfToken:       u.csrfToken(r),
 		IsAuthenticated: u.IsAuthenticated(r),
 	}); err != nil {
-		u.log.Error(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		u.errorHandlers.InternalServerError(w, r)
 		return
 	}
 }
@@ -203,14 +201,12 @@ func (u *UserController) DeleteUserPost(
 	username := r.FormValue("username")
 	id, err := strconv.Atoi(r.FormValue("id"))
 	if err != nil {
-		u.log.Error(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		u.errorHandlers.BadRequest(w, r)
 		return
 	}
 
 	if err := u.service.DeleteById(uint(id)); err != nil {
-		u.log.Error(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		u.errorHandlers.InternalServerError(w, r)
 		return
 	}
 

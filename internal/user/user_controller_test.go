@@ -26,6 +26,7 @@ var mockTemplateCache = templates.TemplateCache{
 var mockLogger = new(MockLogger)
 var mockSessionManager = new(MockSessionManager)
 var mockService = new(MockUserService)
+var mockErrorHandlers = new(MockErrorHandlers)
 
 func TestUserController(t *testing.T) {
 	scenarios := map[string]func(t *testing.T, ctrl UserController){
@@ -61,6 +62,7 @@ func TestUserController(t *testing.T) {
 				CsrfToken: func(r *http.Request) string {
 					return "mock-token"
 				},
+				ErrorHandlers: mockErrorHandlers,
 			}
 
 			ctrl := NewUserController(mockService, config)
@@ -68,7 +70,22 @@ func TestUserController(t *testing.T) {
 		})
 
 	}
+}
 
+type MockErrorHandlers struct {
+	mock.Mock
+}
+
+func (e *MockErrorHandlers) InternalServerError(w http.ResponseWriter, r *http.Request) {
+	e.Called(w, r)
+}
+
+func (e *MockErrorHandlers) NotFound(w http.ResponseWriter, r *http.Request) {
+	e.Called(w, r)
+}
+
+func (e *MockErrorHandlers) BadRequest(w http.ResponseWriter, r *http.Request) {
+	e.Called(w, r)
 }
 
 type MockLogger struct {
@@ -318,12 +335,13 @@ func testGetUserLoginScreenHandlerTemplateError(
 		},
 	).Return(errors.New("template_error"))
 
-	mockLoggerError := mockLogger.On("Error", "template_error", mock.Anything)
+	mockErrorHandlersInternalServerError := mockErrorHandlers.
+		On("InternalServerError", rr, req.WithContext(ctx)).
+		Run(func(args mock.Arguments) {
+			rr.WriteHeader(http.StatusInternalServerError)
+		})
 
-	handler.ServeHTTP(
-		rr,
-		req.WithContext(ctx),
-	)
+	handler.ServeHTTP(rr, req.WithContext(ctx))
 
 	require.Equal(
 		t,
@@ -340,13 +358,13 @@ func testGetUserLoginScreenHandlerTemplateError(
 		t.Error("should pop message from session context")
 	}
 
-	if res := mockLogger.AssertExpectations(t); !res {
-		t.Error("should log error")
+	if res := mockErrorHandlers.AssertExpectations(t); !res {
+		t.Error("should call error handler")
 	}
 
+	mockErrorHandlersInternalServerError.Unset()
 	mockTemplateExecuteTemplate.Unset()
 	mockSessionManagerPopString.Unset()
-	mockLoggerError.Unset()
 }
 
 func testPostUserLogin(t *testing.T, ctrl UserController) {
@@ -443,14 +461,18 @@ func testPostUserLoginUsernamePasswordFailed(
 		mock.Anything,
 	)
 
+	mockSessionManagerPut := mockSessionManager.On("Put", req.Context(), session.SESSION_KEY_MESSAGE, "Login failed.")
+
 	handler.ServeHTTP(rr, req)
 
 	require.Equal(
 		t,
-		http.StatusUnauthorized,
+		http.StatusSeeOther,
 		rr.Result().StatusCode,
-		"should return status code unauthorised",
+		"should return status code see other",
 	)
+
+	require.Equal(t, "/admin/login", rr.Result().Header.Get("Location"), "should redirect back to login screen")
 
 	if res := mockService.AssertExpectations(t); !res {
 		t.Error("should call login service")
@@ -460,8 +482,13 @@ func testPostUserLoginUsernamePasswordFailed(
 		t.Error("should log error")
 	}
 
+	if res := mockSessionManager.AssertExpectations(t); !res {
+		t.Error("should put unauthorised message in session context")
+	}
+
 	mockSessionManager.AssertNotCalled(t, "RenewToken")
 
+	mockSessionManagerPut.Unset()
 	mockServiceLoginUsernamePassword.Unset()
 	mockLoggerError.Unset()
 }
@@ -502,9 +529,9 @@ func testPostUserLoginRenewTokenFailed(t *testing.T, ctrl UserController) {
 
 	require.Equal(
 		t,
-		http.StatusUnauthorized,
+		http.StatusSeeOther,
 		rr.Result().StatusCode,
-		"should return status code unauthorised",
+		"should return status code see other",
 	)
 
 	if res := mockService.AssertExpectations(t); !res {
@@ -658,9 +685,13 @@ func testGetCreateUserPageTemplateError(t *testing.T, ctrl UserController) {
 		},
 	).Return(errors.New("template_error"))
 
-	mockLoggerError := mockLogger.On("Error", "template_error", mock.Anything)
-
 	ctx := context.WithValue(req.Context(), session.IS_LOGGED_IN_CONTEXT_KEY, true)
+
+	mockErrorHandlersInternalServerError := mockErrorHandlers.
+		On("InternalServerError", rr, req.WithContext(ctx)).
+		Run(func(args mock.Arguments) {
+			rr.WriteHeader(http.StatusInternalServerError)
+		})
 
 	handler.ServeHTTP(rr, req.WithContext(ctx))
 
@@ -675,12 +706,12 @@ func testGetCreateUserPageTemplateError(t *testing.T, ctrl UserController) {
 		t.Error("should execute template with view struct")
 	}
 
-	if res := mockLogger.AssertExpectations(t); !res {
-		t.Error("should log error")
+	if res := mockErrorHandlers.AssertExpectations(t); !res {
+		t.Error("should call error handler")
 	}
 
+	mockErrorHandlersInternalServerError.Unset()
 	mockTemplateExecuteTemplate.Unset()
-	mockLoggerError.Unset()
 }
 
 func testPostCreateUser(t *testing.T, ctrl UserController) {
@@ -775,7 +806,11 @@ func testPostCreateUserServiceError(t *testing.T, ctrl UserController) {
 		Email:    "jane@example.org",
 	}).Return(&UserResponseDto{}, errors.New("service_error"))
 
-	mockLoggerError := mockLogger.On("Error", "service_error", mock.Anything)
+	mockErrorHandlersInternalServerError := mockErrorHandlers.
+		On("InternalServerError", rr, req).
+		Run(func(args mock.Arguments) {
+			rr.WriteHeader(http.StatusInternalServerError)
+		})
 
 	handler.ServeHTTP(rr, req)
 
@@ -790,12 +825,12 @@ func testPostCreateUserServiceError(t *testing.T, ctrl UserController) {
 		t.Error("should call user create service")
 	}
 
-	if res := mockLogger.AssertExpectations(t); !res {
-		t.Error("should log error")
+	if res := mockErrorHandlers.AssertExpectations(t); !res {
+		t.Error("should call error handler")
 	}
 
 	mockServiceCreate.Unset()
-	mockLoggerError.Unset()
+	mockErrorHandlersInternalServerError.Unset()
 }
 
 func testGetAllUsers(t *testing.T, ctrl UserController) {
@@ -876,7 +911,11 @@ func testGetAllUsersServiceError(t *testing.T, ctrl UserController) {
 	mockServiceGetAll := mockService.On("GetAll").
 		Return(&[]UserResponseDto{}, errors.New("service_error"))
 
-	mockLoggerError := mockLogger.On("Error", "service_error", mock.Anything)
+	mockErrorHandlersInternalServerError := mockErrorHandlers.
+		On("InternalServerError", rr, req).
+		Run(func(args mock.Arguments) {
+			rr.WriteHeader(http.StatusInternalServerError)
+		})
 
 	handler.ServeHTTP(rr, req)
 
@@ -891,12 +930,12 @@ func testGetAllUsersServiceError(t *testing.T, ctrl UserController) {
 		t.Error("should call service to get users")
 	}
 
-	if res := mockLogger.AssertExpectations(t); !res {
-		t.Error("should log error")
+	if res := mockErrorHandlers.AssertExpectations(t); !res {
+		t.Error("should call error handler")
 	}
 
+	mockErrorHandlersInternalServerError.Unset()
 	mockServiceGetAll.Unset()
-	mockLoggerError.Unset()
 }
 
 func testGetAllUsersTemplateError(t *testing.T, ctrl UserController) {
@@ -938,7 +977,11 @@ func testGetAllUsersTemplateError(t *testing.T, ctrl UserController) {
 		},
 	).Return(errors.New("template_error"))
 
-	mockLoggerError := mockLogger.On("Error", "template_error", mock.Anything)
+	mockErrorHandlersInternalServerError := mockErrorHandlers.
+		On("InternalServerError", rr, req).
+		Run(func(args mock.Arguments) {
+			rr.WriteHeader(http.StatusInternalServerError)
+		})
 
 	handler.ServeHTTP(rr, req)
 
@@ -961,14 +1004,14 @@ func testGetAllUsersTemplateError(t *testing.T, ctrl UserController) {
 		t.Error("should call service to get users")
 	}
 
-	if res := mockLogger.AssertExpectations(t); !res {
-		t.Error("should log error")
+	if res := mockErrorHandlers.AssertExpectations(t); !res {
+		t.Error("should call error handler")
 	}
 
+	mockErrorHandlersInternalServerError.Unset()
 	mockSessionManagerPopString.Unset()
 	mockTemplateExecuteTemplate.Unset()
 	mockServiceGetAll.Unset()
-	mockLoggerError.Unset()
 }
 
 func testGetUserByUsername(t *testing.T, ctrl UserController) {
@@ -1048,7 +1091,11 @@ func testGetUserByUsernameServiceError(t *testing.T, ctrl UserController) {
 	mockServiceGetByAttribute := mockService.On("GetByAttribute", "username", "janedoe").
 		Return(&UserResponseDto{}, errors.New("service_error"))
 
-	mockLoggerError := mockLogger.On("Error", "service_error", mock.Anything)
+	mockErrorHandlersInternalServerError := mockErrorHandlers.
+		On("InternalServerError", rr, req).
+		Run(func(args mock.Arguments) {
+			rr.WriteHeader(http.StatusInternalServerError)
+		})
 
 	handler.ServeHTTP(rr, req)
 
@@ -1063,12 +1110,12 @@ func testGetUserByUsernameServiceError(t *testing.T, ctrl UserController) {
 		t.Error("should call service to get users")
 	}
 
-	if res := mockLogger.AssertExpectations(t); !res {
-		t.Error("should log error")
+	if res := mockErrorHandlers.AssertExpectations(t); !res {
+		t.Error("should call error handler")
 	}
 
+	mockErrorHandlersInternalServerError.Unset()
 	mockServiceGetByAttribute.Unset()
-	mockLoggerError.Unset()
 }
 
 func testGetUserByUsernameTemplateError(t *testing.T, ctrl UserController) {
@@ -1107,7 +1154,11 @@ func testGetUserByUsernameTemplateError(t *testing.T, ctrl UserController) {
 		},
 	).Return(errors.New("template_error"))
 
-	mockLoggerError := mockLogger.On("Error", "template_error", mock.Anything)
+	mockErrorHandlersInternalServerError := mockErrorHandlers.
+		On("InternalServerError", rr, req).
+		Run(func(args mock.Arguments) {
+			rr.WriteHeader(http.StatusInternalServerError)
+		})
 
 	handler.ServeHTTP(rr, req)
 
@@ -1130,14 +1181,14 @@ func testGetUserByUsernameTemplateError(t *testing.T, ctrl UserController) {
 		t.Error("should call service to get users")
 	}
 
-	if res := mockLogger.AssertExpectations(t); !res {
-		t.Error("should log error")
+	if res := mockErrorHandlers.AssertExpectations(t); !res {
+		t.Error("should call error handler")
 	}
 
+	mockErrorHandlersInternalServerError.Unset()
 	mockSessionManagerPopString.Unset()
 	mockTemplateExecuteTemplate.Unset()
 	mockServiceGetByAttribute.Unset()
-	mockLoggerError.Unset()
 }
 
 func testPostDeleteUser(t *testing.T, ctrl UserController) {
@@ -1221,22 +1272,27 @@ func testPostDeleteUserFormError(t *testing.T, ctrl UserController) {
 
 	handler := http.HandlerFunc(ctrl.DeleteUserPost)
 
-	mockLoggerError := mockLogger.On("Error", mock.Anything, mock.Anything)
+	mockErrorHandlersBadRequest := mockErrorHandlers.
+		On("BadRequest", rr, req).
+		Run(func(args mock.Arguments) {
+			rr.WriteHeader(http.StatusBadRequest)
+		})
 
 	handler.ServeHTTP(rr, req)
 
 	require.Equal(
 		t,
-		http.StatusInternalServerError,
+		http.StatusBadRequest,
 		rr.Result().StatusCode,
-		"should return status code internal server error",
+		"should return status code bad request",
 	)
 
-	if res := mockLogger.AssertExpectations(t); !res {
-		t.Error("should log error")
+	if res := mockErrorHandlers.AssertExpectations(t); !res {
+		t.Error("should call error handler")
 	}
 
-	mockLoggerError.Unset()
+	mockErrorHandlersBadRequest.Unset()
+
 }
 
 func testPostDeleteUserServiceError(t *testing.T, ctrl UserController) {
@@ -1264,7 +1320,11 @@ func testPostDeleteUserServiceError(t *testing.T, ctrl UserController) {
 	mockServiceDeleteById := mockService.On("DeleteById", uint(23)).
 		Return(errors.New("service_error"))
 
-	mockLoggerError := mockLogger.On("Error", "service_error", mock.Anything)
+	mockErrorHandlersInternalServerError := mockErrorHandlers.
+		On("InternalServerError", rr, req).
+		Run(func(args mock.Arguments) {
+			rr.WriteHeader(http.StatusInternalServerError)
+		})
 
 	handler.ServeHTTP(rr, req)
 
@@ -1279,10 +1339,10 @@ func testPostDeleteUserServiceError(t *testing.T, ctrl UserController) {
 		t.Error("should call service to delete user")
 	}
 
-	if res := mockLogger.AssertExpectations(t); !res {
-		t.Error("should log error")
+	if res := mockErrorHandlers.AssertExpectations(t); !res {
+		t.Error("should call error handler")
 	}
 
+	mockErrorHandlersInternalServerError.Unset()
 	mockServiceDeleteById.Unset()
-	mockLoggerError.Unset()
 }
