@@ -9,6 +9,7 @@ import (
 type ErrorHandlers interface {
 	NotFound(w http.ResponseWriter, r *http.Request)
 	InternalServerError(w http.ResponseWriter, r *http.Request)
+	BadRequest(w http.ResponseWriter, r *http.Request)
 }
 
 type ErrorHandlersImpl struct {
@@ -30,5 +31,12 @@ func (e ErrorHandlersImpl) InternalServerError(w http.ResponseWriter, r *http.Re
 	w.WriteHeader(http.StatusInternalServerError)
 	if err := e.templateCache["pages/errors/internal-server-error.tmpl"].ExecuteTemplate(w, "public", nil); err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
+
+func (e ErrorHandlersImpl) BadRequest(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusBadRequest)
+	if err := e.templateCache["pages/errors/bad-request.tmpl"].ExecuteTemplate(w, "public", nil); err != nil {
+		e.InternalServerError(w, r)
 	}
 }

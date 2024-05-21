@@ -90,18 +90,12 @@ func (t *TagController) DeleteAdminTagsSlugHandler(
 ) {
 	id, err := strconv.Atoi(r.FormValue("id"))
 	if err != nil {
-		t.log.Error(err.Error())
-		http.Error(w, "Bad Request", http.StatusBadRequest)
+		t.errorHandlers.BadRequest(w, r)
 		return
 	}
 
 	if err := t.tagService.DeleteById(id); err != nil {
-		t.log.Error(err.Error())
-		http.Error(
-			w,
-			http.StatusText(http.StatusInternalServerError),
-			http.StatusInternalServerError,
-		)
+		t.errorHandlers.InternalServerError(w, r)
 		return
 	}
 
@@ -120,8 +114,7 @@ func (t *TagController) GetAdminTagsHandler(
 ) {
 	tags, err := t.tagService.GetAll()
 	if err != nil {
-		t.log.Error(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		t.errorHandlers.InternalServerError(w, r)
 		return
 	}
 
@@ -143,8 +136,7 @@ func (t *TagController) GetAdminTagsHandler(
 		tagView,
 	)
 	if err != nil {
-		t.log.Error(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		t.errorHandlers.InternalServerError(w, r)
 	}
 }
 
@@ -156,8 +148,7 @@ func (t *TagController) GetAdminTagsSlugHandler(
 
 	tag, err := t.tagService.GetByAttribute("slug", slug)
 	if err != nil {
-		t.log.Error(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		t.errorHandlers.InternalServerError(w, r)
 		return
 	}
 
@@ -171,8 +162,7 @@ func (t *TagController) GetAdminTagsSlugHandler(
 	}
 
 	if err := t.templates["pages/admin/tag.tmpl"].ExecuteTemplate(w, "admin", tagView); err != nil {
-		t.log.Error(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		t.errorHandlers.InternalServerError(w, r)
 		return
 	}
 }
@@ -183,8 +173,7 @@ func (t *TagController) PostAdminTagsSlugHandler(
 ) {
 	id, err := strconv.Atoi(r.FormValue("id"))
 	if err != nil {
-		t.log.Error(err.Error())
-		http.Error(w, "Invalid tag ID", http.StatusBadRequest)
+		t.errorHandlers.BadRequest(w, r)
 		return
 	}
 
@@ -195,8 +184,7 @@ func (t *TagController) PostAdminTagsSlugHandler(
 	}
 
 	if _, err := t.tagService.Update(&tag); err != nil {
-		t.log.Error(err.Error())
-		http.Error(w, "Unable to save changes", http.StatusInternalServerError)
+		t.errorHandlers.InternalServerError(w, r)
 		return
 	}
 

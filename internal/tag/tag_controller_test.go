@@ -77,6 +77,10 @@ func (e *MockErrorHandlers) InternalServerError(w http.ResponseWriter, r *http.R
 	e.Called(w, r)
 }
 
+func (e *MockErrorHandlers) BadRequest(w http.ResponseWriter, r *http.Request) {
+	e.Called(w, r)
+}
+
 type MockSessionManager struct {
 	mock.Mock
 }
@@ -369,9 +373,10 @@ func testPostAdminTagsHandlerServiceError(t *testing.T, ctrl TagController) {
 	}).Return(&TagResponseDto{}, errors.New("service_error"))
 
 	mockErrorHandlersInternalServerError := mockErrorHandlers.
-		On("InternalServerError", rr, req).Run(func(args mock.Arguments) {
-		rr.WriteHeader(http.StatusInternalServerError)
-	})
+		On("InternalServerError", rr, req).
+		Run(func(args mock.Arguments) {
+			rr.WriteHeader(http.StatusInternalServerError)
+		})
 
 	handler.ServeHTTP(rr, req)
 
@@ -473,8 +478,11 @@ func testPostAdminTagsDeleteHandlerErrorBadId(
 
 	handler := http.HandlerFunc(ctrl.DeleteAdminTagsSlugHandler)
 
-	mockLoggerError := mockLogger.On("Error", mock.Anything, mock.Anything).
-		Return()
+	mockErrorHandlersBadRequest := mockErrorHandlers.
+		On("BadRequest", rr, req).
+		Run(func(args mock.Arguments) {
+			rr.WriteHeader(http.StatusBadRequest)
+		})
 
 	handler.ServeHTTP(rr, req)
 
@@ -485,11 +493,11 @@ func testPostAdminTagsDeleteHandlerErrorBadId(
 		"should return status code bad request",
 	)
 
-	if res := mockLogger.AssertExpectations(t); !res {
-		t.Error("should log the error")
+	if res := mockErrorHandlers.AssertExpectations(t); !res {
+		t.Error("should call error handler")
 	}
 
-	mockLoggerError.Unset()
+	mockErrorHandlersBadRequest.Unset()
 }
 
 func testPostAdminTagsDeleteHandlerServiceError(
@@ -518,8 +526,11 @@ func testPostAdminTagsDeleteHandlerServiceError(
 	mockServiceDeleteById := mockService.On("DeleteById", 23).
 		Return(errors.New("service_error"))
 
-	mockLoggerError := mockLogger.On("Error", "service_error", mock.Anything).
-		Return()
+	mockErrorHandlersInternalServerError := mockErrorHandlers.
+		On("InternalServerError", rr, req).
+		Run(func(args mock.Arguments) {
+			rr.WriteHeader(http.StatusInternalServerError)
+		})
 
 	handler.ServeHTTP(rr, req)
 
@@ -534,12 +545,12 @@ func testPostAdminTagsDeleteHandlerServiceError(
 		t.Error("should call tag service to delete")
 	}
 
-	if res := mockLogger.AssertExpectations(t); !res {
-		t.Error("should log error")
+	if res := mockErrorHandlers.AssertExpectations(t); !res {
+		t.Error("should call error handlers")
 	}
 
 	mockServiceDeleteById.Unset()
-	mockLoggerError.Unset()
+	mockErrorHandlersInternalServerError.Unset()
 }
 
 func testGetAdminTagsHandler(t *testing.T, ctrl TagController) {
@@ -635,8 +646,11 @@ func testGetAdminTagsHandlerServiceError(t *testing.T, ctrl TagController) {
 	mockServiceGetAll := mockService.On("GetAll").
 		Return(&[]TagResponseDto{}, errors.New("service_error"))
 
-	mockLoggerError := mockLogger.On("Error", "service_error", mock.Anything).
-		Return()
+	mockErrorHandlersInternalServerError := mockErrorHandlers.
+		On("InternalServerError", rr, req).
+		Run(func(args mock.Arguments) {
+			rr.WriteHeader(http.StatusInternalServerError)
+		})
 
 	handler.ServeHTTP(rr, req)
 
@@ -651,12 +665,12 @@ func testGetAdminTagsHandlerServiceError(t *testing.T, ctrl TagController) {
 		t.Error("should call tag service to get all tags")
 	}
 
-	if res := mockLogger.AssertExpectations(t); !res {
-		t.Error("should log errors")
+	if res := mockErrorHandlers.AssertExpectations(t); !res {
+		t.Error("should call error handler")
 	}
 
+	mockErrorHandlersInternalServerError.Unset()
 	mockServiceGetAll.Unset()
-	mockLoggerError.Unset()
 }
 
 func testGetAdminTagsHandlerTemplateError(t *testing.T, ctrl TagController) {
@@ -706,7 +720,11 @@ func testGetAdminTagsHandlerTemplateError(t *testing.T, ctrl TagController) {
 	}).
 		Return(errors.New("template_error"))
 
-	mockLoggerError := mockLogger.On("Error", "template_error", mock.Anything)
+	mockErrorHandlersInternalServerError := mockErrorHandlers.
+		On("InternalServerError", rr, req).
+		Run(func(args mock.Arguments) {
+			rr.WriteHeader(http.StatusInternalServerError)
+		})
 
 	handler.ServeHTTP(rr, req)
 
@@ -729,15 +747,15 @@ func testGetAdminTagsHandlerTemplateError(t *testing.T, ctrl TagController) {
 		t.Error("should execute template")
 	}
 
-	if res := mockLogger.AssertExpectations(t); !res {
-		t.Error("should log error")
+	if res := mockErrorHandlers.AssertExpectations(t); !res {
+		t.Error("should call error handler")
 	}
 
+	mockErrorHandlersInternalServerError.Unset()
 	mockServiceGetAll.Unset()
 	mockSessionManagerPopString.Unset()
 	mockSessionManagerExists.Unset()
 	mockTemplateExecuteTemplate.Unset()
-	mockLoggerError.Unset()
 }
 
 func testGetAdminTagsBySlugHandler(t *testing.T, ctrl TagController) {
@@ -821,8 +839,11 @@ func testGetAdminTagsBySlugHandlerServiceError(
 	mockServiceGetByAttribute := mockService.On("GetByAttribute", "slug", "tag-slug").
 		Return(&TagResponseDto{}, errors.New("service_error"))
 
-	mockLoggerError := mockLogger.On("Error", "service_error", mock.Anything).
-		Return()
+	mockErrorHandlersInternalServerError := mockErrorHandlers.
+		On("InternalServerError", rr, req).
+		Run(func(args mock.Arguments) {
+			rr.WriteHeader(http.StatusInternalServerError)
+		})
 
 	handler.ServeHTTP(rr, req)
 
@@ -833,15 +854,15 @@ func testGetAdminTagsBySlugHandlerServiceError(
 		"should return status code internal server error",
 	)
 
-	if res := mockLogger.AssertExpectations(t); !res {
-		t.Error("should log error")
-	}
-
 	if res := mockService.AssertExpectations(t); !res {
 		t.Error("should have called through to service to get tag")
 	}
 
-	mockLoggerError.Unset()
+	if res := mockErrorHandlers.AssertExpectations(t); !res {
+		t.Error("should call error handler")
+	}
+
+	mockErrorHandlersInternalServerError.Unset()
 	mockServiceGetByAttribute.Unset()
 }
 
@@ -870,6 +891,12 @@ func testGetAdminTagsBySlugHandlerTemplateError(
 	mockSessionManagerExists := mockSessionManager.On("Exists", mock.Anything, "logged_in_username").
 		Return(true)
 
+	mockErrorHandlersInternalServerError := mockErrorHandlers.
+		On("InternalServerError", rr, req).
+		Run(func(args mock.Arguments) {
+			rr.WriteHeader(http.StatusInternalServerError)
+		})
+
 	mockTemplateExecuteTemplate := mockTemplate.On(
 		"ExecuteTemplate",
 		mock.Anything,
@@ -884,9 +911,6 @@ func testGetAdminTagsBySlugHandlerTemplateError(
 			IsAuthenticated: true,
 		},
 	).Return(errors.New("template_error"))
-
-	mockLoggerError := mockLogger.On("Error", "template_error", mock.Anything).
-		Return()
 
 	handler.ServeHTTP(rr, req)
 
@@ -909,14 +933,14 @@ func testGetAdminTagsBySlugHandlerTemplateError(
 		t.Error("should have called through to service to get tag")
 	}
 
-	if res := mockLogger.AssertExpectations(t); !res {
-		t.Error("should log error")
+	if res := mockErrorHandlers.AssertExpectations(t); !res {
+		t.Error("should call error handlers")
 	}
 
+	mockErrorHandlersInternalServerError.Unset()
 	mockSessionManagerExists.Unset()
 	mockTemplateExecuteTemplate.Unset()
 	mockServiceGetByAttribute.Unset()
-	mockLoggerError.Unset()
 }
 
 func testPostTagBySlugToUpdateHandler(t *testing.T, ctrl TagController) {
@@ -1008,8 +1032,11 @@ func testPostTagBySlugToUpdateHandlerBadFormIdError(
 
 	handler := http.HandlerFunc(ctrl.PostAdminTagsSlugHandler)
 
-	mockLoggerError := mockLogger.On("Error", mock.Anything, mock.Anything).
-		Return(errors.New("logger_error"))
+	mockErrorHandlersBadRequest := mockErrorHandlers.
+		On("BadRequest", rr, req).
+		Run(func(args mock.Arguments) {
+			rr.WriteHeader(http.StatusBadRequest)
+		})
 
 	handler.ServeHTTP(rr, req)
 
@@ -1020,11 +1047,11 @@ func testPostTagBySlugToUpdateHandlerBadFormIdError(
 		"should return status code bad request",
 	)
 
-	if res := mockLogger.AssertExpectations(t); !res {
-		t.Error("should log error")
+	if res := mockErrorHandlers.AssertExpectations(t); !res {
+		t.Error("should call error handlers")
 	}
 
-	mockLoggerError.Unset()
+	mockErrorHandlersBadRequest.Unset()
 }
 
 func testPostTagBySlugToUpdateHandlerServiceError(
@@ -1056,8 +1083,11 @@ func testPostTagBySlugToUpdateHandlerServiceError(
 		Slug: "tag-slug",
 	}).Return(&TagResponseDto{}, errors.New("service_error"))
 
-	mockLoggerError := mockLogger.On("Error", mock.Anything, mock.Anything).
-		Return(errors.New("logger_error"))
+	mockErrorHandlersInternalServerError := mockErrorHandlers.
+		On("InternalServerError", rr, req).
+		Run(func(args mock.Arguments) {
+			rr.WriteHeader(http.StatusInternalServerError)
+		})
 
 	handler.ServeHTTP(rr, req)
 
@@ -1068,14 +1098,14 @@ func testPostTagBySlugToUpdateHandlerServiceError(
 		"should return status code internal server error",
 	)
 
-	if res := mockLogger.AssertExpectations(t); !res {
-		t.Error("should log error")
-	}
-
 	if res := mockService.AssertExpectations(t); !res {
 		t.Error("should call through to service")
 	}
 
-	mockLoggerError.Unset()
+	if res := mockErrorHandlers.AssertExpectations(t); !res {
+		t.Error("should call error handler")
+	}
+
+	mockErrorHandlersInternalServerError.Unset()
 	mockServiceUpdate.Unset()
 }
