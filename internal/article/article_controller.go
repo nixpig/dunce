@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/nixpig/dunce/internal/app/errors"
 	"github.com/nixpig/dunce/internal/tag"
 	"github.com/nixpig/dunce/pkg/logging"
 	"github.com/nixpig/dunce/pkg/markdown"
@@ -22,6 +23,7 @@ type ArticleController struct {
 	templates      templates.TemplateCache
 	session        session.SessionManager
 	csrfToken      func(r *http.Request) string
+	errorHandlers  errors.ErrorHandlers
 }
 
 type ArticleControllerConfig struct {
@@ -29,6 +31,7 @@ type ArticleControllerConfig struct {
 	TemplateCache  templates.TemplateCache
 	SessionManager session.SessionManager
 	CsrfToken      func(*http.Request) string
+	ErrorHandlers  errors.ErrorHandlers
 }
 
 type ArticleView struct {
@@ -67,6 +70,7 @@ func NewArticleController(
 		log:            config.Log,
 		templates:      config.TemplateCache,
 		csrfToken:      config.CsrfToken,
+		errorHandlers:  config.ErrorHandlers,
 	}
 }
 

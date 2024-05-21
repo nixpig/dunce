@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/nixpig/dunce/pkg/templates"
@@ -28,8 +29,13 @@ func (e ErrorHandlersImpl) NotFound(w http.ResponseWriter, r *http.Request) {
 }
 
 func (e ErrorHandlersImpl) InternalServerError(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("writing header...")
 	w.WriteHeader(http.StatusInternalServerError)
+
+	fmt.Println("rendering template")
 	if err := e.templateCache["pages/errors/internal-server-error.tmpl"].ExecuteTemplate(w, "public", nil); err != nil {
+
+		fmt.Println("final error")
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }

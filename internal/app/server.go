@@ -46,6 +46,7 @@ func Start(appConfig AppConfig) error {
 		TemplateCache:  appConfig.TemplateCache,
 		SessionManager: appConfig.SessionManager,
 		CsrfToken:      appConfig.CsrfToken,
+		ErrorHandlers:  appConfig.ErrorHandlers,
 	})
 
 	tagRepository := tag.NewTagPostgresRepository(appConfig.Db.Pool)
@@ -59,10 +60,7 @@ func Start(appConfig AppConfig) error {
 	})
 
 	articleRepository := article.NewArticlePostgresRepository(appConfig.Db.Pool)
-	articleService := article.NewArticleService(
-		articleRepository,
-		appConfig.Validator,
-	)
+	articleService := article.NewArticleService(articleRepository, appConfig.Validator)
 	articleController := article.NewArticleController(
 		articleService,
 		tagService,
@@ -71,14 +69,11 @@ func Start(appConfig AppConfig) error {
 			TemplateCache:  appConfig.TemplateCache,
 			SessionManager: appConfig.SessionManager,
 			CsrfToken:      appConfig.CsrfToken,
+			ErrorHandlers:  appConfig.ErrorHandlers,
 		},
 	)
 
-	isAuthenticated := middleware.NewAuthenticatedMiddleware(
-		userService,
-		appConfig.SessionManager,
-		session.LOGGED_IN_USERNAME,
-	)
+	isAuthenticated := middleware.NewAuthenticatedMiddleware(userService, appConfig.SessionManager, session.LOGGED_IN_USERNAME)
 	protected := middleware.NewProtectedMiddleware(appConfig.SessionManager)
 	noSurf := middleware.NewNoSurfMiddleware()
 	stripSlash := middleware.NewStripSlashMiddleware()
@@ -88,89 +83,122 @@ func Start(appConfig AppConfig) error {
 	mux.Handle("GET /static/", http.StripPrefix("/static/", static))
 
 	mux.HandleFunc("GET /admin", adminRootHandler(appConfig))
-	mux.HandleFunc("GET /admin/login", noSurf(userController.UserLoginGet))
-	mux.HandleFunc("POST /admin/login", noSurf(userController.UserLoginPost))
-	mux.HandleFunc("POST /admin/logout", noSurf(userController.UserLogoutPost))
-	mux.HandleFunc(
-		"GET /admin/users/new",
-		isAuthenticated(noSurf(protected(userController.CreateUserGet))),
-	)
-	mux.HandleFunc(
-		"GET /admin/users/{slug}",
-		isAuthenticated(noSurf(protected(userController.UserGet))),
-	)
-	mux.HandleFunc(
-		"GET /admin/users",
-		isAuthenticated(noSurf(protected(userController.UsersGet))),
-	)
-	mux.HandleFunc(
-		"POST /admin/users",
-		isAuthenticated(noSurf(protected(userController.CreateUserPost))),
-	)
-	mux.HandleFunc(
-		"POST /admin/users/{username}/delete",
-		isAuthenticated(noSurf(protected(userController.DeleteUserPost))),
-	)
 
-	mux.HandleFunc(
-		"POST /admin/tags",
-		isAuthenticated(noSurf(tagController.PostAdminTagsHandler)),
-	)
-	mux.HandleFunc(
-		"GET /admin/tags",
-		isAuthenticated(noSurf(protected(tagController.GetAdminTagsHandler))),
-	)
-	mux.HandleFunc(
-		"GET /admin/tags/new",
-		isAuthenticated(
-			noSurf(protected(tagController.GetAdminTagsNewHandler)),
-		),
-	)
-	mux.HandleFunc(
-		"GET /admin/tags/{slug}",
-		isAuthenticated(
-			noSurf(protected(tagController.GetAdminTagsSlugHandler)),
-		),
-	)
-	mux.HandleFunc(
-		"POST /admin/tags/{slug}",
-		isAuthenticated(
-			noSurf(protected(tagController.PostAdminTagsSlugHandler)),
-		),
-	)
-	mux.HandleFunc(
-		"POST /admin/tags/{slug}/delete",
-		isAuthenticated(
-			noSurf(protected(tagController.DeleteAdminTagsSlugHandler)),
-		),
-	)
+	mux.HandleFunc("GET /admin/login", applyMiddlewares(
+		userController.UserLoginGet,
+		noSurf,
+	))
+	mux.HandleFunc("POST /admin/login", applyMiddlewares(
+		userController.UserLoginPost,
+		noSurf,
+	))
+	mux.HandleFunc("POST /admin/logout", applyMiddlewares(
+		userController.UserLogoutPost,
+		noSurf,
+	))
+	mux.HandleFunc("GET /admin/users/new", applyMiddlewares(
+		userController.CreateUserGet,
+		protected,
+		noSurf,
+		isAuthenticated,
+	))
+	mux.HandleFunc("GET /admin/users/{slug}", applyMiddlewares(
+		userController.UserGet,
+		protected,
+		noSurf,
+		isAuthenticated,
+	))
+	mux.HandleFunc("GET /admin/users", applyMiddlewares(
+		userController.UsersGet,
+		protected,
+		noSurf,
+		isAuthenticated,
+	))
+	mux.HandleFunc("POST /admin/users", applyMiddlewares(
+		userController.CreateUserPost,
+		protected,
+		noSurf,
+		isAuthenticated,
+	))
+	mux.HandleFunc("POST /admin/users/{username}/delete", applyMiddlewares(
+		userController.DeleteUserPost,
+		protected,
+		noSurf,
+		isAuthenticated,
+	))
 
-	mux.HandleFunc(
-		"POST /admin/articles",
-		isAuthenticated(noSurf(protected(articleController.CreateHandler))),
-	)
-	mux.HandleFunc(
-		"GET /admin/articles",
-		isAuthenticated(noSurf(protected(articleController.GetAllHandler))),
-	)
-	mux.HandleFunc(
-		"GET /admin/articles/new",
-		isAuthenticated(noSurf(protected(articleController.NewHandler))),
-	)
-	mux.HandleFunc(
-		"GET /admin/articles/{slug}",
-		isAuthenticated(noSurf(protected(articleController.GetBySlugHander))),
-	)
-	mux.HandleFunc(
-		"POST /admin/articles/{slug}",
-		isAuthenticated(noSurf(protected(articleController.UpdateHandler))),
-	)
-	mux.HandleFunc(
-		"POST /admin/articles/{slug}/delete",
-		isAuthenticated(
-			noSurf(protected(articleController.AdminArticlesDeleteHandler)),
-		),
-	)
+	mux.HandleFunc("POST /admin/tags", applyMiddlewares(
+		tagController.PostAdminTagsHandler,
+		noSurf,
+		isAuthenticated,
+	))
+	mux.HandleFunc("GET /admin/tags", applyMiddlewares(
+		tagController.GetAdminTagsHandler,
+		protected,
+		noSurf,
+		isAuthenticated,
+	))
+	mux.HandleFunc("GET /admin/tags/new", applyMiddlewares(
+		tagController.GetAdminTagsHandler,
+		protected,
+		noSurf,
+		isAuthenticated,
+	))
+	mux.HandleFunc("GET /admin/tags/{slug}", applyMiddlewares(
+		tagController.GetAdminTagsSlugHandler,
+		protected,
+		noSurf,
+		isAuthenticated,
+	))
+	mux.HandleFunc("POST /admin/tags/{slug}", applyMiddlewares(
+		tagController.PostAdminTagsSlugHandler,
+		protected,
+		noSurf,
+		isAuthenticated,
+	))
+	mux.HandleFunc("POST /admin/tags/{slug}/delete", applyMiddlewares(
+		tagController.DeleteAdminTagsSlugHandler,
+		protected,
+		noSurf,
+		isAuthenticated,
+	))
+
+	mux.HandleFunc("POST /admin/articles", applyMiddlewares(
+		articleController.CreateHandler,
+		protected,
+		noSurf,
+		isAuthenticated,
+	))
+	mux.HandleFunc("GET /admin/articles", applyMiddlewares(
+		articleController.GetAllHandler,
+		protected,
+		noSurf,
+		isAuthenticated,
+	))
+	mux.HandleFunc("GET /admin/articles/new", applyMiddlewares(
+		articleController.NewHandler,
+		protected,
+		noSurf,
+		isAuthenticated,
+	))
+	mux.HandleFunc("GET /admin/articles/{slug}", applyMiddlewares(
+		articleController.GetBySlugHander,
+		protected,
+		noSurf,
+		isAuthenticated,
+	))
+	mux.HandleFunc("POST /admin/articles/{slug}", applyMiddlewares(
+		articleController.UpdateHandler,
+		protected,
+		noSurf,
+		isAuthenticated,
+	))
+	mux.HandleFunc("POST /admin/articles/{slug}/delete", applyMiddlewares(
+		articleController.AdminArticlesDeleteHandler,
+		protected,
+		noSurf,
+		isAuthenticated,
+	))
 
 	homeController := home.NewHomeController(
 		tagService,
@@ -189,10 +217,7 @@ func Start(appConfig AppConfig) error {
 	mux.HandleFunc("GET /tags", homeController.HomeTagsGet)
 	mux.HandleFunc("GET /tags/{slug}", homeController.HomeTagGet)
 
-	mux.HandleFunc(
-		"GET /",
-		stripSlash(publicRootHandler(homeController.HomeGet)),
-	)
+	mux.HandleFunc("GET /", stripSlash(publicRootHandler(homeController.HomeGet)))
 
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%v", appConfig.Port),
@@ -211,26 +236,11 @@ func Start(appConfig AppConfig) error {
 	return nil
 }
 
-func publicRootHandler(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/" && r.URL.Path != "" {
-			http.Error(w, "Not Found", 404)
-			return
-		}
-
-		next(w, r)
+func applyMiddlewares(handler http.HandlerFunc, middlewares ...func(next http.HandlerFunc) http.HandlerFunc) http.HandlerFunc {
+	h := handler
+	for _, middleware := range middlewares {
+		h = middleware(h)
 	}
-}
 
-func adminRootHandler(appConfig AppConfig) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if appConfig.SessionManager.Exists(
-			r.Context(),
-			string(session.IS_LOGGED_IN_CONTEXT_KEY),
-		) {
-			http.Redirect(w, r, "/admin/articles", http.StatusSeeOther)
-		} else {
-			http.Redirect(w, r, "/admin/login", http.StatusSeeOther)
-		}
-	}
+	return h
 }
