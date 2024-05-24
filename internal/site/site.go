@@ -7,6 +7,13 @@ type Site struct {
 }
 
 type SiteKv struct {
+	Id    uint
+	Key   string
+	Value string
+}
+
+type SiteItemResponseDto struct {
+	Id    uint
 	Key   string
 	Value string
 }

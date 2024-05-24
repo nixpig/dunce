@@ -42,7 +42,7 @@ func testSiteServiceCreateKv(t *testing.T, service SiteService) {
 	got, err := service.Create("some name", "some description")
 
 	require.NoError(t, err, "should not return error")
-	require.Equal(t, &SiteKv{
+	require.Equal(t, &SiteItemResponseDto{
 		Key:   "some name",
 		Value: "some description",
 	}, got, "should return k/v pair")

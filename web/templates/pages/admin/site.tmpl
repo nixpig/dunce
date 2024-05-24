@@ -1,0 +1,22 @@
+{{ define "title" }}
+  Site
+{{ end }}
+
+{{ define "main" }}
+  <div class="hero">
+    <h1>{{ template "title" . }}</h1>
+  </div>
+
+  <form name="edit-tag" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}">
+
+    <label for="key">Key</label>
+    <input type="text" id="key" name="key">
+
+    <label for="value">Value</label>
+    <input type="text" id="value" name="value">
+
+    <br>
+    <button type="submit">Create site item</button>
+  </form>
+{{ end }}

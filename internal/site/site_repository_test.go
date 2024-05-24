@@ -29,11 +29,11 @@ func TestSiteRepository(t *testing.T) {
 }
 
 func testCreateSiteKeyValue(t *testing.T, mock pgxmock.PgxPoolIface, repo SiteRepository) {
-	query := `insert into site_ (key_, value_) values ($1, $2) returning key_, value_`
+	query := `insert into site_ (key_, value_) values ($1, $2) returning id_, key_, value_`
 
 	mockRow := mock.
-		NewRows([]string{"key_", "value_"}).
-		AddRow("name", "site name")
+		NewRows([]string{"id_", "key_", "value_"}).
+		AddRow(uint(23), "name", "site name")
 
 	mock.
 		ExpectQuery(regexp.QuoteMeta(query)).
@@ -44,7 +44,7 @@ func testCreateSiteKeyValue(t *testing.T, mock pgxmock.PgxPoolIface, repo SiteRe
 
 	require.NoError(t, err, "should not return error")
 	require.Equal(t, &SiteKv{
-		Key: "name", Value: "site name",
+		Id: 23, Key: "name", Value: "site name",
 	}, got, "should return created site k/v")
 
 	if err := mock.ExpectationsWereMet(); err != nil {

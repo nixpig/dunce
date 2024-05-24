@@ -10,6 +10,7 @@ import (
 	"github.com/nixpig/dunce/internal/app/errors"
 	"github.com/nixpig/dunce/internal/article"
 	"github.com/nixpig/dunce/internal/home"
+	"github.com/nixpig/dunce/internal/site"
 	"github.com/nixpig/dunce/internal/tag"
 	"github.com/nixpig/dunce/internal/user"
 	"github.com/nixpig/dunce/pkg/crypto"
@@ -38,6 +39,16 @@ func Start(appConfig AppConfig) error {
 		bcrypt.GenerateFromPassword,
 		bcrypt.CompareHashAndPassword,
 	)
+
+	siteRepo := site.NewSitePostgresRepository(appConfig.Db.Pool)
+	siteService := site.NewSiteService(siteRepo)
+	siteController := site.NewSiteController(siteService, site.SiteControllerConfig{
+		Log:            appConfig.Logger,
+		TemplateCache:  appConfig.TemplateCache,
+		SessionManager: appConfig.SessionManager,
+		CsrfToken:      appConfig.CsrfToken,
+		ErrorHandlers:  appConfig.ErrorHandlers,
+	})
 
 	userRepo := user.NewUserPostgresRepository(appConfig.Db.Pool)
 	userService := user.NewUserService(userRepo, appConfig.Validator, crypt)
@@ -195,6 +206,13 @@ func Start(appConfig AppConfig) error {
 	))
 	mux.HandleFunc("POST /admin/articles/{slug}/delete", applyMiddlewares(
 		articleController.AdminArticlesDeleteHandler,
+		protected,
+		noSurf,
+		isAuthenticated,
+	))
+
+	mux.HandleFunc("GET /admin/site", applyMiddlewares(
+		siteController.GetCreateSiteItems,
 		protected,
 		noSurf,
 		isAuthenticated,
