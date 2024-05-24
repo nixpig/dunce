@@ -61,27 +61,58 @@ func NewTagController(
 	}
 }
 
-func (t *TagController) PostAdminTagsHandler(
+func (t *TagController) AdminTagsHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
-	tag := TagNewRequestDto{
-		Name: r.FormValue("name"),
-		Slug: r.FormValue("slug"),
+	switch r.Method {
+	case "POST":
+		tag := TagNewRequestDto{
+			Name: r.FormValue("name"),
+			Slug: r.FormValue("slug"),
+		}
+
+		if _, err := t.tagService.Create(&tag); err != nil {
+			t.errorHandlers.InternalServerError(w, r)
+			return
+		}
+
+		t.session.Put(
+			r.Context(),
+			session.SESSION_KEY_MESSAGE,
+			fmt.Sprintf("Created tag '%s'.", tag.Name),
+		)
+
+		http.Redirect(w, r, "/admin/tags", http.StatusSeeOther)
+
+	case "GET":
+		tags, err := t.tagService.GetAll()
+		if err != nil {
+			t.errorHandlers.InternalServerError(w, r)
+			return
+		}
+
+		message := t.session.PopString(r.Context(), session.SESSION_KEY_MESSAGE)
+
+		tagView := TagsView{
+			Message:   message,
+			Tags:      tags,
+			CsrfToken: t.csrfToken(r),
+			IsAuthenticated: t.session.Exists(
+				r.Context(),
+				string(session.IS_LOGGED_IN_CONTEXT_KEY),
+			),
+		}
+
+		err = t.templates["pages/admin/tags.tmpl"].ExecuteTemplate(
+			w,
+			"admin",
+			tagView,
+		)
+		if err != nil {
+			t.errorHandlers.InternalServerError(w, r)
+		}
 	}
-
-	if _, err := t.tagService.Create(&tag); err != nil {
-		t.errorHandlers.InternalServerError(w, r)
-		return
-	}
-
-	t.session.Put(
-		r.Context(),
-		session.SESSION_KEY_MESSAGE,
-		fmt.Sprintf("Created tag '%s'.", tag.Name),
-	)
-
-	http.Redirect(w, r, "/admin/tags", http.StatusSeeOther)
 }
 
 func (t *TagController) DeleteAdminTagsSlugHandler(
@@ -106,38 +137,6 @@ func (t *TagController) DeleteAdminTagsSlugHandler(
 	)
 
 	http.Redirect(w, r, "/admin/tags", http.StatusSeeOther)
-}
-
-func (t *TagController) GetAdminTagsHandler(
-	w http.ResponseWriter,
-	r *http.Request,
-) {
-	tags, err := t.tagService.GetAll()
-	if err != nil {
-		t.errorHandlers.InternalServerError(w, r)
-		return
-	}
-
-	message := t.session.PopString(r.Context(), session.SESSION_KEY_MESSAGE)
-
-	tagView := TagsView{
-		Message:   message,
-		Tags:      tags,
-		CsrfToken: t.csrfToken(r),
-		IsAuthenticated: t.session.Exists(
-			r.Context(),
-			string(session.IS_LOGGED_IN_CONTEXT_KEY),
-		),
-	}
-
-	err = t.templates["pages/admin/tags.tmpl"].ExecuteTemplate(
-		w,
-		"admin",
-		tagView,
-	)
-	if err != nil {
-		t.errorHandlers.InternalServerError(w, r)
-	}
 }
 
 func (t *TagController) GetAdminTagsSlugHandler(

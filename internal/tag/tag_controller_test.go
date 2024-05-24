@@ -318,7 +318,7 @@ func testPostAdminTagsHandler(t *testing.T, ctrl TagController) {
 
 	rr := httptest.NewRecorder()
 
-	handler := http.HandlerFunc(ctrl.PostAdminTagsHandler)
+	handler := http.HandlerFunc(ctrl.AdminTagsHandler)
 
 	handler.ServeHTTP(rr, req)
 
@@ -365,7 +365,7 @@ func testPostAdminTagsHandlerServiceError(t *testing.T, ctrl TagController) {
 
 	rr := httptest.NewRecorder()
 
-	handler := http.HandlerFunc(ctrl.PostAdminTagsHandler)
+	handler := http.HandlerFunc(ctrl.AdminTagsHandler)
 
 	mockServiceCreate := mockService.On("Create", &TagNewRequestDto{
 		Name: "tag name",
@@ -561,7 +561,7 @@ func testGetAdminTagsHandler(t *testing.T, ctrl TagController) {
 
 	rr := httptest.NewRecorder()
 
-	handler := http.HandlerFunc(ctrl.GetAdminTagsHandler)
+	handler := http.HandlerFunc(ctrl.AdminTagsHandler)
 
 	mockServiceGetAll := mockService.On("GetAll").Return(&[]TagResponseDto{
 		{
@@ -641,7 +641,7 @@ func testGetAdminTagsHandlerServiceError(t *testing.T, ctrl TagController) {
 
 	rr := httptest.NewRecorder()
 
-	handler := http.HandlerFunc(ctrl.GetAdminTagsHandler)
+	handler := http.HandlerFunc(ctrl.AdminTagsHandler)
 
 	mockServiceGetAll := mockService.On("GetAll").
 		Return(&[]TagResponseDto{}, errors.New("service_error"))
@@ -681,7 +681,7 @@ func testGetAdminTagsHandlerTemplateError(t *testing.T, ctrl TagController) {
 
 	rr := httptest.NewRecorder()
 
-	handler := http.HandlerFunc(ctrl.GetAdminTagsHandler)
+	handler := http.HandlerFunc(ctrl.AdminTagsHandler)
 
 	mockServiceGetAll := mockService.On("GetAll").Return(&[]TagResponseDto{
 		{

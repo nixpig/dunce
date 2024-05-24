@@ -7,7 +7,7 @@
     <h1>{{ template "title" . }}</h1>
   </div>
 
-  <form name="edit-tag" method="POST">
+  <form name="create-site-item" method="POST">
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}">
 
     <label for="key">Key</label>
