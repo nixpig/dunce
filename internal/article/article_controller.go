@@ -14,7 +14,7 @@ import (
 	"github.com/nixpig/dunce/pkg/templates"
 )
 
-const longFormat = "2006-01-02 15:04:05.999999999 -0700 MST"
+const longTimeFormat = "2006-01-02 15:04:05.999999999 -0700 MST"
 
 type ArticleController struct {
 	articleService ArticleService
@@ -79,8 +79,7 @@ func (a *ArticleController) CreateHandler(
 	r *http.Request,
 ) {
 	if err := r.ParseForm(); err != nil {
-		a.log.Error(err.Error())
-		http.Error(w, "Bad Request", http.StatusBadRequest)
+		a.errorHandlers.BadRequest(w, r)
 		return
 	}
 
@@ -91,12 +90,7 @@ func (a *ArticleController) CreateHandler(
 	for i, t := range tagsForm {
 		tagId, err := strconv.Atoi(t)
 		if err != nil {
-			a.log.Error(err.Error())
-			http.Error(
-				w,
-				"Unable to parse tags to ints",
-				http.StatusInternalServerError,
-			)
+			a.errorHandlers.InternalServerError(w, r)
 			return
 		}
 
@@ -114,8 +108,7 @@ func (a *ArticleController) CreateHandler(
 	}
 
 	if _, err := a.articleService.Create(&article); err != nil {
-		a.log.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		a.errorHandlers.InternalServerError(w, r)
 		return
 	}
 
@@ -128,8 +121,7 @@ func (a *ArticleController) GetAllHandler(
 ) {
 	articles, err := a.articleService.GetAll()
 	if err != nil {
-		a.log.Error(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		a.errorHandlers.InternalServerError(w, r)
 		return
 	}
 
@@ -138,8 +130,7 @@ func (a *ArticleController) GetAllHandler(
 		CsrfToken:       a.csrfToken(r),
 		IsAuthenticated: a.session.Exists(r.Context(), string(session.IS_LOGGED_IN_CONTEXT_KEY)),
 	}); err != nil {
-		a.log.Error(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		a.errorHandlers.InternalServerError(w, r)
 		return
 	}
 }
@@ -147,8 +138,7 @@ func (a *ArticleController) GetAllHandler(
 func (a *ArticleController) NewHandler(w http.ResponseWriter, r *http.Request) {
 	availableTags, err := a.tagService.GetAll()
 	if err != nil {
-		a.log.Error(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		a.errorHandlers.InternalServerError(w, r)
 		return
 	}
 
@@ -157,8 +147,7 @@ func (a *ArticleController) NewHandler(w http.ResponseWriter, r *http.Request) {
 		CsrfToken:       a.csrfToken(r),
 		IsAuthenticated: a.session.Exists(r.Context(), string(session.IS_LOGGED_IN_CONTEXT_KEY)),
 	}); err != nil {
-		a.log.Error(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		a.errorHandlers.InternalServerError(w, r)
 		return
 	}
 }
@@ -171,15 +160,13 @@ func (a *ArticleController) GetBySlugHander(
 
 	article, err := a.articleService.GetByAttribute("slug", slug)
 	if err != nil {
-		a.log.Error(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		a.errorHandlers.BadRequest(w, r)
 		return
 	}
 
 	allTags, err := a.tagService.GetAll()
 	if err != nil {
-		a.log.Error(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		a.errorHandlers.InternalServerError(w, r)
 		return
 	}
 
@@ -193,8 +180,7 @@ func (a *ArticleController) GetBySlugHander(
 			IsAuthenticated: a.session.Exists(r.Context(), string(session.IS_LOGGED_IN_CONTEXT_KEY)),
 		},
 	); err != nil {
-		a.log.Error(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		a.errorHandlers.InternalServerError(w, r)
 		return
 	}
 }
@@ -204,8 +190,7 @@ func (a ArticleController) UpdateHandler(
 	r *http.Request,
 ) {
 	if err := r.ParseForm(); err != nil {
-		a.log.Error(err.Error())
-		http.Error(w, "Bad Request", http.StatusBadRequest)
+		a.errorHandlers.BadRequest(w, r)
 		return
 	}
 
@@ -216,29 +201,22 @@ func (a ArticleController) UpdateHandler(
 	for i, t := range tags {
 		id, err := strconv.Atoi(t)
 		if err != nil {
-			a.log.Error(err.Error())
-			http.Error(
-				w,
-				"Internal Server Error",
-				http.StatusInternalServerError,
-			)
+			a.errorHandlers.InternalServerError(w, r)
 			return
 		}
 
 		tagIds[i] = id
 	}
 
-	createdAt, err := time.Parse(longFormat, r.FormValue("created_at"))
+	createdAt, err := time.Parse(longTimeFormat, r.FormValue("created_at"))
 	if err != nil {
-		a.log.Error(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		a.errorHandlers.BadRequest(w, r)
 		return
 	}
 
 	articleId, err := strconv.Atoi(r.FormValue("id"))
 	if err != nil {
-		a.log.Error(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		a.errorHandlers.BadRequest(w, r)
 		return
 	}
 
@@ -255,8 +233,7 @@ func (a ArticleController) UpdateHandler(
 
 	_, err = a.articleService.Update(&article)
 	if err != nil {
-		a.log.Error(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		a.errorHandlers.InternalServerError(w, r)
 		return
 	}
 
@@ -269,14 +246,12 @@ func (a ArticleController) AdminArticlesDeleteHandler(
 ) {
 	id, err := strconv.Atoi(r.FormValue("id"))
 	if err != nil {
-		a.log.Error(err.Error())
-		http.Error(w, "Bad Request", http.StatusBadRequest)
+		a.errorHandlers.BadRequest(w, r)
 		return
 	}
 
 	if err := a.articleService.DeleteById(id); err != nil {
-		a.log.Error(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		a.errorHandlers.InternalServerError(w, r)
 		return
 	}
 
@@ -291,15 +266,13 @@ func (a ArticleController) PublicGetArticle(
 
 	article, err := a.articleService.GetByAttribute("slug", slug)
 	if err != nil {
-		a.log.Error(err.Error())
-		http.Error(w, "Not Found", http.StatusNotFound)
+		a.errorHandlers.NotFound(w, r)
 		return
 	}
 
 	content, err := markdown.MdToHtml([]byte(article.Body))
 	if err != nil {
-		a.log.Error(err.Error())
-		http.Error(w, "Not Found", http.StatusNotFound)
+		a.errorHandlers.BadRequest(w, r)
 		return
 	}
 
@@ -311,8 +284,7 @@ func (a ArticleController) PublicGetArticle(
 			Content: template.HTML(content),
 		},
 	); err != nil {
-		a.log.Error(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		a.errorHandlers.InternalServerError(w, r)
 		return
 	}
 }

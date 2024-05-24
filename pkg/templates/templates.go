@@ -42,7 +42,7 @@ func newTemplateCache(templateDir, pageGlob string) (TemplateCache, error) {
 
 		name := strings.ReplaceAll(
 			page,
-			strings.Join([]string{templateDir, "/"}, ""),
+			templateDir+"/",
 			"",
 		)
 
