@@ -139,61 +139,60 @@ func (t *TagController) DeleteAdminTagsSlugHandler(
 	http.Redirect(w, r, "/admin/tags", http.StatusSeeOther)
 }
 
-func (t *TagController) GetAdminTagsSlugHandler(
+func (t *TagController) AdminTagsSlugHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
-	slug := r.PathValue("slug")
+	switch r.Method {
+	case "GET":
+		slug := r.PathValue("slug")
 
-	tag, err := t.tagService.GetByAttribute("slug", slug)
-	if err != nil {
-		t.errorHandlers.InternalServerError(w, r)
-		return
-	}
+		tag, err := t.tagService.GetByAttribute("slug", slug)
+		if err != nil {
+			t.errorHandlers.InternalServerError(w, r)
+			return
+		}
 
-	tagView := TagView{
-		Tag:       tag,
-		CsrfToken: t.csrfToken(r),
-		IsAuthenticated: t.session.Exists(
+		tagView := TagView{
+			Tag:       tag,
+			CsrfToken: t.csrfToken(r),
+			IsAuthenticated: t.session.Exists(
+				r.Context(),
+				string(session.IS_LOGGED_IN_CONTEXT_KEY),
+			),
+		}
+
+		if err := t.templates["pages/admin/tag.tmpl"].ExecuteTemplate(w, "admin", tagView); err != nil {
+			t.errorHandlers.InternalServerError(w, r)
+			return
+		}
+
+	case "POST":
+		id, err := strconv.Atoi(r.FormValue("id"))
+		if err != nil {
+			t.errorHandlers.BadRequest(w, r)
+			return
+		}
+
+		tag := TagUpdateRequestDto{
+			Id:   id,
+			Name: r.FormValue("name"),
+			Slug: r.FormValue("slug"),
+		}
+
+		if _, err := t.tagService.Update(&tag); err != nil {
+			t.errorHandlers.InternalServerError(w, r)
+			return
+		}
+
+		t.session.Put(
 			r.Context(),
-			string(session.IS_LOGGED_IN_CONTEXT_KEY),
-		),
+			session.SESSION_KEY_MESSAGE,
+			fmt.Sprintf("Updated tag '%s'.", tag.Name),
+		)
+
+		http.Redirect(w, r, "/admin/tags", http.StatusSeeOther)
 	}
-
-	if err := t.templates["pages/admin/tag.tmpl"].ExecuteTemplate(w, "admin", tagView); err != nil {
-		t.errorHandlers.InternalServerError(w, r)
-		return
-	}
-}
-
-func (t *TagController) PostAdminTagsSlugHandler(
-	w http.ResponseWriter,
-	r *http.Request,
-) {
-	id, err := strconv.Atoi(r.FormValue("id"))
-	if err != nil {
-		t.errorHandlers.BadRequest(w, r)
-		return
-	}
-
-	tag := TagUpdateRequestDto{
-		Id:   id,
-		Name: r.FormValue("name"),
-		Slug: r.FormValue("slug"),
-	}
-
-	if _, err := t.tagService.Update(&tag); err != nil {
-		t.errorHandlers.InternalServerError(w, r)
-		return
-	}
-
-	t.session.Put(
-		r.Context(),
-		session.SESSION_KEY_MESSAGE,
-		fmt.Sprintf("Updated tag '%s'.", tag.Name),
-	)
-
-	http.Redirect(w, r, "/admin/tags", http.StatusSeeOther)
 }
 
 func (t *TagController) GetAdminTagsNewHandler(

@@ -768,7 +768,7 @@ func testGetAdminTagsBySlugHandler(t *testing.T, ctrl TagController) {
 
 	rr := httptest.NewRecorder()
 
-	handler := http.HandlerFunc(ctrl.GetAdminTagsSlugHandler)
+	handler := http.HandlerFunc(ctrl.AdminTagsSlugHandler)
 
 	mockServiceGetByAttribute := mockService.On("GetByAttribute", "slug", "tag-slug").
 		Return(&TagResponseDto{
@@ -834,7 +834,7 @@ func testGetAdminTagsBySlugHandlerServiceError(
 
 	rr := httptest.NewRecorder()
 
-	handler := http.HandlerFunc(ctrl.GetAdminTagsSlugHandler)
+	handler := http.HandlerFunc(ctrl.AdminTagsSlugHandler)
 
 	mockServiceGetByAttribute := mockService.On("GetByAttribute", "slug", "tag-slug").
 		Return(&TagResponseDto{}, errors.New("service_error"))
@@ -879,7 +879,7 @@ func testGetAdminTagsBySlugHandlerTemplateError(
 
 	rr := httptest.NewRecorder()
 
-	handler := http.HandlerFunc(ctrl.GetAdminTagsSlugHandler)
+	handler := http.HandlerFunc(ctrl.AdminTagsSlugHandler)
 
 	mockServiceGetByAttribute := mockService.On("GetByAttribute", "slug", "tag-slug").
 		Return(&TagResponseDto{
@@ -964,7 +964,7 @@ func testPostTagBySlugToUpdateHandler(t *testing.T, ctrl TagController) {
 
 	rr := httptest.NewRecorder()
 
-	handler := http.HandlerFunc(ctrl.PostAdminTagsSlugHandler)
+	handler := http.HandlerFunc(ctrl.AdminTagsSlugHandler)
 
 	mockServiceUpdate := mockService.On("Update", &TagUpdateRequestDto{
 		Id:   23,
@@ -1030,7 +1030,7 @@ func testPostTagBySlugToUpdateHandlerBadFormIdError(
 
 	rr := httptest.NewRecorder()
 
-	handler := http.HandlerFunc(ctrl.PostAdminTagsSlugHandler)
+	handler := http.HandlerFunc(ctrl.AdminTagsSlugHandler)
 
 	mockErrorHandlersBadRequest := mockErrorHandlers.
 		On("BadRequest", rr, req).
@@ -1075,7 +1075,7 @@ func testPostTagBySlugToUpdateHandlerServiceError(
 
 	rr := httptest.NewRecorder()
 
-	handler := http.HandlerFunc(ctrl.PostAdminTagsSlugHandler)
+	handler := http.HandlerFunc(ctrl.AdminTagsSlugHandler)
 
 	mockServiceUpdate := mockService.On("Update", &TagUpdateRequestDto{
 		Id:   23,
